@@ -86,7 +86,9 @@ namespace RentManagement.Models
         public int? ModifiedBy { get; set; }
 
         // Optional navigation/display properties
+        
         public string? LeaseTypeName { get; set; }
+        public string? PerquisiteApplicablePercent { get; set; }
         public string? EmployeeName { get; set; }
         public string? VendorName { get; set; }
         public string? RentRecoveryElementName { get; set; }
