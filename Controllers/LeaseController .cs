@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace RentManagement.Controllers
 {
-    public class LeaseController : Controller
+    public class LeaseController : Controller   
     {
         private readonly ILeaseRepository _leaseRepository;
 

@@ -1,262 +1,285 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Vendor Management System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+       <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-blue': '#3b82f6',
-                        'sidebar-bg': '#f8fafc',
-                        'nav-active': '#e0f2fe'
+                        primary: '#0EA5E9',
+                        secondary: '#64748B',
+                        success: '#22c55e',
+                        warning: '#eab308',
+                        danger: '#ef4444'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
                     }
                 }
             }
         }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        .table-row:hover {
+            background-color: #f8fafc;
+        }
+        .sortable {
+            cursor: pointer;
+        }
+        .sortable:hover {
+            background-color: #f1f5f9;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background-color: #fef9c3;
+            color: #a16207;
+        }
+        .status-expired {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .sidebar-overlay {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Sidebar animations */
+        .sidebar-expanded {
+            width: 16rem;
+        }
+        .sidebar-collapsed {
+            width: 4rem;
+        }
+        .sidebar-transition {
+            transition: width 0.3s ease-in-out;
+        }
+        
+        /* Slide-over animations */
+        .slide-over-enter {
+            transform: translateX(100%);
+        }
+        .slide-over-enter-active {
+            transform: translateX(0);
+            transition: transform 0.3s ease-out;
+        }
+        .slide-over-exit {
+            transform: translateX(0);
+        }
+        .slide-over-exit-active {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in;
+        }
+        
+        @* @media (max-width: 768px) {
+            .mobile-table-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .mobile-table {
+                min-width: 800px;
+            }
+        } *@
+    </style>
 </head>
+
 <body class="bg-gray-50 font-sans">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0">
-            <div class="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-500">
-                <div class="flex items-center space-x-3">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffffff'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='%233b82f6' font-family='Arial' font-size='14' font-weight='bold'%3EKSAI%3C/text%3E%3C/svg%3E" alt="Logo" class="w-8 h-8">
-                    <span class="text-white font-bold text-lg">KSAI</span>
-                </div>
-                <button id="sidebar-close" class="lg:hidden text-white hover:text-gray-200 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+     <div class="flex min-h-screen relative">
+         <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 sidebar-overlay z-40 hidden lg:hidden"></div>
+        
+        <!-- Left Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out sidebar-expanded sidebar-transition">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <img id="sidebarLogo" src="assets/img/FSSAI_Logo.png" alt="Logo" class="h-10 sm:h-12 mx-auto lg:mx-0 transition-opacity duration-300"/>
+                <button id="closeSidebar" class="lg:hidden text-gray-600 hover:text-gray-900">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+                <!-- Desktop Toggle Button -->
+                <button id="toggleSidebarDesktop" class="hidden lg:block text-gray-600 hover:text-gray-900">
+                    <i class="ri-menu-fold-line text-xl"></i>
                 </button>
             </div>
-
-            <nav class="flex-1 overflow-y-auto py-6 px-4">
-                <ul class="space-y-1">
-                    <li>
-                        <a href="/" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-tachometer-alt w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Employee" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-users w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Employee Management</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Vendor" class="flex items-center space-x-3 px-4 py-3 text-white bg-blue-600 rounded-lg shadow-sm border-l-4 border-blue-400">
-                            <i class="fas fa-truck w-5 text-white"></i>
-                            <span class="font-medium">Vendor Management</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Lease" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-file-contract w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Lease Management</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/MonthlyRent" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-calendar-check w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Monthly Rent Payment</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Brokerage" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-handshake w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Brokerage Payment</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Security" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-shield-alt w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">Security Deposit</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Reports" class="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group">
-                            <i class="fas fa-chart-bar w-5 text-gray-400 group-hover:text-blue-600"></i>
-                            <span class="font-medium">MIS Reports</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <a href="/logout" class="flex items-center space-x-3 px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200 group">
-                        <i class="fas fa-sign-out-alt w-5 text-red-500 group-hover:text-red-600"></i>
-                        <span class="font-medium">Log Out</span>
-                    </a>
-                </div>
+            <nav class="flex-1 p-4 overflow-y-auto">
+                <a href="/dashboard" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-dashboard-line"></i>
+                    </div>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+                <a href="/Employee" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <span class="sidebar-text">Employee Management</span>
+                </a>
+                <a href="#" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-store-line"></i>
+                    </div>
+                    <span class="sidebar-text">Vendor Management</span>
+                </a>
+                <a href="/Lease" class="sidebar-item flex items-center px-3 py-2 text-primary bg-blue-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-file-list-line"></i>
+                    </div>
+                    <span class="sidebar-text">Lease Management</span>
+                </a>
+                <a href="monthly-rent-payment.html" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-money-dollar-circle-line"></i>
+                    </div>
+                    <span class="sidebar-text">Monthly Rent Payment</span>
+                </a>
+                <a href="brokerage-payment.html" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-exchange-dollar-line"></i>
+                    </div>
+                    <span class="sidebar-text">Brokerage Payment</span>
+                </a>
+                <a href="security-deposit.html" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-safe-2-line"></i>
+                    </div>
+                    <span class="sidebar-text">Security Deposit</span>
+                </a>
+                <a href="mis-reports.html" class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-file-chart-line"></i>
+                    </div>
+                    <span class="sidebar-text">MIS Reports</span>
+                </a>
+                <a href="login.html" class="sidebar-item flex items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                        <i class="ri-logout-box-r-line"></i>
+                    </div>
+                    <span class="sidebar-text">Log Out</span>
+                </a>
             </nav>
         </aside>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden" id="main-content">
-            <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200 relative z-10">
-                <div class="flex items-center justify-between h-16 px-6">
-                    <div class="flex items-center space-x-4">
-                        <button id="sidebar-toggle" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200 lg:hidden">
-                            <i class="fas fa-bars text-lg"></i>
+          <!-- Main Content -->
+        <main class="flex-1 min-w-0">
+  <!-- Header Section -->
+            <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+                <div class="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4">
+                    <div class="flex items-center min-w-0">
+                        <button id="openSidebar" class="lg:hidden !rounded-button text-gray-600 hover:text-gray-900 mr-3">
+                            <div class="w-8 h-8 flex items-center justify-center">
+                                <i class="ri-menu-line"></i>
+                            </div>
                         </button>
-                        <button id="sidebar-collapse" class="hidden lg:flex p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200">
-                            <i class="fas fa-bars text-lg"></i>
-                        </button>
-
-                        <!-- Hamburger Menu -->
-                        <div class="h-6 w-px bg-gray-300 hidden lg:block"></div>
-
-                        <div class="flex items-center space-x-2 text-sm text-gray-600">
-                            <i class="fas fa-home text-gray-400"></i>
-                            <span>Dashboard</span>
-                            <i class="fas fa-chevron-right text-xs"></i>
-                            <span class="text-gray-900 font-medium">@ViewData["Title"]</span>
-                        </div>
+                        <h1 class="text-lg lg:text-xl font-semibold text-gray-800 truncate">Lease Management</h1>
                     </div>
-
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <button class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200 relative">
-                                <i class="fas fa-bell text-lg"></i>
-                                <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
-                                </span>
-                            </button>
-                        </div>
-
-                        <div class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-all duration-200">
-                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
-                                <span class="text-white text-sm font-semibold">JW</span>
+                    <div class="flex items-center space-x-2 lg:space-x-4">
+                        <button class="!rounded-button relative">
+                            <div class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900">
+                                <i class="ri-notification-line"></i>
                             </div>
-                            <div class="hidden sm:block">
-                                <span class="text-gray-900 font-medium text-sm">James Wilson</span>
-                                <div class="text-xs text-gray-500">Administrator</div>
+                            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <button class="flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <i class="ri-user-line text-gray-600"></i>
                             </div>
-                            <i class="fas fa-chevron-down text-xs text-gray-400 hidden sm:block"></i>
-                        </div>
+                            <span class="text-sm text-gray-700 hidden sm:block">James Wilson</span>
+                        </button>
                     </div>
                 </div>
             </header>
-
-            <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50">
-                <div class="h-full">
+            
+               <!-- Main Content Area -->
+            <div class="p-4 lg:p-6">
                     @RenderBody()
                 </div>
-            </main>
-        </div>
+            
+       </main>
     </div>
 
-    <!-- Sidebar Overlay for Mobile -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
 
     <script>
-        // Sidebar toggle functionality
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebarClose = document.getElementById('sidebar-close');
-        const sidebarCollapse = document.getElementById('sidebar-collapse');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-        const mainContent = document.getElementById('main-content');
+        // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const openSidebarBtn = document.getElementById('openSidebar');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+    const toggleSidebarDesktopBtn = document.getElementById('toggleSidebarDesktop');
+    const sidebarLogo = document.getElementById('sidebarLogo');
+    const sidebarTexts = document.querySelectorAll('.sidebar-text');
+    
+    let sidebarCollapsed = false;
 
-        let sidebarCollapsed = false;
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        sidebarOverlay.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
 
-        function openSidebar() {
-            sidebar.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function toggleSidebarDesktop() {
+        sidebarCollapsed = !sidebarCollapsed;
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.remove('sidebar-expanded');
+            sidebar.classList.add('sidebar-collapsed');
+            sidebarLogo.classList.add('opacity-0');
+            sidebarTexts.forEach(text => text.classList.add('opacity-0', 'w-0', 'overflow-hidden'));
+            toggleSidebarDesktopBtn.querySelector('i').className = 'ri-menu-unfold-line text-xl';
+        } else {
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.add('sidebar-expanded');
+            sidebarLogo.classList.remove('opacity-0');
+            sidebarTexts.forEach(text => text.classList.remove('opacity-0', 'w-0', 'overflow-hidden'));
+            toggleSidebarDesktopBtn.querySelector('i').className = 'ri-menu-fold-line text-xl';
         }
+    }
 
-        function closeSidebar() {
-            sidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
+    openSidebarBtn.addEventListener('click', openSidebar);
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+    toggleSidebarDesktopBtn.addEventListener('click', toggleSidebarDesktop);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar on window resize if desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+            closeSidebar();
         }
+    });
 
-        function toggleSidebarCollapse() {
-            if (window.innerWidth >= 1024) {
-                if (sidebarCollapsed) {
-                    // Expand sidebar
-                    sidebar.classList.remove('-translate-x-full');
-                    mainContent.classList.remove('lg:ml-0');
-                    sidebarCollapsed = false;
-                } else {
-                    // Collapse sidebar
-                    sidebar.classList.add('-translate-x-full');
-                    mainContent.classList.add('lg:ml-0');
-                    sidebarCollapsed = true;
-                }
-            }
-        }
-
-        // Event listeners
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', openSidebar);
-        }
-
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', closeSidebar);
-        }
-
-        if (sidebarCollapse) {
-            sidebarCollapse.addEventListener('click', toggleSidebarCollapse);
-        }
-
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', closeSidebar);
-        }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) {
-                // Reset mobile sidebar state on desktop
-                sidebarOverlay.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-
-                // Restore sidebar state for desktop
-                if (!sidebarCollapsed) {
-                    sidebar.classList.remove('-translate-x-full');
-                    mainContent.classList.remove('lg:ml-0');
-                } else {
-                    sidebar.classList.add('-translate-x-full');
-                    mainContent.classList.add('lg:ml-0');
-                }
-            } else {
-                // Reset desktop collapsed state on mobile
-                sidebarCollapsed = false;
-                mainContent.classList.remove('lg:ml-0');
-                closeSidebar();
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Toggle sidebar with Ctrl/Cmd + B
-            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-                e.preventDefault();
-                if (window.innerWidth >= 1024) {
-                    toggleSidebarCollapse();
-                } else {
-                    if (sidebar.classList.contains('-translate-x-full')) {
-                        openSidebar();
-                    } else {
-                        closeSidebar();
-                    }
-                }
-            }
-
-            // Close sidebar with Escape key on mobile
-            if (e.key === 'Escape' && window.innerWidth < 1024) {
-                closeSidebar();
-            }
-        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
