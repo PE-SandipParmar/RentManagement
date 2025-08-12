@@ -1,0 +1,139 @@
+﻿@model RentManagement.Models.Lease
+
+@{
+    ViewData["Title"] = "Lease Details";
+}
+
+<div class="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-5">
+        <h1 class="text-3xl font-bold text-white">Lease Details</h1>
+        <p class="text-indigo-100 text-sm">Complete information about this lease</p>
+    </div>
+
+    <!-- Body -->
+    <div class="px-8 py-8 text-gray-700">
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+
+         
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Perquisite Type</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PerquisiteType</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Status</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Status</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease Type</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LeaseTypeName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Reference No</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.RefNo</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease Name (Employee)</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.EmployeeName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Reference Date</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.RefDate?.ToString("dd/MM/yyyy")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">% of Perquisite Applicable</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PerquisiteApplicablePercentId</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Owner Name</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.VendorName</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Monthly Rent Payable</dt>
+                <dd class="mt-1">@Model.MonthlyRentPayable?.ToString("C")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease From Date</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.FromDate?.ToString("dd/MM/yyyy")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease End Date</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.EndDate?.ToString("dd/MM/yyyy")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Rent Recovery Element</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.RentRecoveryElementName</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Rent Deposit</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.RentDeposit?.ToString("C")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Additional Rent Recovery</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.AdditionalRentRecovery?.ToString("C")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Brokerage Amount</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.BrokerageAmount?.ToString("C")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">License Fee Recovery Element</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LicenseFeeRecoveryElementName</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Stamp Duty</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.StampDuty?.ToString("C")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">License Fee Amount</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LicenseFeeAmount?.ToString("C")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Payment Term</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PaymentTermName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Payable On or Before</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PayableOnOrBeforeName</dd>
+            </div>
+
+            <div class="md:col-span-2">
+                <dt class="text-sm font-semibold text-gray-500">Narration</dt>
+                <dd class="mt-1 p-3 bg-gray-50 border border-gray-200 rounded-lg">@Model.Narration</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Is Active</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@(Model.IsActive ? "✅ Yes" : "❌ No")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Total Lease Amount</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Convert.ToDecimal(Model.TotalLeaseAmount).ToString("C")</dd>
+            </div>
+
+      @*       <div>
+                <dt class="text-sm font-semibold text-gray-500">Created At</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+            </div> *@
+           
+        </dl>
+        <div class="flex justify-end space-x-3 mt-8 border-t pt-4">
+            <a href="@Url.Action("Index")"
+               class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+  
+</div>

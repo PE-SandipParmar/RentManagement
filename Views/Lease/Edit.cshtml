@@ -1,0 +1,199 @@
+﻿@model RentManagement.Models.Lease
+@{
+    ViewData["Title"] = "Edit Lease";
+}
+
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-900">Edit Lease</h1>
+        </div>
+
+        <form asp-action="Edit" method="post" class="px-6 py-4 space-y-6">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
+
+            <!-- Perquisite Type -->
+            <div>
+                <label>Perquisite Type:</label><br />
+                <input type="radio" id="perq_ActualRentPaid" name="PerquisiteType" value="Actual Rent Paid"
+                @(Model.PerquisiteType == "Actual Rent Paid" ? "checked" : "") />
+                <label for="perq_ActualRentPaid">Actual Rent Paid</label>
+
+                <input type="radio" id="perq_Salary" name="PerquisiteType" value="15% of Salary"
+                @(Model.PerquisiteType == "15% of Salary" ? "checked" : "") />
+                <label for="perq_Salary">15% of Salary</label>
+
+                <input type="radio" id="perq_LowerofActual" name="PerquisiteType" value="Lower of Actual or 15% of Salary"
+                @(Model.PerquisiteType == "Lower of Actual or 15% of Salary" ? "checked" : "") />
+                <label for="perq_LowerofActual">Lower of Actual or 15% of Salary</label>
+                <span asp-validation-for="PerquisiteType" class="text-red-600 text-sm"></span>
+            </div>
+
+            <!-- Lease Type & Reference Number -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="LeaseTypeId" class="block text-sm font-medium text-gray-700 mb-1">Lease Type</label>
+                    <select asp-for="LeaseTypeId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.LeaseTypes, "Id", "Name", Model.LeaseTypeId))">
+                        <option value="0">-- Select Lease Type --</option>
+                    </select>
+                    <span asp-validation-for="LeaseTypeId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="RefNo" class="block text-sm font-medium text-gray-700 mb-1">Lease Reference Number</label>
+                    <input asp-for="RefNo" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="RefNo" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Lease Name & Reference Date -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Lease Name</label>
+                    <select asp-for="EmployeeId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.LeaseNames, "Id", "Name", Model.EmployeeId))">
+                        <option value="0">-- Select Lease Name --</option>
+                    </select>
+                    <span asp-validation-for="EmployeeId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="RefDate" class="block text-sm font-medium text-gray-700 mb-1">Lease Reference Date</label>
+                    <input asp-for="RefDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="RefDate" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- % of Perquisite Applicable, Owner, Monthly Rent -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label asp-for="PerquisiteApplicablePercentId" class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable</label>
+                    <select asp-for="PerquisiteApplicablePercentId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.PerquisitePercents, "Id", "Description", Model.PerquisiteApplicablePercentId))">
+                        <option value="0">-- Select Percentage --</option>
+                    </select>
+                    <span asp-validation-for="PerquisiteApplicablePercentId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+                    <select asp-for="VendorId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.Owners, "Id", "Name", Model.VendorId))">
+                        <option value="0">-- Select Owner --</option>
+                    </select>
+                    <span asp-validation-for="VendorId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="MonthlyRentPayable" class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent Payable</label>
+                    <input asp-for="MonthlyRentPayable" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="MonthlyRentPayable" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Lease Dates -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="FromDate" class="block text-sm font-medium text-gray-700 mb-1">Lease From Date</label>
+                    <input asp-for="FromDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="FromDate" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="EndDate" class="block text-sm font-medium text-gray-700 mb-1">Lease End Date</label>
+                    <input asp-for="EndDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="EndDate" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <h2 class="text-lg font-semibold text-gray-800 mt-6">Recovery & Payment Details</h2>
+
+            <!-- Recovery Elements -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label asp-for="RentRecoveryElementId" class="block text-sm font-medium text-gray-700 mb-1">Rent Recovery Element</label>
+                    <select asp-for="RentRecoveryElementId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.RentRecoveryElements, "Id", "Name", Model.RentRecoveryElementId))">
+                        <option value="0">-- Select Rent Recovery Element --</option>
+                    </select>
+                    <span asp-validation-for="RentRecoveryElementId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="RentDeposit" class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit</label>
+                    <input asp-for="RentDeposit" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="RentDeposit" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalRentRecovery" class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery</label>
+                    <input asp-for="AdditionalRentRecovery" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="AdditionalRentRecovery" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Brokerage, License Fee Recovery Element, Stamp Duty -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label asp-for="BrokerageAmount" class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount</label>
+                    <input asp-for="BrokerageAmount" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="BrokerageAmount" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="LicenseFeeRecoveryElementId" class="block text-sm font-medium text-gray-700 mb-1">License Fee Recovery Element</label>
+                    <select asp-for="LicenseFeeRecoveryElementId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.LicenseFeeRecoveryElements, "Id", "Name", Model.LicenseFeeRecoveryElementId))">
+                        <option value="0">-- Select License Fee Recovery Element --</option>
+                    </select>
+                    <span asp-validation-for="LicenseFeeRecoveryElementId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="StampDuty" class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty</label>
+                    <input asp-for="StampDuty" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="StampDuty" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- License Fee Amount, Payment Term, Payable On or Before -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label asp-for="LicenseFeeAmount" class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount</label>
+                    <input asp-for="LicenseFeeAmount" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <span asp-validation-for="LicenseFeeAmount" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="PaymentTermId" class="block text-sm font-medium text-gray-700 mb-1">Payment Term</label>
+                    <select asp-for="PaymentTermId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.PaymentTerms, "Id", "Name", Model.PaymentTermId))">
+                        <option value="0">-- Select Payment Term --</option>
+                    </select>
+                    <span asp-validation-for="PaymentTermId" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="PayableOnOrBeforeId" class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before</label>
+                    <select asp-for="PayableOnOrBeforeId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.PayableOnOrBeforeOptions, "Id", "Name", Model.PayableOnOrBeforeId))">
+                        <option value="0">-- Select Option --</option>
+                    </select>
+                    <span asp-validation-for="PayableOnOrBeforeId" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Narration -->
+            <div>
+                <label asp-for="Narration" class="block text-sm font-medium text-gray-700 mb-1">Narration</label>
+                <textarea asp-for="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                <span asp-validation-for="Narration" class="text-red-600 text-sm"></span>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end space-x-3">
+                <a href="@Url.Action("Index")" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    Update Lease
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
