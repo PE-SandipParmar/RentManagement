@@ -28,6 +28,10 @@
                 <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LeaseName</dd>
             </div>
             <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease End Date.</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LeaseEndDate.ToString("dd/MM/yyyy")</dd>
+            </div>
+            <div>
                 <dt class="text-sm font-semibold text-gray-500">Payment Month</dt>
                 <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PaymentMonth?.ToString("MMMM yyyy")</dd>
             </div>
