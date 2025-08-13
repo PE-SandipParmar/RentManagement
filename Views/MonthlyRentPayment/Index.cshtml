@@ -1,14 +1,15 @@
-﻿@model PagedResult<Lease>
+﻿@model PagedResult<MonthlyRentPayment>
 @{
-    ViewData["Title"] = "Leases";
+    ViewData["Title"] = "Monthly Rent Payments";
 }
 
 <div class="bg-white shadow rounded-lg">
     <div class="px-6 py-4 border-b border-gray-200">
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Leases</h1>
-            <a href="@Url.Action("Create")" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200">
-                Add New Lease
+            <h1 class="text-2xl font-bold text-gray-900">Monthly Rent Payments</h1>
+            <a href="@Url.Action("Create")"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200">
+                Add New Payment
             </a>
         </div>
     </div>
@@ -52,50 +53,40 @@
         </form>
     </div>
 
-    <!-- Lease Table -->
+    <!-- Payments Table -->
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Number</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lease amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Month</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renew Lease</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TDS (%)</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payable</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DSC Approval Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @foreach (var lease in Model.Items)
+                @foreach (var payment in Model.Items)
                 {
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@lease.RefNo</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@lease.EmployeeName</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@lease.VendorName</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(Convert.ToDecimal(lease.TotalLeaseAmount).ToString("C") ?? "N/A")</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(Convert.ToDecimal(lease.MonthlyRentPayable).ToString("C") ?? "N/A")</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@lease.Status</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900"></div>
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.EmployeeName</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.VendorName</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(payment.PaymentMonth?.ToString("MMM yyyy"))</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.MonthlyLeaseAmount?.ToString("C")</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.TDSRate</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.NetPayableAmount.ToString("C")</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.PaymentStatus</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.DSCApprovalStatus</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.Remark</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <a href="@Url.Action("Details", new { id = lease.Id })" class="text-blue-600 hover:text-blue-900"><i class="ri-eye-line"></i></a>
-                            <a href="@Url.Action("Edit", new { id = lease.Id })" class="text-indigo-600 hover:text-indigo-900"><i class="ri-edit-line"></i></a>
-                            <a href="@Url.Action("Delete", new { id = lease.Id })" class="text-red-600 hover:text-red-900"><i class="ri-delete-bin-line"></i></a>
+                            <a href="@Url.Action("Details", new { id = payment.Id })" class="text-blue-600 hover:text-blue-900"><i class="ri-eye-line"></i></a>
+                            <a href="@Url.Action("Edit", new { id = payment.Id })" class="text-indigo-600 hover:text-indigo-900"><i class="ri-edit-line"></i></a>
+                            <a href="@Url.Action("Delete", new { id = payment.Id })" class="text-red-600 hover:text-red-900"><i class="ri-delete-bin-line"></i></a>
                         </td>
                     </tr>
                 }
@@ -105,34 +96,27 @@
 
     @if (!Model.Items.Any())
     {
-        <div class="px-6 py-12 text-center">
-            <div class="text-gray-500">
-                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                {
-                    <p>No leases found matching your search criteria.</p>
-                }
-                else
-                {
-                    <p>No leases found. <a href="@Url.Action("Create")" class="text-blue-600 hover:underline">Create the first lease</a>.</p>
-                }
-            </div>
+        <div class="px-6 py-12 text-center text-gray-500">
+            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+            {
+                <p>No payments found matching your search criteria.</p>
+            }
+            else
+            {
+                <p>No payments found. <a href="@Url.Action("Create")" class="text-blue-600 hover:underline">Add the first payment</a>.</p>
+            }
         </div>
     }
 
     <!-- Pagination -->
     <div class="px-6 py-4 border-t border-gray-200">
         <div class="flex items-center justify-between">
-            <!-- Showing text -->
             <div class="text-sm text-gray-700">
                 Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
                 to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
                 of @Model.TotalItems results
-             
             </div>
-
-            <!-- Pagination -->
             <div class="flex space-x-1">
-                <!-- Previous button -->
                 @if (Model.HasPreviousPage)
                 {
                     <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search })"
@@ -147,14 +131,11 @@
                     </span>
                 }
 
-                <!-- Page numbers -->
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
                     if (i == Model.PageNumber)
                     {
-                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">
-                            @i
-                        </span>
+                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
                     }
                     else
                     {
@@ -165,7 +146,6 @@
                     }
                 }
 
-                <!-- Next button -->
                 @if (Model.HasNextPage)
                 {
                     <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search })"
@@ -182,6 +162,4 @@
             </div>
         </div>
     </div>
-
-
 </div>

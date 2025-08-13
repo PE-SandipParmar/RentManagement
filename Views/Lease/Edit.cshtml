@@ -16,18 +16,14 @@
             <!-- Perquisite Type -->
             <div>
                 <label>Perquisite Type:</label><br />
-                <input type="radio" id="perq_ActualRentPaid" name="PerquisiteType" value="Actual Rent Paid"
-                @(Model.PerquisiteType == "Actual Rent Paid" ? "checked" : "") />
-                <label for="perq_ActualRentPaid">Actual Rent Paid</label>
+                <input type="radio" id="perq_Government" name="PerquisiteType" value="Government"
+                @(Model.PerquisiteType == "Government" ? "checked" : "") />
+                <label for="perq_Government">Government</label>
 
-                <input type="radio" id="perq_Salary" name="PerquisiteType" value="15% of Salary"
-                @(Model.PerquisiteType == "15% of Salary" ? "checked" : "") />
-                <label for="perq_Salary">15% of Salary</label>
+                <input type="radio" id="perq_Non_Government" name="PerquisiteType" value="Non-Government"
+                @(Model.PerquisiteType == "Non-Government" ? "checked" : "") />
+                <label for="perq_Salary">Non-Government</label>
 
-                <input type="radio" id="perq_LowerofActual" name="PerquisiteType" value="Lower of Actual or 15% of Salary"
-                @(Model.PerquisiteType == "Lower of Actual or 15% of Salary" ? "checked" : "") />
-                <label for="perq_LowerofActual">Lower of Actual or 15% of Salary</label>
-                <span asp-validation-for="PerquisiteType" class="text-red-600 text-sm"></span>
             </div>
 
             <!-- Lease Type & Reference Number -->
@@ -52,7 +48,7 @@
                 <div>
                     <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Lease Name</label>
                     <select asp-for="EmployeeId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            asp-items="@(new SelectList(ViewBag.LeaseNames, "Id", "Name", Model.EmployeeId))">
+                            asp-items="@(new SelectList(ViewBag.EmployeeNames, "Id", "Name", Model.EmployeeId))">
                         <option value="0">-- Select Lease Name --</option>
                     </select>
                     <span asp-validation-for="EmployeeId" class="text-red-600 text-sm"></span>

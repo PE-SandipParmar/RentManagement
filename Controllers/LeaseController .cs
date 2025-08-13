@@ -126,7 +126,7 @@ namespace RentManagement.Controllers
         private async Task LoadDropdowns()
         {
             ViewBag.LeaseTypes = await _leaseRepository.GetLeaseTypesAsync();
-            ViewBag.LeaseNames = await _leaseRepository.GetLeaseNamesAsync();
+            ViewBag.EmployeeNames = await _leaseRepository.GetEmployeeNamesAsync();
             ViewBag.Owners = await _leaseRepository.GetOwnersAsync();
             ViewBag.RentRecoveryElements = await _leaseRepository.GetRentRecoveryElementsAsync();
             ViewBag.LicenseFeeRecoveryElements = await _leaseRepository.GetLicenseFeeRecoveryElementsAsync();

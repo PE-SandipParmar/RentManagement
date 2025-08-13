@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
+builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepository>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

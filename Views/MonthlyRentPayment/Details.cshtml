@@ -1,0 +1,76 @@
+﻿@model MonthlyRentPayment
+@{
+    ViewData["Title"] = "Payment Details";
+}
+<div class="max-w-5xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-5">
+        <h1 class="text-3xl font-bold text-white">Monthly Rent Payment Details</h1>
+        <p class="text-indigo-100 text-sm">Complete information about this Monthly Rent Payment</p>
+    </div>
+
+    <!-- Body -->
+    <div class="px-8 py-8 text-gray-700">
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+
+
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Employee Name</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.EmployeeName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Vendor Name</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.VendorName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Lease Ref.</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LeaseName</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Payment Month</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PaymentMonth?.ToString("MMMM yyyy")</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Monthly Lease Amount</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.MonthlyLeaseAmount?.ToString("C")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">TDS Rate</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TDSRate</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Net Payable Amount</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.NetPayableAmount.ToString("C")</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Payment Status</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.PaymentStatus</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">DSC Approval Status</dt>
+                <dd class="mt-1  p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.DSCApprovalStatus</dd>
+            </div>
+
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Remark</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Remark</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">Created Date</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.CreatedDate</dd>
+            </div>
+        </dl>
+        <div class="flex justify-end space-x-3 mt-8 border-t pt-4">
+            <a href="@Url.Action("Index")"
+               class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+
+</div>
+

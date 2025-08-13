@@ -28,7 +28,7 @@ namespace RentManagement.Data
 
 
         Task<IEnumerable<LeaseType>> GetLeaseTypesAsync();
-        Task<IEnumerable<LeaseName>> GetLeaseNamesAsync();
+        Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();
         Task<IEnumerable<Owner>> GetOwnersAsync();
         Task<IEnumerable<RentRecoveryElement>> GetRentRecoveryElementsAsync();
         Task<IEnumerable<LicenseFeeRecoveryElement>> GetLicenseFeeRecoveryElementsAsync();
