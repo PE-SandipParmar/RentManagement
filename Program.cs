@@ -6,6 +6,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
 builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepository>();
+builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentRepository>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
