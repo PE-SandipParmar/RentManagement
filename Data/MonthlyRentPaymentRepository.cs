@@ -44,7 +44,6 @@ public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
         parameters.Add("@CreatedBy", payment.CreatedBy);
         parameters.Add("@IsActive", payment.IsActive);
 
-        // Assuming stored proc MonthlyRentPayment_Create returns inserted Id as output param
         parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
         await connection.ExecuteAsync(
@@ -76,7 +75,7 @@ public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
         parameters.Add("@Search", search ?? string.Empty);
 
         using var multi = await connection.QueryMultipleAsync(
-            "MonthlyRentPaymentRead",  // Create this stored proc accordingly
+            "MonthlyRentPaymentRead", 
             parameters,
             commandType: CommandType.StoredProcedure);
 

@@ -13,7 +13,6 @@ namespace RentManagement.Controllers
             _employeeRepository = employeeRepository;
         }
 
-        // List employees with pagination & search
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string search = "")
         {
             var employees = await _employeeRepository.GetEmployeesAsync(page, pageSize, search);
@@ -23,7 +22,6 @@ namespace RentManagement.Controllers
             return View(employees);
         }
 
-        // View employee details
         public async Task<IActionResult> Details(int id)
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
@@ -33,7 +31,6 @@ namespace RentManagement.Controllers
             return View(employee);
         }
 
-        // Create employee (GET)
         public async Task<IActionResult> Create()
         {
             ViewBag.Departments = await _employeeRepository.GetDepartmentsAsync();
@@ -41,7 +38,6 @@ namespace RentManagement.Controllers
             return View();
         }
 
-        // Create employee (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Employee employee)
@@ -72,7 +68,6 @@ namespace RentManagement.Controllers
             return View(employee);
         }
 
-        // Edit employee (GET)
         public async Task<IActionResult> Edit(int id)
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
@@ -84,7 +79,6 @@ namespace RentManagement.Controllers
             return View(employee);
         }
 
-        // Edit employee (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Employee employee)
@@ -115,7 +109,6 @@ namespace RentManagement.Controllers
             return View(employee);
         }
 
-        // Delete employee (GET)
         public async Task<IActionResult> Delete(int id)
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
@@ -125,7 +118,6 @@ namespace RentManagement.Controllers
             return View(employee);
         }
 
-        // Delete employee (POST)
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

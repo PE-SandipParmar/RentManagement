@@ -6,7 +6,6 @@ namespace RentManagement.Data
     {
         Task<PagedResult<Employee>> GetEmployeesAsync(int page, int pageSize, string search);
         Task<Employee?> GetEmployeeByIdAsync(int id);
-        //Task<bool> CodeExistsAsync(string code, int? excludeId = null);
         Task<bool> EmailExistsAsync(string email, int? excludeId = null);
         Task<int> CreateEmployeeAsync(Employee employee);
         Task<bool> UpdateEmployeeAsync(Employee employee);
@@ -14,6 +13,5 @@ namespace RentManagement.Data
         Task<IEnumerable<Department>> GetDepartmentsAsync();
         Task<IEnumerable<Designation>> GetDesignationsAsync();
 
-        //Task<int> GetTotalCountAsync(string search);
     }
 }

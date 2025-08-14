@@ -9,10 +9,9 @@ public class AadharAttribute : ValidationAttribute
 
         if (string.IsNullOrEmpty(aadhar))
         {
-            return ValidationResult.Success; // use [Required] separately if needed
+            return ValidationResult.Success; 
         }
 
-        // Regex for exactly 12 digits
         var regex = new Regex(@"^\d{12}$");
 
         if (!regex.IsMatch(aadhar))

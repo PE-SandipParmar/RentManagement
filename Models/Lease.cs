@@ -7,11 +7,9 @@ namespace RentManagement.Models
     {
         public int Id { get; set; }
 
-        //[Required(ErrorMessage = "Perquisite Type is required.")]
-        //[RegularExpression("Non-Government", ErrorMessage = "Perquisite Type must be 'Non-Government'.")]
-        public string PerquisiteType { get; set; } = "Non-Government"; // Radio button, fixed value
+        public string PerquisiteType { get; set; } = "Non-Government"; 
 
-        public string Status { get; set; } = string.Empty; // Auto fetched
+        public string Status { get; set; } = string.Empty; 
 
         [Range(1, int.MaxValue, ErrorMessage = "Lease Type is required.")]
         public int LeaseTypeId { get; set; }
@@ -27,7 +25,7 @@ namespace RentManagement.Models
         public DateTime? RefDate { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "% of Perquisite Applicable is required.")]
-        public int PerquisiteApplicablePercentId { get; set; } // Dropdown id
+        public int PerquisiteApplicablePercentId { get; set; } 
 
         [Range(1, int.MaxValue, ErrorMessage = "Owner Name is required.")]
         public int VendorId { get; set; }
@@ -85,7 +83,6 @@ namespace RentManagement.Models
         public int? CreatedBy { get; set; }
         public int? ModifiedBy { get; set; }
 
-        // Optional navigation/display properties
         
         public string? LeaseTypeName { get; set; }
         public string? PerquisiteApplicablePercent { get; set; }

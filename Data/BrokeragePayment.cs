@@ -76,7 +76,7 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
         parameters.Add("@Search", search ?? string.Empty);
 
         using var multi = await connection.QueryMultipleAsync(
-            "BrokeragePaymentRead",  // Create this stored proc accordingly
+            "BrokeragePaymentRead", 
             parameters,
             commandType: CommandType.StoredProcedure);
 

@@ -14,7 +14,6 @@ namespace RentManagement.Controllers
             _leaseRepository = leaseRepository;
         }
 
-        // List leases with pagination & search
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string search = "")
         {
             var leases = await _leaseRepository.GetLeasesAsync(page, pageSize, search);
@@ -24,7 +23,6 @@ namespace RentManagement.Controllers
             return View(leases);
         }
 
-        // View lease details
         public async Task<IActionResult> Details(int id)
         {
             var lease = await _leaseRepository.GetLeaseByIdAsync(id);
@@ -34,14 +32,12 @@ namespace RentManagement.Controllers
             return View(lease);
         }
 
-        // Create lease (GET)
         public async Task<IActionResult> Create()
         {
             await LoadDropdowns();
             return View();
         }
 
-        // Create lease (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Lease lease)
@@ -57,7 +53,6 @@ namespace RentManagement.Controllers
             return View(lease);
         }
 
-        // Edit lease (GET)
         public async Task<IActionResult> Edit(int id)
         {
             var lease = await _leaseRepository.GetLeaseByIdAsync(id);
@@ -68,7 +63,6 @@ namespace RentManagement.Controllers
             return View(lease);
         }
 
-        // Edit lease (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Lease lease)
@@ -94,7 +88,6 @@ namespace RentManagement.Controllers
             return View(lease);
         }
 
-        // Delete lease (GET)
         public async Task<IActionResult> Delete(int id)
         {
             var lease = await _leaseRepository.GetLeaseByIdAsync(id);
@@ -104,7 +97,6 @@ namespace RentManagement.Controllers
             return View(lease);
         }
 
-        // Delete lease (POST)
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -122,7 +114,6 @@ namespace RentManagement.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Load dropdown data for create/edit views
         private async Task LoadDropdowns()
         {
             ViewBag.LeaseTypes = await _leaseRepository.GetLeaseTypesAsync();

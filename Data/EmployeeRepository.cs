@@ -63,7 +63,6 @@ namespace RentManagement.Data
 
             var parameters = new DynamicParameters();
             parameters.Add("@Email", email);
-            //parameters.Add("@ExcludeId", excludeId);
 
             return await connection.ExecuteScalarAsync<bool>(
                 "CheckEmployeesEmailExists",

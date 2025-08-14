@@ -24,7 +24,6 @@ namespace RentManagement.Controllers
             return View(BrokeragePayment);
         }
 
-        // View monthly rent payment details
         public async Task<IActionResult> Details(int id)
         {
             var payment = await _BrokeragePaymentRepository.GetByIdAsync(id);
@@ -34,7 +33,6 @@ namespace RentManagement.Controllers
             return View(payment);
         }
 
-        // Create monthly rent payment (GET)
         public async Task<IActionResult> Create()
         {
             await LoadDropdowns();
@@ -42,7 +40,6 @@ namespace RentManagement.Controllers
             return View();
         }
 
-        // Create monthly rent payment (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BrokeragePayment payment)
@@ -58,7 +55,6 @@ namespace RentManagement.Controllers
             return View(payment);
         }
 
-        // Edit monthly rent payment (GET)
         public async Task<IActionResult> Edit(int id)
         {
             var payment = await _BrokeragePaymentRepository.GetByIdAsync(id);
@@ -69,7 +65,6 @@ namespace RentManagement.Controllers
             return View(payment);
         }
 
-        // Edit monthly rent payment (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, BrokeragePayment payment)
@@ -96,7 +91,6 @@ namespace RentManagement.Controllers
         }
      
 
-        // Delete monthly rent payment (GET)
         public async Task<IActionResult> Delete(int id)
         {
             var payment = await _BrokeragePaymentRepository.GetByIdAsync(id);
@@ -106,7 +100,6 @@ namespace RentManagement.Controllers
             return View(payment);
         }
 
-        // Delete monthly rent payment (POST)
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -127,7 +120,6 @@ namespace RentManagement.Controllers
         private async Task LoadDropdowns()
         {
 
-            // If you need dropdown data (like leases, employees, vendors), load them here
             ViewBag.Leases = await _BrokeragePaymentRepository.GetLeaseNameAsync();
             ViewBag.Employees = await _BrokeragePaymentRepository.GetEmployeeNamesAsync();
             ViewBag.Vendors = await _BrokeragePaymentRepository.GetOwnersAsync();

@@ -28,7 +28,7 @@ namespace RentManagement.Data
             parameters.Add("@Search", search ?? string.Empty);
 
             using var multi = await connection.QueryMultipleAsync(
-                "LeaseRead",  // Create this stored proc accordingly
+                "LeaseRead",  
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
@@ -52,7 +52,7 @@ namespace RentManagement.Data
             parameters.Add("@Id", id);
 
             return await connection.QueryFirstOrDefaultAsync<Lease>(
-                "LeaseGetById", // Create this stored proc accordingly
+                "LeaseGetById", 
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
@@ -153,7 +153,7 @@ namespace RentManagement.Data
             parameters.Add("@Search", search ?? string.Empty);
 
             return await connection.ExecuteScalarAsync<int>(
-                "LeaseCount", // Create a stored proc that returns count with search filter
+                "LeaseCount", 
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
