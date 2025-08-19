@@ -2,6 +2,24 @@
 @{
     ViewData["Title"] = "Create Brokerage Payment";
 }
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+    }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151; 
+            line-height: 28px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
+</style>
 
 <div class="max-w-4xl mx-auto">
     <div class="bg-white shadow rounded-lg">
@@ -16,7 +34,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Name (Employee)</label>
-                    <select asp-for="EmployeeId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    <select asp-for="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.Employees, "Id", "Name"))">
                         <option value="0">Select</option>
                     </select>
@@ -26,7 +44,7 @@
                 <div>
                     <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner's Name</label>
 
-                    <select asp-for="VendorId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    <select asp-for="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.Vendors, "Id", "Name"))">
                         <option value="0">Select</option>
                     </select>
@@ -37,7 +55,7 @@
                 <div>
                     <label asp-for="LeaseId" class="block text-sm font-medium text-gray-700 mb-1">Lease Ref.</label>
 
-                    <select asp-for="LeaseId" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    <select asp-for="LeaseId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.Leases, "Id", "Name"))">
                         <option value="0">Select</option>
                     </select>
@@ -57,9 +75,9 @@
                     <span asp-validation-for="BrokerageAmount" class="text-red-500 text-sm"></span>
                 </div>
                 <div>
-                    <label asp-for="TDSApplicableId" class="block font-medium text-gray-700 mb-1">TDS Applicable</label>
+                    <label asp-for="TDSApplicableId" class=" block font-medium text-gray-700 mb-1">TDS Applicable</label>
              
-                    <select asp-for="TDSApplicableId" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <select asp-for="TDSApplicableId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
                         <option value="0">Select TDS Applicable</option>
                         @foreach (var item in ViewBag.TDSApplicable)
                         {
@@ -106,19 +124,31 @@
     </div>
 </div>
 
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
     <script>
-        document.getElementById("TDSApplicableId").addEventListener("change", function () {
+
+        $(document).ready(function () {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+        $(".searchable-dropdown").on("change", function () {
             debugger;
-            let rate = this.options[this.selectedIndex].getAttribute("data-rate");
-            document.getElementById("TDSRate").value = rate || 0;
+            let rate = $(this).find(":selected").data("rate");
+            $("#TDSRate").val(rate || 0);
             calculateNetAmount();
         });
 
-        document.getElementById("MonthlyLeaseAmount").addEventListener("input", calculateNetAmount);
-
+        $("#MonthlyLeaseAmount").on("input", function () {
+            calculateNetAmount();
+        });
         function calculateNetAmount() {
             let total = parseFloat(document.getElementById("MonthlyLeaseAmount").value) || 0;
             let rate = parseFloat(document.getElementById("TDSRate").value) || 0;
