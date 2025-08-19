@@ -1,0 +1,382 @@
+﻿<!-- Views/Admin/UserManagement.cshtml -->
+@model RentManagement.ViewModels.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string;
+    var selectedRole = ViewBag.SelectedRole as RentManagement.Models.UserRole?;
+    var selectedStatus = ViewBag.SelectedStatus as bool?;
+}
+
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+        <p class="mt-2 text-sm text-gray-600">Manage user accounts, roles, and permissions</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex space-x-3">
+        <a asp-action="CreateUser" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            <i class="ri-user-add-line mr-2"></i>
+            Create User
+        </a>
+        <a asp-controller="Account" asp-action="Register" asp-route-isAdmin="true" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+            <i class="ri-user-settings-line mr-2"></i>
+            Quick Register
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Users</p>
+                <p class="text-2xl font-bold text-gray-900">@Model.TotalUsers</p>
+            </div>
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="ri-team-line text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Active Users</p>
+                <p class="text-2xl font-bold text-gray-900">@Model.ActiveUsers</p>
+            </div>
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="ri-user-check-line text-green-600"></i>
+            </div>
+        </div>
+    </div>
+
+    @foreach (var roleCount in Model.UsersByRole.Take(2))
+    {
+        var colorClass = roleCount.Key switch
+        {
+            RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-600",
+            RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-600",
+            RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-600",
+            _ => "bg-gray-100 text-gray-600"
+        };
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">@roleCount.Key.GetDisplayName()s</p>
+                    <p class="text-2xl font-bold text-gray-900">@roleCount.Value</p>
+                </div>
+                <div class="w-10 h-10 @colorClass.Replace("text-", "bg-").Replace("-600", "-100") rounded-lg flex items-center justify-center">
+                    <i class="ri-user-line @colorClass"></i>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Filters and Search -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <form method="get" asp-action="UserManagement" class="space-y-4 sm:space-y-0 sm:flex sm:items-end sm:space-x-4">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ri-search-line text-gray-400"></i>
+                </div>
+                <input type="text" name="search" value="@searchTerm"
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Search by name, username, or email">
+            </div>
+        </div>
+
+        <div class="sm:w-48">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+            <select name="role" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All Roles</option>
+                @foreach (RentManagement.Models.UserRole role in Enum.GetValues<RentManagement.Models.UserRole>())
+                {
+                    <option value="@role" selected="@(selectedRole == role)">@role.GetDisplayName()</option>
+                }
+            </select>
+        </div>
+
+        <div class="sm:w-48">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select name="isActive" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All Status</option>
+                <option value="true" selected="@(selectedStatus == true)">Active</option>
+                <option value="false" selected="@(selectedStatus == false)">Inactive</option>
+            </select>
+        </div>
+
+        <div class="flex space-x-2">
+            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                <i class="ri-search-line mr-2"></i>
+                Search
+            </button>
+            <a asp-action="UserManagement" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                <i class="ri-refresh-line mr-2"></i>
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">
+            Users List
+            <span class="text-sm font-normal text-gray-500">(@Model.Users.Count users displayed)</span>
+        </h3>
+    </div>
+
+    @if (Model.Users.Any())
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var user in Model.Users)
+                    {
+                        var roleColorClass = user.Role switch
+                        {
+                            RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800",
+                            RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800",
+                            RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800",
+                            _ => "bg-gray-100 text-gray-800"
+                        };
+
+                        <tr class="hover:bg-gray-50 transition-colors duration-150" data-user-id="@user.Id">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm mr-4">
+                                        @(user.FullName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">@user.FullName</div>
+                                        <div class="text-sm text-gray-500">@user.Username</div>
+                                        <div class="text-sm text-gray-500">@user.Email</div>
+                                        @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                        {
+                                            <div class="text-sm text-gray-500">@user.PhoneNumber</div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @roleColorClass">
+                                    @user.Role.GetDisplayName()
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @(user.Department ?? "-")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(user.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                    <span class="w-1.5 h-1.5 @(user.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @user.CreatedAt.ToString("MMM dd, yyyy")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if (user.LastLoginAt.HasValue)
+                                {
+                                    @user.LastLoginAt.Value.ToString("MMM dd, yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">Never</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a asp-action="UserDetails" asp-route-id="@user.Id"
+                                       class="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors duration-200"
+                                       title="View Details">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    <a asp-action="EditUser" asp-route-id="@user.Id"
+                                       class="text-yellow-600 hover:text-yellow-900 p-1 rounded transition-colors duration-200"
+                                       title="Edit User">
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="text-@(user.IsActive ? "gray" : "green")-600 hover:text-@(user.IsActive ? "gray" : "green")-900 p-1 rounded transition-colors duration-200"
+                                            onclick="toggleUserStatus(@user.Id)"
+                                            title="@(user.IsActive ? "Deactivate" : "Activate")">
+                                        <i class="ri-@(user.IsActive ? "user-forbid" : "user-follow")-line"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="text-purple-600 hover:text-purple-900 p-1 rounded transition-colors duration-200"
+                                            onclick="resetUserPassword(@user.Id)"
+                                            title="Reset Password">
+                                        <i class="ri-key-line"></i>
+                                    </button>
+                                    @if (user.Id != int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value))
+                                    {
+                                        <button type="button"
+                                                class="text-red-600 hover:text-red-900 p-1 rounded transition-colors duration-200"
+                                                onclick="deleteUser(@user.Id, '@user.Username')"
+                                                title="Delete User">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <a asp-action="UserManagement" asp-route-page="@(currentPage - 1)" asp-route-search="@searchTerm" asp-route-role="@selectedRole" asp-route-isActive="@selectedStatus"
+                           class="@(currentPage <= 1 ? "pointer-events-none opacity-50" : "") relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                        <a asp-action="UserManagement" asp-route-page="@(currentPage + 1)" asp-route-search="@searchTerm" asp-route-role="@selectedRole" asp-route-isActive="@selectedStatus"
+                           class="@(currentPage >= totalPages ? "pointer-events-none opacity-50" : "") ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing page <span class="font-medium">@currentPage</span> of <span class="font-medium">@totalPages</span>
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <a asp-action="UserManagement" asp-route-page="@(currentPage - 1)" asp-route-search="@searchTerm" asp-route-role="@selectedRole" asp-route-isActive="@selectedStatus"
+                                   class="@(currentPage <= 1 ? "pointer-events-none opacity-50" : "") relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+
+                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                {
+                                    <a asp-action="UserManagement" asp-route-page="@i" asp-route-search="@searchTerm" asp-route-role="@selectedRole" asp-route-isActive="@selectedStatus"
+                                       class="@(i == currentPage ? "bg-blue-50 border-blue-500 text-blue-600" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50") relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        @i
+                                    </a>
+                                }
+
+                                <a asp-action="UserManagement" asp-route-page="@(currentPage + 1)" asp-route-search="@searchTerm" asp-route-role="@selectedRole" asp-route-isActive="@selectedStatus"
+                                   class="@(currentPage >= totalPages ? "pointer-events-none opacity-50" : "") relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-12">
+            <i class="ri-user-line text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+            <p class="text-gray-500 mb-6">No users match your current search criteria.</p>
+            <a asp-action="CreateUser" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
+                <i class="ri-user-add-line mr-2"></i>
+                Create First User
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function toggleUserStatus(userId) {
+            if (confirm('Are you sure you want to change this user\'s status?')) {
+                fetch('@Url.Action("ToggleUserStatus")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: 'id=' + userId
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(() => {
+                        alert('An error occurred while updating the user status.');
+                    });
+            }
+        }
+
+        function resetUserPassword(userId) {
+            if (confirm('Are you sure you want to reset this user\'s password? A new password will be sent to their email.')) {
+                fetch('@Url.Action("ResetUserPassword")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: 'id=' + userId
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(() => {
+                        alert('An error occurred while resetting the password.');
+                    });
+            }
+        }
+
+        function deleteUser(userId, username) {
+            if (confirm('Are you sure you want to delete user "' + username + '"? This action cannot be undone.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteUser")';
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                form.appendChild(idInput);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

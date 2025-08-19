@@ -1,0 +1,245 @@
+﻿<!-- Views/Admin/CreateUser.cshtml -->
+@model RentManagement.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center space-x-4 mb-4">
+            <a asp-action="UserManagement" class="text-gray-600 hover:text-gray-900">
+                <i class="ri-arrow-left-line text-xl"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Create New User</h1>
+                <p class="text-sm text-gray-600">Add a new user account to the system</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
+            <h2 class="text-lg font-medium text-gray-900 flex items-center">
+                <i class="ri-user-add-line mr-2 text-blue-600"></i>
+                User Information
+            </h2>
+        </div>
+
+        <div class="p-6">
+            <form asp-action="CreateUser" method="post" class="space-y-6">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg" role="alert">
+                    <div class="flex">
+                        <i class="ri-error-warning-line text-red-400 mr-2"></i>
+                        <div class="text-red-700 text-sm"></div>
+                    </div>
+                </div>
+
+                <input type="hidden" asp-for="IsAdminRegistration" value="true" />
+
+                <!-- Personal Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-user-line mr-1"></i>First Name
+                        </label>
+                        <input asp-for="FirstName"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Enter first name" />
+                        <span asp-validation-for="FirstName" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-user-line mr-1"></i>Last Name
+                        </label>
+                        <input asp-for="LastName"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Enter last name" />
+                        <span asp-validation-for="LastName" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-mail-line mr-1"></i>Email Address
+                        </label>
+                        <input asp-for="Email" type="email"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Enter email address" />
+                        <span asp-validation-for="Email" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Username" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-at-line mr-1"></i>Username
+                        </label>
+                        <input asp-for="Username"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Choose username" />
+                        <span asp-validation-for="Username" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-phone-line mr-1"></i>Phone Number
+                        </label>
+                        <input asp-for="PhoneNumber"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Enter phone number" />
+                        <span asp-validation-for="PhoneNumber" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Department" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-building-line mr-1"></i>Department
+                        </label>
+                        <input asp-for="Department"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Enter department" />
+                        <span asp-validation-for="Department" class="text-red-500 text-sm mt-1"></span>
+                    </div>
+                </div>
+
+                <!-- Role Selection -->
+                <div>
+                    <label asp-for="Role" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-user-settings-line mr-1"></i>User Role
+                    </label>
+                    <select asp-for="Role"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        @foreach (RentManagement.Models.UserRole role in Enum.GetValues<RentManagement.Models.UserRole>())
+                        {
+                            <option value="@role">@role.GetDisplayName()</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Role" class="text-red-500 text-sm mt-1"></span>
+                    <p class="text-sm text-gray-500 mt-1">Select the appropriate role for this user</p>
+                </div>
+
+                <!-- Password Section -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-900 mb-4 flex items-center">
+                        <i class="ri-lock-line mr-2"></i>Password Settings
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-2">
+                                Password (Optional)
+                            </label>
+                            <div class="relative">
+                                <input asp-for="Password" type="password"
+                                       class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="Leave blank to auto-generate" />
+                                <button type="button"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                        onclick="togglePasswordVisibility('Password')">
+                                    <i class="ri-eye-line text-gray-400 hover:text-gray-600"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-red-500 text-sm mt-1"></span>
+                            <p class="text-sm text-gray-500 mt-1">Leave blank to generate a random secure password</p>
+                        </div>
+
+                        <div>
+                            <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                                Confirm Password
+                            </label>
+                            <div class="relative">
+                                <input asp-for="ConfirmPassword" type="password"
+                                       class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="Confirm password" />
+                                <button type="button"
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                        onclick="togglePasswordVisibility('ConfirmPassword')">
+                                    <i class="ri-eye-line text-gray-400 hover:text-gray-600"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-red-500 text-sm mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div class="flex">
+                            <i class="ri-information-line text-blue-400 mr-2 mt-0.5"></i>
+                            <div class="text-sm text-blue-700">
+                                <p class="font-medium">Password Requirements:</p>
+                                <ul class="mt-1 list-disc list-inside space-y-1">
+                                    <li>At least 8 characters long</li>
+                                    <li>One uppercase letter (A-Z)</li>
+                                    <li>One lowercase letter (a-z)</li>
+                                    <li>One number (0-9)</li>
+                                    <li>One special character</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-6 border-t border-gray-200">
+                    <a asp-action="UserManagement"
+                       class="inline-flex justify-center items-center px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        <i class="ri-close-line mr-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex justify-center items-center px-6 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        <i class="ri-user-add-line mr-2"></i>
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Auto-generate username from first name and last name
+        document.addEventListener('DOMContentLoaded', function () {
+            const firstNameField = document.getElementById('FirstName');
+            const lastNameField = document.getElementById('LastName');
+
+            if (firstNameField && lastNameField) {
+                firstNameField.addEventListener('input', generateUsername);
+                lastNameField.addEventListener('input', generateUsername);
+            }
+        });
+
+        function generateUsername() {
+            const firstName = document.getElementById('FirstName').value.toLowerCase().trim();
+            const lastName = document.getElementById('LastName').value.toLowerCase().trim();
+            const usernameField = document.getElementById('Username');
+
+            if (firstName && lastName && !usernameField.value) {
+                usernameField.value = firstName + '.' + lastName;
+            }
+        }
+
+        // Password visibility toggle
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            const icon = button.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'ri-eye-off-line text-gray-400 hover:text-gray-600';
+            } else {
+                input.type = 'password';
+                icon.className = 'ri-eye-line text-gray-400 hover:text-gray-600';
+            }
+        }
+    </script>
+}
