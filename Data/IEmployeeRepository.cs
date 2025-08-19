@@ -5,6 +5,7 @@ namespace RentManagement.Data
     public interface IEmployeeRepository
     {
         Task<PagedResult<Employee>> GetEmployeesAsync(int page, int pageSize, string search);
+        Task<IEnumerable<Employee>> GetAllEmployeesDropdownAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task<bool> EmailExistsAsync(string email, int? excludeId = null);
         Task<int> CreateEmployeeAsync(Employee employee);
