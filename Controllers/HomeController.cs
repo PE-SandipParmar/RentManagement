@@ -1,9 +1,11 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentManagement.Models;
 using System.Diagnostics;
 
 namespace RentManagement.Controllers
 {
+    [AllowAnonymous] // ✅ Allow anonymous access to home pages
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -15,6 +17,11 @@ namespace RentManagement.Controllers
 
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Dashboard", "Account");
+            }
+
             return View();
         }
 

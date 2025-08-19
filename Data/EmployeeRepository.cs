@@ -175,5 +175,11 @@ namespace RentManagement.Data
                 commandType: CommandType.StoredProcedure
             );
         }
+
+        public async Task<IEnumerable<Employee>> GetAllEmployeesDropdownAsync()
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<Employee>("sp_GetAllEmployees", commandType: CommandType.StoredProcedure);
+        }
     }
 }

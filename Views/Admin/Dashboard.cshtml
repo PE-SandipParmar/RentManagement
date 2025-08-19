@@ -1,0 +1,344 @@
+﻿<!-- Views/Admin/Dashboard.cshtml -->
+@model RentManagement.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<!-- Page Header -->
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p class="mt-2 text-sm text-gray-600">Welcome back, @Model.CurrentUser.FirstName! Here's what's happening with your system today.</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <a asp-action="CreateUser" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
+                <i class="ri-user-add-line mr-2"></i>
+                Create User
+            </a>
+            <a asp-action="UserManagement" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg">
+                <i class="ri-team-line mr-2"></i>
+                Manage Users
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Users</p>
+                <p class="text-3xl font-bold text-gray-900">@Model.TotalUsers</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="ri-team-line text-xl text-blue-600"></i>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center">
+            <span class="text-sm text-gray-500">All registered users</span>
+        </div>
+    </div>
+
+    <!-- Active Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Active Users</p>
+                <p class="text-3xl font-bold text-gray-900">@(Model.UsersByRole.Values.Sum())</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <i class="ri-user-check-line text-xl text-green-600"></i>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center">
+            <span class="text-sm text-green-600">Currently active</span>
+        </div>
+    </div>
+
+    <!-- New Users (Last 7 days) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">New Users</p>
+                <p class="text-3xl font-bold text-gray-900">@Model.RecentRegistrations</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="ri-user-add-line text-xl text-purple-600"></i>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center">
+            <span class="text-sm text-gray-500">Last 7 days</span>
+        </div>
+    </div>
+
+    <!-- Admin Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Administrators</p>
+                <p class="text-3xl font-bold text-gray-900">@(Model.UsersByRole.ContainsKey(RentManagement.Models.UserRole.Admin) ? Model.UsersByRole[RentManagement.Models.UserRole.Admin] : 0)</p>
+            </div>
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <i class="ri-shield-user-line text-xl text-red-600"></i>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center">
+            <span class="text-sm text-gray-500">System administrators</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <!-- User Distribution Chart -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">User Distribution by Role</h3>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500">Total: @Model.TotalUsers users</span>
+            </div>
+        </div>
+
+        @if (Model.UsersByRole.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var roleCount in Model.UsersByRole)
+                {
+                    var percentage = Model.TotalUsers > 0 ? (roleCount.Value * 100.0 / Model.TotalUsers) : 0;
+                    var colorClass = roleCount.Key switch
+                    {
+                        RentManagement.Models.UserRole.Admin => "bg-red-500",
+                        RentManagement.Models.UserRole.Employee => "bg-blue-500",
+                        RentManagement.Models.UserRole.Vendor => "bg-orange-500",
+                        _ => "bg-gray-500"
+                    };
+                    var lightColorClass = roleCount.Key switch
+                    {
+                        RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800",
+                        RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800",
+                        RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800",
+                        _ => "bg-gray-100 text-gray-800"
+                    };
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @lightColorClass">
+                                @roleCount.Key.GetDisplayName()
+                            </span>
+                            <span class="text-sm text-gray-600">@roleCount.Value users</span>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">@percentage.ToString("F1")%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="@colorClass h-2 rounded-full transition-all duration-500" style="width: @(percentage.ToString("F1"))%"></div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <i class="ri-pie-chart-line text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500">No user data available</p>
+            </div>
+        }
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
+        <div class="space-y-3">
+            <a asp-action="CreateUser" class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg group transition-colors duration-200">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-200">
+                    <i class="ri-user-add-line text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Create User</p>
+                    <p class="text-sm text-gray-500">Add new user account</p>
+                </div>
+            </a>
+
+            <a asp-action="UserManagement" class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg group transition-colors duration-200">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200">
+                    <i class="ri-team-line text-green-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Manage Users</p>
+                    <p class="text-sm text-gray-500">View and edit users</p>
+                </div>
+            </a>
+
+            <a asp-controller="Account" asp-action="Register" asp-route-isAdmin="true" class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg group transition-colors duration-200">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-purple-200">
+                    <i class="ri-user-settings-line text-purple-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Quick Register</p>
+                    <p class="text-sm text-gray-500">Fast user creation</p>
+                </div>
+            </a>
+
+            <a href="#" class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg group transition-colors duration-200">
+                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-orange-200">
+                    <i class="ri-settings-3-line text-orange-600"></i>
+                </div>
+                <div>
+                    <p class="font-medium">System Settings</p>
+                    <p class="text-sm text-gray-500">Configure system</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users and System Info -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Recent Users -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Users</h3>
+            <a asp-action="UserManagement" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View all</a>
+        </div>
+
+        @if (Model.RecentUsers.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var user in Model.RecentUsers.Take(5))
+                {
+                    var roleColorClass = user.Role switch
+                    {
+                        RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800",
+                        RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800",
+                        RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800",
+                        _ => "bg-gray-100 text-gray-800"
+                    };
+
+                    <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                                @(user.FullName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">@user.FullName</p>
+                                <p class="text-sm text-gray-500">@user.Email</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @roleColorClass">
+                                @user.Role.GetDisplayName()
+                            </span>
+                            <p class="text-xs text-gray-500 mt-1">@user.CreatedAt.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-8">
+                <i class="ri-user-line text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500">No recent users</p>
+            </div>
+        }
+    </div>
+
+    <!-- System Information -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">System Information</h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <span class="text-gray-600">System Version</span>
+                <span class="font-medium text-gray-900">v1.0.0</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <span class="text-gray-600">Last Backup</span>
+                <span class="font-medium text-gray-900">@DateTime.Now.AddDays(-1).ToString("MMM dd, yyyy")</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <span class="text-gray-600">Server Status</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
+                    Online
+                </span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                <span class="text-gray-600">Database Status</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
+                    Connected
+                </span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+                <span class="text-gray-600">Current Admin</span>
+                <span class="font-medium text-gray-900">@Model.CurrentUser.FullName</span>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Last login</span>
+                <span class="text-sm font-medium text-gray-900">
+                    @(Model.CurrentUser.LastLoginAt?.ToString("MMM dd, yyyy HH:mm") ?? "Just now")
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Distribution Summary (Mobile Friendly) -->
+<div class="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">User Summary</h3>
+            <p class="text-sm text-gray-600">Breakdown of all users in your system</p>
+        </div>
+        <div class="mt-4 sm:mt-0 grid grid-cols-3 gap-4 text-center">
+            @foreach (var roleCount in Model.UsersByRole.Take(3))
+            {
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">@roleCount.Value</p>
+                    <p class="text-sm text-gray-600">@roleCount.Key.GetDisplayName()@(roleCount.Value != 1 ? "s" : "")</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh dashboard data every 5 minutes
+        setInterval(function () {
+            // You can add AJAX calls here to refresh statistics without full page reload
+            console.log('Dashboard auto-refresh triggered');
+        }, 300000); // 5 minutes
+
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function () {
+            // Animate progress bars on load
+            const progressBars = document.querySelectorAll('[style*="width"]');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+
+            // Add hover effects to stat cards
+            const statCards = document.querySelectorAll('.grid > div');
+            statCards.forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                });
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                });
+            });
+        });
+    </script>
+}

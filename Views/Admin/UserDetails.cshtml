@@ -1,0 +1,354 @@
+﻿@model RentManagement.Models.User
+@{
+    ViewData["Title"] = "User Details";
+    var roleColorClass = Model.Role switch
+    {
+        RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800 border-red-200",
+        RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800 border-blue-200",
+        RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800 border-orange-200",
+        _ => "bg-gray-100 text-gray-800 border-gray-200"
+    };
+}
+
+<div class="max-w-6xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a asp-action="UserManagement" class="text-gray-600 hover:text-gray-900">
+                    <i class="ri-arrow-left-line text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">User Details</h1>
+                    <p class="text-sm text-gray-600">Complete information for @Model.FullName</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <a asp-action="EditUser" asp-route-id="@Model.Id"
+                   class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                    <i class="ri-edit-line mr-2"></i>
+                    Edit User
+                </a>
+                <button onclick="resetUserPassword(@Model.Id)"
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                    <i class="ri-key-line mr-2"></i>
+                    Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- User Profile Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-8 text-center bg-gradient-to-r from-blue-50 to-purple-50">
+                    <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-4">
+                        @(Model.FullName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (acc, c) => acc + c))
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">@Model.FullName</h3>
+                    <p class="text-gray-600">@Model.Username</p>
+                    <div class="mt-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border @roleColorClass">
+                            @Model.Role.GetDisplayName()
+                        </span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(Model.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                            <span class="w-1.5 h-1.5 @(Model.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Member Since</span>
+                            <span class="text-sm font-medium text-gray-900">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        @if (Model.LastLoginAt.HasValue)
+                        {
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Last Login</span>
+                                <span class="text-sm font-medium text-gray-900">@Model.LastLoginAt.Value.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        }
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Last Updated</span>
+                                <span class="text-sm font-medium text-gray-900">@Model.UpdatedAt.Value.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h4>
+                <div class="space-y-3">
+                    <button onclick="toggleUserStatus(@Model.Id)"
+                            class="w-full flex items-center justify-center px-4 py-2 border border-@(Model.IsActive ? "red" : "green")-300 text-@(Model.IsActive ? "red" : "green")-700 bg-@(Model.IsActive ? "red" : "green")-50 hover:bg-@(Model.IsActive ? "red" : "green")-100 rounded-lg transition-colors duration-200">
+                        <i class="ri-@(Model.IsActive ? "user-forbid" : "user-follow")-line mr-2"></i>
+                        @(Model.IsActive ? "Deactivate" : "Activate") Account
+                    </button>
+
+                    <button onclick="resetUserPassword(@Model.Id)"
+                            class="w-full flex items-center justify-center px-4 py-2 border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200">
+                        <i class="ri-key-line mr-2"></i>
+                        Reset Password
+                    </button>
+
+                    @if (Model.Id != int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value))
+                    {
+                        <button onclick="deleteUser(@Model.Id, '@Model.Username')"
+                                class="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors duration-200">
+                            <i class="ri-delete-bin-line mr-2"></i>
+                            Delete Account
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- User Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Contact Information -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="ri-contacts-line mr-2 text-blue-600"></i>
+                        Contact Information
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-mail-line mr-2"></i>Email Address
+                            </dt>
+                            <dd class="text-sm text-gray-900">
+                                <a href="mailto:@Model.Email" class="text-blue-600 hover:text-blue-800">@Model.Email</a>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-phone-line mr-2"></i>Phone Number
+                            </dt>
+                            <dd class="text-sm text-gray-900">
+                                @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                {
+                                    <a href="tel:@Model.PhoneNumber" class="text-blue-600 hover:text-blue-800">@Model.PhoneNumber</a>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">Not provided</span>
+                                }
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-building-line mr-2"></i>Department
+                            </dt>
+                            <dd class="text-sm text-gray-900">
+                                @(Model.Department ?? "Not assigned")
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-user-settings-line mr-2"></i>User Role
+                            </dt>
+                            <dd class="text-sm text-gray-900">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @roleColorClass">
+                                    @Model.Role.GetDisplayName()
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Account Details -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="ri-user-line mr-2 text-green-600"></i>
+                        Account Details
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-hashtag mr-2"></i>User ID
+                            </dt>
+                            <dd class="text-sm text-gray-900 font-mono">@Model.Id</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-at-line mr-2"></i>Username
+                            </dt>
+                            <dd class="text-sm text-gray-900 font-mono">@Model.Username</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-toggle-line mr-2"></i>Account Status
+                            </dt>
+                            <dd class="text-sm text-gray-900">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(Model.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                    <span class="w-1.5 h-1.5 @(Model.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                                    @(Model.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                <i class="ri-calendar-line mr-2"></i>Created Date
+                            </dt>
+                            <dd class="text-sm text-gray-900">@Model.CreatedAt.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+                        </div>
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                    <i class="ri-calendar-check-line mr-2"></i>Last Updated
+                                </dt>
+                                <dd class="text-sm text-gray-900">@Model.UpdatedAt.Value.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+                            </div>
+                        }
+                        @if (Model.LastLoginAt.HasValue)
+                        {
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                    <i class="ri-time-line mr-2"></i>Last Login
+                                </dt>
+                                <dd class="text-sm text-gray-900">@Model.LastLoginAt.Value.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                    <i class="ri-time-line mr-2"></i>Last Login
+                                </dt>
+                                <dd class="text-sm text-gray-400 italic">Never logged in</dd>
+                            </div>
+                        }
+                        @if (Model.CreatedBy.HasValue)
+                        {
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 flex items-center mb-1">
+                                    <i class="ri-user-add-line mr-2"></i>Created By
+                                </dt>
+                                <dd class="text-sm text-gray-900">Admin User (ID: @Model.CreatedBy)</dd>
+                            </div>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="ri-information-line mr-2 text-purple-600"></i>
+                        System Information
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="text-2xl font-bold text-blue-600">@((DateTime.UtcNow - Model.CreatedAt).Days)</div>
+                            <div class="text-sm text-gray-600">Days as Member</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <div class="text-2xl font-bold text-green-600">@(Model.LastLoginAt.HasValue ? (DateTime.UtcNow - Model.LastLoginAt.Value).Days : 0)</div>
+                            <div class="text-sm text-gray-600">Days Since Last Login</div>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <div class="text-2xl font-bold text-purple-600">1</div>
+                            <div class="text-sm text-gray-600">Role Level</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleUserStatus(userId) {
+            if (confirm('Are you sure you want to change this user\'s status?')) {
+                fetch('@Url.Action("ToggleUserStatus")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: 'id=' + userId
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(() => {
+                        alert('An error occurred while updating the user status.');
+                    });
+            }
+        }
+
+        function resetUserPassword(userId) {
+            if (confirm('Are you sure you want to reset this user\'s password? A new password will be sent to their email.')) {
+                fetch('@Url.Action("ResetUserPassword")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: 'id=' + userId
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(() => {
+                        alert('An error occurred while resetting the password.');
+                    });
+            }
+        }
+
+        function deleteUser(userId, username) {
+            if (confirm('Are you sure you want to delete user "' + username + '"? This action cannot be undone.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteUser")';
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                form.appendChild(idInput);
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+}

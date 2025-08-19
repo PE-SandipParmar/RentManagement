@@ -5,25 +5,30 @@ namespace RentManagement.Models
     public class User
     {
         public int Id { get; set; }
-
-        [Required(ErrorMessage = "First name is required")]
-        [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters")]
-        public string FirstName { get; set; }
-
-        [Required(ErrorMessage = "Last name is required")]
-        [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters")]
-        public string LastName { get; set; }
-
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email format")]
-        [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
-        public string Email { get; set; }
-
-        [Phone(ErrorMessage = "Invalid phone number format")]
-        [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters")]
-        public string? Phone { get; set; }
-
-        public DateTime CreatedAt { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public string Salt { get; set; } = string.Empty;
+        public UserRole Role { get; set; } = UserRole.Employee;
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        public string? ResetPasswordToken { get; set; }
+        public DateTime? ResetPasswordExpires { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Department { get; set; }
+        public int? CreatedBy { get; set; }
+        public DateTime? LastLoginAt { get; set; }
+
+        // Computed  properties
+        public string FullName => $"{FirstName} {LastName}";
+
+        public string RoleDisplayName => Role.GetDisplayName();
+
+        public string StatusDisplayName => IsActive ? "Active" : "Inactive";
     }
+
+
 }
