@@ -922,7 +922,7 @@
                         form.querySelector('input[name="vendorId"]').value = vendor.id;
                         form.querySelector('input[name="vendorCode"]').value = vendor.vendorCode;
                         form.querySelector('input[name="vendorName"]').value = vendor.vendorName;
-                        form.querySelector('input[name="panNumber"]').value = vendor.pANNumber;
+                        form.querySelector('input[name="panNumber"]').value = vendor.panNumber;
                         form.querySelector('input[name="mobileNumber"]').value = vendor.mobileNumber;
                         form.querySelector('input[name="alternateNumber"]').value = vendor.alternateNumber || '';
                         form.querySelector('input[name="emailId"]').value = vendor.emailId;
@@ -931,7 +931,7 @@
                         form.querySelector('input[name="bankName"]').value = vendor.bankName;
                         form.querySelector('input[name="branchName"]').value = vendor.branchName;
                         form.querySelector('input[name="accountNumber"]').value = vendor.accountNumber;
-                        form.querySelector('input[name="ifscCode"]').value = vendor.iFSCCode;
+                        form.querySelector('input[name="ifscCode"]').value = vendor.ifscCode;
                         form.querySelector('textarea[name="propertyAddress"]').value = vendor.propertyAddress;
                         form.querySelector('input[name="totalRentAmount"]').value = vendor.totalRentAmount;
                         form.querySelector('select[name="status"]').value = vendor.status;
@@ -1081,7 +1081,7 @@
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700">IFSC Code</label>
-                                            <p class="text-sm text-gray-900">${vendor.iFSCCode}</p>
+                                                    <p class="text-sm text-gray-900">${vendor.ifscCode}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1205,7 +1205,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorCode}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.iFSCCode}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="status-badge ${vendor.Status === 'Active' ? 'status-active' : 'status-inactive'}">
@@ -1235,10 +1235,10 @@
             const info = document.getElementById('paginationInfo');
             const buttons = document.getElementById('paginationButtons');
             
-            const startRecord = (pagination.CurrentPage - 1) * pagination.PageSize + 1;
-            const endRecord = Math.min(pagination.CurrentPage * pagination.PageSize, pagination.TotalRecords);
+            const startRecord = (pagination.currentPage - 1) * pagination.pageSize + 1;
+            const endRecord = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords);
             
-            info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.TotalRecords} results`;
+            info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.totalRecords} results`;
             
             let buttonsHtml = '';
             

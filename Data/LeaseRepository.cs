@@ -158,7 +158,20 @@ namespace RentManagement.Data
                 commandType: CommandType.StoredProcedure);
         }
 
+        public async Task<bool> LeaseNoExistsAsync(string leaseNo, int? excludeId = null)
+        {
+            using var connection = CreateConnection();
 
+            var parameters = new DynamicParameters();
+            parameters.Add("@LeaseNo", leaseNo);
+            parameters.Add("@excludeId", excludeId);
+
+            return await connection.ExecuteScalarAsync<bool>(
+                "CheckLeaseNoExists",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+        }
         public async Task<IEnumerable<LeaseType>> GetLeaseTypesAsync()
         {
             using var connection = CreateConnection();

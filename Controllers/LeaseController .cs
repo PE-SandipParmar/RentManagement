@@ -42,6 +42,10 @@ namespace RentManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Lease lease)
         {
+            if (await _leaseRepository.LeaseNoExistsAsync(lease.RefNo))
+            {
+                ModelState.AddModelError("RefNo", "This Lease Reference Number already exists. Please use a different one.");
+            }
             if (ModelState.IsValid)
             {
                 var leaseId = await _leaseRepository.CreateLeaseAsync(lease);
@@ -69,6 +73,12 @@ namespace RentManagement.Controllers
         {
             if (id != lease.Id)
                 return NotFound();
+
+
+            if (await _leaseRepository.LeaseNoExistsAsync(lease.RefNo,lease.Id))
+            {
+                ModelState.AddModelError("RefNo", "This Lease Reference Number already exists. Please use a different one.");
+            }
 
             if (ModelState.IsValid)
             {

@@ -171,14 +171,14 @@
                         </a>
 
 
-                        <a asp-controller="Admin" asp-action="UserRoles"
+                      @*   <a asp-controller="Admin" asp-action="UserRoles"
                            class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                            data-nav="user-roles">
                             <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
                                 <i class="ri-user-settings-line"></i>
                             </div>
                             <span class="sidebar-text">User Roles</span>
-                        </a>
+                        </a> *@
                     }
 
                     <!-- Management Modules -->
@@ -197,7 +197,7 @@
                             <span class="sidebar-text">Employee Management</span>
                         </a>
 
-                        <a asp-controller="Employee" asp-action="Create"
+                       @*  <a asp-controller="Employee" asp-action="Create"
                            class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                            data-nav="add-employee">
                             <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
@@ -205,7 +205,7 @@
                             </div>
                             <span class="sidebar-text">Add Employee</span>
                         </a>
-                    }
+ *@                    }
 
                     <a asp-controller="Vendor" asp-action="Index"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
@@ -216,14 +216,14 @@
                         <span class="sidebar-text">Vendor Management</span>
                     </a>
 
-                    <a asp-controller="Vendor" asp-action="Create"
+                  @*   <a asp-controller="Vendor" asp-action="Create"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="add-vendor">
                         <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
                             <i class="ri-store-add-line"></i>
                         </div>
                         <span class="sidebar-text">Add Vendor</span>
-                    </a>
+                    </a> *@
 
                     <a asp-controller="Lease" asp-action="Index"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
@@ -234,23 +234,23 @@
                         <span class="sidebar-text">Lease Management</span>
                     </a>
 
-                    <a asp-controller="Lease" asp-action="Create"
+                  @*   <a asp-controller="Lease" asp-action="Create"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="create-lease">
                         <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
                             <i class="ri-file-add-line"></i>
                         </div>
                         <span class="sidebar-text">Create Lease</span>
-                    </a>
+                    </a> *@
 
-                    <a asp-controller="Property" asp-action="Index"
+                   @*  <a asp-controller="Property" asp-action="Index"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="property-management">
                         <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
                             <i class="ri-building-line"></i>
                         </div>
                         <span class="sidebar-text">Property Management</span>
-                    </a>
+                    </a> *@
 
                     <!-- Financial Section -->
                     <div class="mt-4 mb-2">
@@ -290,7 +290,7 @@
                         <span class="sidebar-text text-xs font-medium text-gray-500 uppercase tracking-wide px-3">Reports & Analytics</span>
                     </div>
 
-                    <a asp-controller="Reports" asp-action="MIS"
+                    <a asp-controller="MISReport" asp-action="Index"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="mis-reports">
                         <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
@@ -299,14 +299,14 @@
                         <span class="sidebar-text">MIS Reports</span>
                     </a>
 
-                    <a asp-controller="Reports" asp-action="Financial"
+                    @* <a asp-controller="Reports" asp-action="Financial"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="financial-reports">
                         <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
                             <i class="ri-funds-line"></i>
                         </div>
                         <span class="sidebar-text">Financial Reports</span>
-                    </a>
+                    </a> *@
 
                     <!-- Settings Section -->
                     <div class="mt-4 mb-2">

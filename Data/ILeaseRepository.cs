@@ -20,6 +20,7 @@ namespace RentManagement.Data
 
         Task<int> GetLeasesCountAsync(string? searchTerm);
 
+        Task<bool> LeaseNoExistsAsync(string leaseno, int? excludeId = null);
 
         Task<IEnumerable<LeaseType>> GetLeaseTypesAsync();
         Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();

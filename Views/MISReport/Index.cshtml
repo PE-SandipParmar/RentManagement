@@ -1,0 +1,287 @@
+﻿    
+
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <style>
+        .tab-active {
+            background-color: #0EA5E9;
+            color: white;
+        }
+
+        .table-header {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .table-row:hover {
+            background-color: #e0f2fe;
+            transition: 0.2s;
+        }
+
+
+    </style>
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">MIS Reports</h1>
+        </div>
+    </div>
+    <div class="min-h-screen flex flex-col">
+        <!-- Tabs -->
+        <div class="flex gap-2 justify-start mx-6 mt-6">
+            <button class="px-6 py-2 rounded tab-active" onclick="switchTab('Employee')">Employee Report</button>
+            <button class="px-6 py-2 rounded" onclick="switchTab('Lease')">Lease Report</button>
+            <button class="px-6 py-2 rounded" onclick="switchTab('EmployeePayment')">Employee Payment Report</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="flex-1 p-6">
+
+            <!-- Employee Report -->
+            <div id="Employee" class="report-tab">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Employee Report</h2>
+
+                <!-- Filter Card -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block mb-1 font-medium">Financial Year</label>
+                        <select id="empFinancialYear" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-300">
+                            <option value="2023-24">2023-24</option>
+                            <option value="2024-25">2024-25</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">From Date</label>
+                        <input type="date" id="empFromDate" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">To Date</label>
+                        <input type="date" id="empToDate" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Employee Name</label>
+                        <input type="text" id="empName" class="w-full border rounded px-3 py-2" placeholder="Enter Name">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Department</label>
+                        <select id="empDepartment" class="w-full border rounded px-3 py-2">
+                            <option value="">All</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">File Format</label>
+                        <select id="empFileFormat" class="w-full border rounded px-3 py-2">
+                            <option value="xlsx">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3 flex gap-4 mt-4">
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-blue-500 text-white hover:bg-blue-600" onclick="viewEmployeeReport()">
+                            <i class="ri-eye-line"></i> View Report
+                        </button>
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-green-500 text-white hover:bg-green-600" onclick="downloadEmployeeReport()">
+                            <i class="ri-download-line"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Associated Lease</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Payment</th>
+                            </tr>
+                        </thead class="bg-white divide-y divide-gray-200">
+                        <tbody id="empReportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lease Report -->
+            <div id="Lease" class="report-tab hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Lease Report</h2>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block mb-1 font-medium">Financial Year</label>
+                        <select id="leaseFinancialYear" class="w-full border rounded px-3 py-2">
+                            <option value="2023-24">2023-24</option>
+                            <option value="2024-25">2024-25</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Lease Start Date</label>
+                        <input type="date" id="leaseStartDate" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Lease End Date</label>
+                        <input type="date" id="leaseEndDate" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Employee Name</label>
+                        <input type="text" id="leaseEmpName" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Vendor Name</label>
+                        <input type="text" id="leaseVendorName" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">File Format</label>
+                        <select id="leaseFileFormat" class="w-full border rounded px-3 py-2">
+                            <option value="xlsx">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3 flex gap-4 mt-4">
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-blue-500 text-white hover:bg-blue-600" onclick="viewLeaseReport()">
+                            <i class="ri-eye-line"></i> View Report
+                        </button>
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-green-500 text-white hover:bg-green-600" onclick="downloadLeaseReport()">
+                            <i class="ri-download-line"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white shadow rounded-lg p-4">
+                    <table class="min-w-full border border-gray-200">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="px-4 py-2 border">Lease Name</th>
+                                <th class="px-4 py-2 border">Start Date</th>
+                                <th class="px-4 py-2 border">End Date</th>
+                                <th class="px-4 py-2 border">Employee</th>
+                                <th class="px-4 py-2 border">Vendor</th>
+                                <th class="px-4 py-2 border">Security Deposit</th>
+                                <th class="px-4 py-2 border">Brokerage Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaseReportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Employee Wise Payment Report -->
+            <div id="EmployeePayment" class="report-tab hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Employee Wise Payment Report</h2>
+
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block mb-1 font-medium">Employee Name</label>
+                        <input type="text" id="payEmpName" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Payment Type</label>
+                        <select id="payType" class="w-full border rounded px-3 py-2">
+                            <option value="">All</option>
+                            <option value="Brokerage">Brokerage</option>
+                            <option value="Security Deposit">Security Deposit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Payment From Date</label>
+                        <input type="date" id="payFromDate" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium">Payment To Date</label>
+                        <input type="date" id="payToDate" class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div class="md:col-span-3 flex gap-4 mt-4">
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-blue-500 text-white hover:bg-blue-600" onclick="viewPaymentReport()">
+                            <i class="ri-eye-line"></i> View Report
+                        </button>
+                        <button class="px-4 py-2 rounded font-semibold inline-flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600 bg-green-500 text-white hover:bg-green-600" onclick="downloadPaymentReport()">
+                            <i class="ri-download-line"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white shadow rounded-lg p-4">
+                    <table class="min-w-full border border-gray-200">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="px-4 py-2 border">Employee Name</th>
+                                <th class="px-4 py-2 border">Employee ID</th>
+                                <th class="px-4 py-2 border">Vendor Name</th>
+                                <th class="px-4 py-2 border">Associated Lease</th>
+                                <th class="px-4 py-2 border">Total Payment</th>
+                                <th class="px-4 py-2 border">TDS</th>
+                                <th class="px-4 py-2 border">Sec/Brokerage Amount</th>
+                                <th class="px-4 py-2 border">IFSC</th>
+                                <th class="px-4 py-2 border">Bank Name</th>
+                                <th class="px-4 py-2 border">Account Number</th>
+                                <th class="px-4 py-2 border">Payment Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentReportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.report-tab').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tab).classList.remove('hidden');
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('tab-active'));
+            event.target.classList.add('tab-active');
+        }
+
+        // Sample data
+        const employeeData = [
+            { name: 'John Doe', id: 101, designation: 'Manager', lease: 'Lease A', totalPayment: 50000 },
+            { name: 'Jane Smith', id: 102, designation: 'HR', lease: 'Lease B', totalPayment: 30000 },
+        ];
+        const leaseData = [
+            { lease: 'Lease A', start: '2023-04-01', end: '2024-03-31', emp: 'John Doe', vendor: 'Vendor A', sd: 100000, brokerage: 5000 },
+            { lease: 'Lease B', start: '2023-05-01', end: '2024-04-30', emp: 'Jane Smith', vendor: 'Vendor B', sd: 50000, brokerage: 2500 },
+        ];
+        const paymentData = [
+            { name: 'John Doe', id: 101, vendor: 'Vendor A', lease: 'Lease A', total: 50000, tds: 5000, secBroker: 45000, ifsc: 'SBIN0001234', bank: 'Axis Bank', acc: 1234567890, status: 'Completed' },
+            { name: 'Jane Smith', id: 102, vendor: 'Vendor B', lease: 'Lease B', total: 30000, tds: 3000, secBroker: 27000, ifsc: 'HDFC0005678', bank: 'HDFC Bank', acc: 9876543210, status: 'Pending' },
+        ];
+
+        function populateTable(tableId, data) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = '';
+            data.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.className = 'table-row';
+                for (const key in d) {
+                    const td = document.createElement('td');
+                    td.className = 'px-4 py-2 border';
+                    td.textContent = d[key];
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function viewEmployeeReport() { populateTable('empReportTable', employeeData); }
+        function downloadEmployeeReport() { downloadTable('empReportTable', 'EmployeeReport', document.getElementById('empFileFormat').value); }
+        function viewLeaseReport() { populateTable('leaseReportTable', leaseData); }
+        function downloadLeaseReport() { downloadTable('leaseReportTable', 'LeaseReport', document.getElementById('leaseFileFormat').value); }
+        function viewPaymentReport() { populateTable('paymentReportTable', paymentData); }
+        function downloadPaymentReport() { downloadTable('paymentReportTable', 'EmployeePaymentReport', 'xlsx'); }
+
+        function downloadTable(tableId, filename, type) {
+            const table = document.getElementById(tableId);
+            const ws = XLSX.utils.table_to_sheet(table);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            if (type === 'csv') { XLSX.writeFile(wb, filename + '.csv', { bookType: 'csv' }); }
+            else { XLSX.writeFile(wb, filename + '.xlsx'); }
+        }
+    </script>

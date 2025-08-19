@@ -13,6 +13,10 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
 builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepository>();
 builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentRepository>();
+builder.Services.AddScoped<ISecurityDepositRepository, SecurityDepositRepository>();
+builder.Services.AddScoped<IMISReportRepository, MISReportRepository>();
+
+
 // Register Dapper and Repository
 builder.Services.AddScoped<IVendorRepository, VendorRepository>();
 

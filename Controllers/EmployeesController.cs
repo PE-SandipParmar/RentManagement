@@ -86,7 +86,19 @@ namespace RentManagement.Controllers
             if (id != employee.Id)
                 return NotFound();
 
-           
+
+            if (await _employeeRepository.EmailExistsAsync(employee.Email,employee.Id))
+            {
+                ModelState.AddModelError("Email", "This email address is already registered.");
+            }
+            if (employee.TotalSalary.HasValue && employee.HouseRentAllowance.HasValue)
+            {
+                decimal monthlySalary = employee.TotalSalary.Value / 12;
+                if (employee.HouseRentAllowance.Value > monthlySalary)
+                {
+                    ModelState.AddModelError("HouseRentAllowance", "House Rent Allowance cannot be more than one month’s salary.");
+                }
+            }
 
             if (ModelState.IsValid)
             {
