@@ -23,7 +23,12 @@ namespace RentManagement.Controllers
 
             return View(MonthlyRentPayment);
         }
-
+        [HttpPost]
+        public IActionResult ToggleActive(int id)
+        {
+            _monthlyRentPaymentRepository.ToggleActiveStatus(id);
+            return RedirectToAction(nameof(Index));
+        }
         public async Task<IActionResult> Details(int id)
         {
             var payment = await _monthlyRentPaymentRepository.GetByIdAsync(id);

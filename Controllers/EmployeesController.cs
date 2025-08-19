@@ -21,7 +21,12 @@ namespace RentManagement.Controllers
 
             return View(employees);
         }
-
+        [HttpPost]
+        public IActionResult ToggleActive(int id)
+        {
+            _employeeRepository.ToggleActiveStatus(id);
+            return RedirectToAction(nameof(Index));
+        }
         public async Task<IActionResult> Details(int id)
         {
             var employee = await _employeeRepository.GetEmployeeByIdAsync(id);

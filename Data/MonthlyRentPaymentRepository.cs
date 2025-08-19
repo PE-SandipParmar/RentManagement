@@ -166,4 +166,13 @@ public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
             "LeaseNamesRead",
             commandType: CommandType.StoredProcedure);
     }
+    public async Task ToggleActiveStatus(int? Id)
+    {
+        using var connection = CreateConnection();
+        await connection.ExecuteAsync(
+            "ToggleMonthlyRentPaymentsActive",
+            new { Id = Id },
+            commandType: CommandType.StoredProcedure
+        );
+    }
 }

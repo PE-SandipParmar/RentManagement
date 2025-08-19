@@ -113,7 +113,12 @@ namespace RentManagement.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            await _securityDepositRepository.ToggleActiveStatus(id);
+            return RedirectToAction(nameof(Index));
+        }
         private async Task LoadDropdowns()
         {
             ViewBag.Employees = await _securityDepositRepository.GetEmployeeNamesAsync();

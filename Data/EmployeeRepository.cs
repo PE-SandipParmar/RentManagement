@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using RentManagement.Models;
 using System.Data;
 using System.Data.SqlClient;
@@ -176,7 +177,15 @@ namespace RentManagement.Data
                 commandType: CommandType.StoredProcedure
             );
         }
-
+        public async Task ToggleActiveStatus(int? Id)
+        {
+            using var connection = CreateConnection();
+            await connection.ExecuteAsync(
+                "ToggleEmployeeActive",
+                new { EmployeeId = Id },
+                commandType: CommandType.StoredProcedure
+            );
+        }
         public async Task<IEnumerable<Employee>> GetAllEmployeesDropdownAsync()
         {
             using var connection = CreateConnection();

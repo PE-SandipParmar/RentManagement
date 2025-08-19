@@ -167,4 +167,14 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
             "LeaseNamesRead",
             commandType: CommandType.StoredProcedure);
     }
+
+    public async Task ToggleActiveStatus(int Id)
+    {
+        using var connection = CreateConnection();
+        await connection.ExecuteAsync(
+            "ToggleBrokeragePaymentActive",
+            new { Id = Id },
+            commandType: CommandType.StoredProcedure
+        );
+    }
 }

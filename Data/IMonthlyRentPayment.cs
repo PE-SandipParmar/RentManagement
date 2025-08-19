@@ -20,6 +20,7 @@ namespace RentManagement.Data
         Task<IEnumerable<Owner>> GetOwnersAsync();
         Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync();
         Task<IEnumerable<LeaseName>> GetLeaseNameAsync();
+        Task ToggleActiveStatus(int? Id);
     }
 }
 

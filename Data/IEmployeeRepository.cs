@@ -13,6 +13,7 @@ namespace RentManagement.Data
         Task<bool> DeleteEmployeeAsync(int id);
         Task<IEnumerable<Department>> GetDepartmentsAsync();
         Task<IEnumerable<Designation>> GetDesignationsAsync();
+        Task ToggleActiveStatus(int? Id);
 
     }
 }

@@ -47,7 +47,7 @@
                     <label asp-for="LeaseTypeId" class="block text-sm font-medium text-gray-700 mb-1">Lease Type</label>
                     <select asp-for="LeaseTypeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.LeaseTypes, "Id", "Name", Model.LeaseTypeId))">
-                        <option value="0">-- Select Lease Type --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="LeaseTypeId" class="text-red-600 text-sm"></span>
                 </div>
@@ -63,7 +63,7 @@
                     <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Lease Name</label>
                     <select asp-for="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.EmployeeNames, "Id", "Name", Model.EmployeeId))">
-                        <option value="0">-- Select Lease Name --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="EmployeeId" class="text-red-600 text-sm"></span>
                 </div>
@@ -79,7 +79,7 @@
                     <label asp-for="PerquisiteApplicablePercentId" class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable</label>
                     <select asp-for="PerquisiteApplicablePercentId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.PerquisitePercents, "Id", "Description", Model.PerquisiteApplicablePercentId))">
-                        <option value="0">-- Select Percentage --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="PerquisiteApplicablePercentId" class="text-red-600 text-sm"></span>
                 </div>
@@ -87,7 +87,7 @@
                     <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner</label>
                     <select asp-for="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.Owners, "Id", "Name", Model.VendorId))">
-                        <option value="0">-- Select Owner --</option>
+                        <option value="0">Select </option>
                     </select>
                     <span asp-validation-for="VendorId" class="text-red-600 text-sm"></span>
                 </div>
@@ -118,7 +118,7 @@
                     <label asp-for="RentRecoveryElementId" class="block text-sm font-medium text-gray-700 mb-1">Rent Recovery Element</label>
                     <select asp-for="RentRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.RentRecoveryElements, "Id", "Name", Model.RentRecoveryElementId))">
-                        <option value="0">-- Select Rent Recovery Element --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="RentRecoveryElementId" class="text-red-600 text-sm"></span>
                 </div>
@@ -144,7 +144,7 @@
                     <label asp-for="LicenseFeeRecoveryElementId" class="block text-sm font-medium text-gray-700 mb-1">License Fee Recovery Element</label>
                     <select asp-for="LicenseFeeRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.LicenseFeeRecoveryElements, "Id", "Name", Model.LicenseFeeRecoveryElementId))">
-                        <option value="0">-- Select License Fee Recovery Element --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="LicenseFeeRecoveryElementId" class="text-red-600 text-sm"></span>
                 </div>
@@ -165,7 +165,7 @@
                     <label asp-for="PaymentTermId" class="block text-sm font-medium text-gray-700 mb-1">Payment Term</label>
                     <select asp-for="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.PaymentTerms, "Id", "Name", Model.PaymentTermId))">
-                        <option value="0">-- Select Payment Term --</option>
+                        <option value="0">Select</option>
                     </select>
                     <span asp-validation-for="PaymentTermId" class="text-red-600 text-sm"></span>
                 </div>
@@ -173,7 +173,7 @@
                     <label asp-for="PayableOnOrBeforeId" class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before</label>
                     <select asp-for="PayableOnOrBeforeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.PayableOnOrBeforeOptions, "Id", "Name", Model.PayableOnOrBeforeId))">
-                        <option value="0">-- Select Option --</option>
+                        <option value="0">Select Option</option>
                     </select>
                     <span asp-validation-for="PayableOnOrBeforeId" class="text-red-600 text-sm"></span>
                 </div>

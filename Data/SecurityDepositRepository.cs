@@ -134,4 +134,13 @@ public class SecurityDepositRepository : ISecurityDepositRepository
             "LeaseNamesRead",
             commandType: CommandType.StoredProcedure);
     }
+    public async Task ToggleActiveStatus(int Id)
+    {
+        using var connection = CreateConnection();
+        await connection.ExecuteAsync(
+            "ToggleSecurityDepositActive",
+            new { Id = Id },
+            commandType: CommandType.StoredProcedure
+        );
+    }
 }
