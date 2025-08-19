@@ -8,6 +8,7 @@ builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
 builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepository>();
 builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentRepository>();
 builder.Services.AddScoped<ISecurityDepositRepository, SecurityDepositRepository>();
+builder.Services.AddScoped<IMISReportRepository, MISReportRepository>();
 
 builder.Services.AddControllersWithViews();
 
