@@ -1,4 +1,341 @@
-﻿    
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIS Reports Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <!-- Sidebar -->
+    <div class="flex">
+        <aside class="w-64 bg-blue-700 text-white min-h-screen p-6">
+            <h2 class="text-2xl font-bold mb-6">MIS Reports</h2>
+            <nav class="space-y-4">
+                <a href="#" class="block hover:text-gray-200">Dashboard</a>
+                <a href="#" class="block hover:text-gray-200">Reports</a>
+                <a href="#" class="block hover:text-gray-200">Settings</a>
+            </nav>
+            <div class="mt-8">
+                <button onclick="openGenerateReport()" class="bg-green-500 w-full py-2 rounded-lg hover:bg-green-600 font-semibold">
+                    + Generate New Report
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 space-y-6">
+            <!-- Report Customization -->
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Report Customization</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium">Department</label>
+                        <select class="w-full mt-1 p-2 border rounded-lg">
+                            <option>All Departments</option>
+                            <option>HR</option>
+                            <option>Finance</option>
+                            <option>Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Report Type</label>
+                        <select class="w-full mt-1 p-2 border rounded-lg">
+                            <option>All Report Types</option>
+                            <option>Employee</option>
+                            <option>Lease</option>
+                            <option>Payment</option>
+                            <option>Vendor</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">From Date</label>
+                        <input type="date" class="w-full mt-1 p-2 border rounded-lg" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">To Date</label>
+                        <input type="date" class="w-full mt-1 p-2 border rounded-lg" />
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow">Apply Filters</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div>
+                <div class="flex space-x-4 border-b">
+                    <button class="tab-btn px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold"
+                            onclick="switchTab('financial')">
+                        Financial
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-gray-600 hover:text-blue-600"
+                            onclick="switchTab('lease')">
+                        Lease
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-gray-600 hover:text-blue-600"
+                            onclick="switchTab('employee')">
+                        Employee
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-gray-600 hover:text-blue-600"
+                            onclick="switchTab('vendor')">
+                        Vendor
+                    </button>
+                </div>
+
+                <!-- Financial Report -->
+                <div id="financial" class="report-tab">
+                    <div class="bg-white p-6 rounded-xl shadow mt-4">
+                        <h2 class="text-xl font-bold mb-4">Financial Report</h2>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-left">
+                                    <th class="px-4 py-2">Month</th>
+                                    <th class="px-4 py-2">Total Income</th>
+                                    <th class="px-4 py-2">Total Expense</th>
+                                    <th class="px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">April</td>
+                                    <td class="px-4 py-2">₹5,00,000</td>
+                                    <td class="px-4 py-2">₹3,50,000</td>
+                                    <td class="px-4 py-2">
+                                        <button onclick="openModal('Financial - April')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <canvas id="financialChart" class="mt-6 h-72"></canvas>
+                    </div>
+                </div>
+
+                <!-- Lease Report -->
+                <div id="lease" class="report-tab hidden">
+                    <div class="bg-white p-6 rounded-xl shadow mt-4">
+                        <h2 class="text-xl font-bold mb-4">Lease Report</h2>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-left">
+                                    <th class="px-4 py-2">Lease Name</th>
+                                    <th class="px-4 py-2">Start Date</th>
+                                    <th class="px-4 py-2">End Date</th>
+                                    <th class="px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">Lease A</td>
+                                    <td class="px-4 py-2">01-Apr-2024</td>
+                                    <td class="px-4 py-2">31-Mar-2025</td>
+                                    <td class="px-4 py-2">
+                                        <button onclick="openModal('Lease A - Details')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <canvas id="leaseChart" class="mt-6 h-72"></canvas>
+                    </div>
+                </div>
+
+                <!-- Employee Report -->
+                <div id="employee" class="report-tab hidden">
+                    <div class="bg-white p-6 rounded-xl shadow mt-4">
+                        <h2 class="text-xl font-bold mb-4">Employee Report</h2>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-left">
+                                    <th class="px-4 py-2">Employee Name</th>
+                                    <th class="px-4 py-2">ID</th>
+                                    <th class="px-4 py-2">Designation</th>
+                                    <th class="px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">Ramesh Patel</td>
+                                    <td class="px-4 py-2">101</td>
+                                    <td class="px-4 py-2">Manager</td>
+                                    <td class="px-4 py-2">
+                                        <button onclick="openModal('Employee - Ramesh Patel')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <canvas id="employeeChart" class="mt-6 h-72"></canvas>
+                    </div>
+                </div>
+
+                <!-- Vendor Report -->
+                <div id="vendor" class="report-tab hidden">
+                    <div class="bg-white p-6 rounded-xl shadow mt-4">
+                        <h2 class="text-xl font-bold mb-4">Vendor Report</h2>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-left">
+                                    <th class="px-4 py-2">Vendor Name</th>
+                                    <th class="px-4 py-2">Total Leases</th>
+                                    <th class="px-4 py-2">Amount</th>
+                                    <th class="px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2">ABC Vendor</td>
+                                    <td class="px-4 py-2">5</td>
+                                    <td class="px-4 py-2">₹10,00,000</td>
+                                    <td class="px-4 py-2">
+                                        <button onclick="openModal('Vendor - ABC Vendor')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <canvas id="vendorChart" class="mt-6 h-72"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report History -->
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Report History</h2>
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-left">
+                            <th class="px-4 py-2">Report Name</th>
+                            <th class="px-4 py-2">Generated On</th>
+                            <th class="px-4 py-2">Status</th>
+                            <th class="px-4 py-2">Download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2">Employee Report Q1</td>
+                            <td class="px-4 py-2">01-Jul-2024</td>
+                            <td class="px-4 py-2 text-green-600">Completed</td>
+                            <td class="px-4 py-2"><a href="#" class="text-blue-600 hover:underline">Download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Scheduled Reports -->
+            <div class="bg-white p-6 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Scheduled Reports</h2>
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-left">
+                            <th class="px-4 py-2">Report Name</th>
+                            <th class="px-4 py-2">Frequency</th>
+                            <th class="px-4 py-2">Next Run</th>
+                            <th class="px-4 py-2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2">Monthly Lease Report</td>
+                            <td class="px-4 py-2">Monthly</td>
+                            <td class="px-4 py-2">01-Sep-2024</td>
+                            <td class="px-4 py-2">
+                                <button class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Cancel</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-1/2 p-6 relative">
+            <h2 class="text-xl font-bold mb-4">Details</h2>
+            <div id="modalContent" class="space-y-2"></div>
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">&times;</button>
+            <div class="mt-4 flex justify-end">
+                <button onclick="closeModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate New Report Modal -->
+    <div id="generateReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg w-1/2 p-6 relative">
+            <h2 class="text-xl font-bold mb-4">Generate New Report</h2>
+            <form class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Report Type</label>
+                    <select class="w-full mt-1 p-2 border rounded-lg">
+                        <option>Employee</option>
+                        <option>Lease</option>
+                        <option>Payment</option>
+                        <option>Vendor</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Format</label>
+                    <select class="w-full mt-1 p-2 border rounded-lg">
+                        <option>Excel</option>
+                        <option>CSV</option>
+                        <option>PDF</option>
+                    </select>
+                </div>
+                <div class="col-span-2 flex justify-end mt-4">
+                    <button type="button" onclick="closeGenerateReport()" class="px-4 py-2 bg-gray-300 rounded-lg mr-2">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.report-tab').forEach(t => t.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('border-blue-600', 'text-blue-600', 'font-semibold'));
+            event.target.classList.add('border-blue-600', 'text-blue-600', 'font-semibold');
+        }
+
+        function openModal(content) {
+            document.getElementById('modalContent').innerHTML = `<p>${content}</p>`;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function openGenerateReport() {
+            document.getElementById('generateReportModal').classList.remove('hidden');
+        }
+        function closeGenerateReport() {
+            document.getElementById('generateReportModal').classList.add('hidden');
+        }
+
+        // Charts
+        new Chart(document.getElementById('financialChart'), {
+            type: 'bar',
+            data: { labels: ['Apr', 'May', 'Jun'], datasets: [{ label: 'Income', data: [500000, 600000, 550000], backgroundColor: '#3b82f6' }] }
+        });
+        new Chart(document.getElementById('leaseChart'), {
+            type: 'line',
+            data: { labels: ['Apr', 'May', 'Jun'], datasets: [{ label: 'Leases', data: [5, 6, 7], borderColor: '#10b981', fill: false }] }
+        });
+        new Chart(document.getElementById('employeeChart'), {
+            type: 'pie',
+            data: { labels: ['Manager', 'Executive'], datasets: [{ data: [5, 10], backgroundColor: ['#f43f5e', '#facc15'] }] }
+        });
+        new Chart(document.getElementById('vendorChart'), {
+            type: 'doughnut',
+            data: { labels: ['ABC', 'XYZ'], datasets: [{ data: [60, 40], backgroundColor: ['#6366f1', '#22c55e'] }] }
+        });
+    </script>
+</body>
+</html>
+
+
+@*     
 
 <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -285,3 +622,4 @@
             else { XLSX.writeFile(wb, filename + '.xlsx'); }
         }
     </script>
+ *@
