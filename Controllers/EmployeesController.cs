@@ -162,11 +162,8 @@ namespace RentManagement.Controllers
         // MODIFIED: Edit POST method to support both AJAX and traditional form submission
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Employee employee)
+        public async Task<IActionResult> Edit(Employee employee)
         {
-            if (id != employee.Id)
-                return NotFound();
-
             // Validation logic
             if (await _employeeRepository.EmailExistsAsync(employee.Email, employee.Id))
             {
@@ -271,101 +268,6 @@ namespace RentManagement.Controllers
             }
 
             return RedirectToAction(nameof(Index));
-        }
-
-        // ALTERNATIVE: Separate AJAX-specific endpoints (if you prefer cleaner separation)
-
-        // Alternative Create endpoint for AJAX only
-        [HttpPost]
-        public async Task<IActionResult> CreateAjax([FromForm] Employee employee)
-        {
-            // Validation logic
-            if (await _employeeRepository.EmailExistsAsync(employee.Email))
-            {
-                ModelState.AddModelError("Email", "This email address is already registered.");
-            }
-
-            if (employee.TotalSalary.HasValue && employee.HouseRentAllowance.HasValue)
-            {
-                decimal monthlySalary = employee.TotalSalary.Value / 12;
-                if (employee.HouseRentAllowance.Value > monthlySalary)
-                {
-                    ModelState.AddModelError("HouseRentAllowance", "House Rent Allowance cannot be more than one month's salary.");
-                }
-            }
-
-            if (ModelState.IsValid)
-            {
-                var employeeId = await _employeeRepository.CreateEmployeeAsync(employee);
-                return Json(new { success = true, message = "Employee created successfully!" });
-            }
-
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return Json(new { success = false, errors = errors });
-        }
-
-        // Alternative Edit endpoint for AJAX only
-        [HttpPost]
-        public async Task<IActionResult> EditAjax([FromForm] Employee employee)
-        {
-            // Validation logic
-            if (await _employeeRepository.EmailExistsAsync(employee.Email, employee.Id))
-            {
-                ModelState.AddModelError("Email", "This email address is already registered.");
-            }
-
-            if (employee.TotalSalary.HasValue && employee.HouseRentAllowance.HasValue)
-            {
-                decimal monthlySalary = employee.TotalSalary.Value / 12;
-                if (employee.HouseRentAllowance.Value > monthlySalary)
-                {
-                    ModelState.AddModelError("HouseRentAllowance", "House Rent Allowance cannot be more than one month's salary.");
-                }
-            }
-
-            if (ModelState.IsValid)
-            {
-                var success = await _employeeRepository.UpdateEmployeeAsync(employee);
-                if (success)
-                {
-                    return Json(new { success = true, message = "Employee updated successfully!" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Failed to update employee." });
-                }
-            }
-
-            var errors = ModelState
-                .Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return Json(new { success = false, errors = errors });
-        }
-
-        // Alternative Delete endpoint for AJAX only
-        [HttpPost]
-        public async Task<IActionResult> DeleteAjax(int id)
-        {
-            var success = await _employeeRepository.DeleteEmployeeAsync(id);
-
-            if (success)
-            {
-                return Json(new { success = true, message = "Employee deleted successfully!" });
-            }
-            else
-            {
-                return Json(new { success = false, message = "Failed to delete employee." });
-            }
         }
     }
 }
