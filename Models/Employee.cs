@@ -4,11 +4,11 @@ namespace RentManagement.Models
 {
     public class Employee
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
-        [Required(ErrorMessage = "Code is required.")]
-        [StringLength(20, ErrorMessage = "Code cannot be longer than 20 characters.")]
-        public string Code { get; set; } = string.Empty;
+        //[Required(ErrorMessage = "Code is required.")]
+        //[StringLength(20, ErrorMessage = "Code cannot be longer than 20 characters.")]
+        public string? Code { get; set; } = string.Empty;
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Name cannot be longer than 100 characters.")]
         public string Name { get; set; } = string.Empty;
@@ -32,9 +32,9 @@ namespace RentManagement.Models
 
         public string? Pan{ get; set; }
 
-        [Required(ErrorMessage = "Department is required.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Department is required.")]
         public int DepartmentId { get; set; }
-        [Required(ErrorMessage = "Designation is required.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Designation is required.")]
         public int DesignationId { get; set; }
 
         [Required(ErrorMessage = "Date of Joining is required.")]
@@ -47,23 +47,23 @@ namespace RentManagement.Models
         [Range(0, double.MaxValue, ErrorMessage = "Total Salary must be a positive number.")]
         public decimal? TotalSalary { get; set; }
 
-        [HraValidation]
+        //[HraValidation]
         [Required(ErrorMessage = "House Rent Allowance is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "House Rent Allowance must be a positive number.")]
         public decimal? HouseRentAllowance { get; set; }
 
-        [Required(ErrorMessage = "Travel Allowance is required.")]
-        [Range(0, double.MaxValue, ErrorMessage = "Travel Allowance must be a positive number.")]
+       
         public decimal? TravelAllowance { get; set; }
 
-        [Required(ErrorMessage = "Medical Allowance is required.")]
-        [Range(0, double.MaxValue, ErrorMessage = "Medical Allowance must be a positive number.")]
+    
         public decimal? MedicalAllowance { get; set; }
 
-        [Required(ErrorMessage = "Other Allowance is required.")]
-        [Range(0, double.MaxValue, ErrorMessage = "Other Allowance must be a positive number.")]
+       
         public decimal? OtherAllowance { get; set; }
         public decimal? GrossSalaryAfterDeductions { get; set; }
+        public decimal? PF { get; set; }
+        public decimal? ProfessionalTax { get; set; }
+        public decimal? ESI { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

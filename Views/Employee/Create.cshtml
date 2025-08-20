@@ -1,8 +1,13 @@
-﻿@model Employee
+﻿@model PagedResult<Employee>
 @{
-    ViewData["Title"] = "Create Employee";
+    ViewData["Title"] = "Employees";
 }
+
+@Html.AntiForgeryToken()
+
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+
 <style>
     .select2-container--default .select2-selection--single {
         height: 42px;
@@ -19,203 +24,990 @@
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 40px;
         }
+
+    /* Toast notification animations */
+    .toast-enter {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    .toast-enter-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 300ms ease-out, opacity 300ms ease-out;
+    }
+
+    .toast-exit {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast-exit-active {
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 300ms ease-in, opacity 300ms ease-in;
+    }
 </style>
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h1 class="text-2xl font-bold text-gray-900">Create New Employee</h1>
+
+<div class="bg-white shadow rounded-lg">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">Employees</h1>
+            <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
+                <i class="ri-add-line mr-2"></i>
+                Add New Employee
+            </button>
         </div>
+    </div>
 
-        <form asp-action="Create" method="post" class="px-6 py-4 space-y-6">
-            <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label asp-for="Code" class="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                    <input asp-for="Code" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="Code" class="text-red-600 text-sm"></span>
+    <!-- Search and Filters -->
+    <form method="get">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex space-x-4 items-center">
+                <input type="hidden" name="page" value="1" />
+                <div class="flex-1">
+                    <input type="text" name="search" value="@ViewBag.Search"
+                           placeholder="Search by name, email or code..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                <div>
-                    <label asp-for="Name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input asp-for="Name" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label asp-for="DateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                    <input asp-for="DateOfBirth" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="DateOfBirth" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="Gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                    <select asp-for="Gender" class=" searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="">Select Gender</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                    </select>
-                    <span asp-validation-for="Gender" class="text-red-600 text-sm"></span>
-
-                </div>
-            </div>
-
-            <div>
-                <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input asp-for="Email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
-
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label asp-for="Aadhar" class="block text-sm font-medium text-gray-700 mb-1">Aadhar</label>
-                    <input asp-for="Aadhar" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="Aadhar" class="text-red-600 text-sm"></span>
-                </div>
-                <div>
-                    <label asp-for="Pan" class="block text-sm font-medium text-gray-700 mb-1">PAN</label>
-                    <input asp-for="Pan" class="w-full px-3 py-2 border border-gray-300 rounded-md" style="text-transform: uppercase;"
-                           oninput="this.value = this.value.toUpperCase()" />
-                    <span asp-validation-for="Pan" class="text-red-600 text-sm"></span>
-
-                </div>
-            </div>
-            <h2 class="text-lg font-semibold text-gray-800 mt-6">Job Details</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label asp-for="Id" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                    <select asp-for="DepartmentId" class=" searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
-                            asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
-                        <option value="">Select</option>
-                    </select>
-                    <span asp-validation-for="DepartmentId" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="Id" class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
-                    <select asp-for="DesignationId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
-                            asp-items="@(new SelectList(ViewBag.Designations, "Id", "Name"))">
-                        <option value="">Select</option>
-                    </select>
-                    <span asp-validation-for="DesignationId" class="text-red-600 text-sm"></span>
-
-                </div>
-            </div>
-
-            <div>
-                <label asp-for="DateOfJoining" class="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
-                <input asp-for="DateOfJoining" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                <span asp-validation-for="DateOfJoining" class="text-red-600 text-sm"></span>
-
-            </div>
-
-            <div>
-                <label class="inline-flex items-center">
-                    <input asp-for="EligibleForLease" type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" />
-                    <span class="ml-2 text-sm text-gray-700">Eligible for Lease</span>
-
-                </label>
-            </div>
-
-            <h2 class="text-lg font-semibold text-gray-800 mt-6">Salary Details</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label asp-for="TotalSalary" class="block text-sm font-medium text-gray-700 mb-1">Total Salary</label>
-                    <input asp-for="TotalSalary" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="TotalSalary" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="HouseRentAllowance" class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance</label>
-                    <input asp-for="HouseRentAllowance" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    
-                    <label asp-for="HouseRentAllowance" class="block text-sm font-small text-gray-700 mb-1">HRA = 2 × Salary (max one month salary)</label>
-
-                    <span asp-validation-for="HouseRentAllowance" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="TravelAllowance" class="block text-sm font-medium text-gray-700 mb-1">Travel Allowance</label>
-                    <input asp-for="TravelAllowance" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="TravelAllowance" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="MedicalAllowance" class="block text-sm font-medium text-gray-700 mb-1">Medical Allowance</label>
-                    <input asp-for="MedicalAllowance" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="MedicalAllowance" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="OtherAllowance" class="block text-sm font-medium text-gray-700 mb-1">Other Allowance</label>
-                    <input asp-for="OtherAllowance" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
-                    <span asp-validation-for="OtherAllowance" class="text-red-600 text-sm"></span>
-
-                </div>
-                <div>
-                    <label asp-for="GrossSalaryAfterDeductions" class="block text-sm font-medium text-gray-700 mb-1">Gross Salary After Deductions</label>
-                    <input asp-for="GrossSalaryAfterDeductions" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" readonly />
-                    <span asp-validation-for="GrossSalaryAfterDeductions" class="text-red-600 text-sm"></span>
-
-                </div>
-            </div>
-
-            <div style="display:none">
-                <label class="inline-flex items-center">
-                    <input asp-for="IsActive" type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked />
-                    <span class="ml-2 text-sm text-gray-700">Active</span>
-                </label>
-            </div>
-
-            <div class="flex justify-end space-x-3">
-                <a href="@Url.Action("Index")" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
-                    Cancel
-                </a>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                    Create Employee
+                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition duration-200">
+                    Search
                 </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                {
+                    <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md font-medium transition duration-200">
+                        Clear
+                    </a>
+                }
             </div>
-        </form>
+        </div>
+        <div class="px-6 py-4 border-b border-gray-200">
+            <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm float-right" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()">
+            </select>
+            <label for="PageSize" class="text-sm text-gray-700 float-right pt-1 pr-2">Rows per page</label>
+            <div class="clear-both"></div>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Code</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var employee in Model.Items)
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@employee.Code</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@employee.Name</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@employee.DepartmentName</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@employee.DesignationName</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@(employee.TotalSalary?.ToString("C") ?? "N/A")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">
+                                <button type="submit">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(employee.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                        <span class="w-1.5 h-1.5 @(employee.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                                        @(employee.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            <button onclick="openDetailsDrawer(@employee.Id)" class="text-blue-600 hover:text-blue-900 p-1">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="openEditDrawer(@employee.Id)" class="text-indigo-600 hover:text-indigo-900 p-1">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDelete(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-900 p-1">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    @if (!Model.Items.Any())
+    {
+        <div class="px-6 py-12 text-center">
+            <div class="text-gray-500">
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                {
+                    <p>No employees found matching your search criteria.</p>
+                }
+                else
+                {
+                    <p>No employees found. <button onclick="openCreateDrawer()" class="text-blue-600 hover:underline">Create the first employee</button>.</p>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
+                to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
+                of @Model.TotalItems results
+            </div>
+            <div class="flex space-x-1">
+                @if (Model.HasPreviousPage)
+                {
+                    <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search })"
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Previous</span>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.PageNumber)
+                    {
+                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search })"
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">@i</a>
+                    }
+                }
+
+                @if (Model.HasNextPage)
+                {
+                    <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search })"
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Next</span>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-       
-      
-    }
-}
+<!-- Create/Edit Slide-over Drawer -->
+<div id="formDrawer" class="fixed inset-0 overflow-hidden z-50 hidden">
+    <div class="absolute inset-0">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300" onclick="closeDrawer()"></div>
+        <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+            <div class="w-screen max-w-2xl transform transition ease-in-out duration-300">
+                <div class="h-full flex flex-col bg-white shadow-xl">
+                    <!-- Header -->
+                    <div class="px-6 py-4 bg-blue-600 text-white">
+                        <div class="flex items-center justify-between">
+                            <h2 id="drawerTitle" class="text-xl font-semibold">Add Employee</h2>
+                            <button onclick="closeDrawer()" class="text-white hover:text-gray-200">
+                                <i class="ri-close-line text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form Content -->
+                    <div class="flex-1 overflow-y-auto">
+                        <form id="employeeForm" class="px-6 py-4 space-y-6">
+                            <input type="hidden" id="employeeId" name="Id" />
+
+                            <div id="validationSummary" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+
+                            <!-- Basic Information -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Basic Information</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                                        <input type="text" id="code" name="Code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" readonly placeholder="Code is Auto " />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <input type="text" id="name" name="Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                        <input type="date" id="dateOfBirth" name="DateOfBirth" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                                        <select id="gender" name="Gender" class="searchable-dropdown w-full">
+                                            <option value="0">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input type="email" id="email" name="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Aadhar</label>
+                                        <input type="text" id="aadhar" name="Aadhar" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">PAN</label>
+                                        <input type="text" id="pan" name="Pan" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Job Details -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Job Details</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                                        <select id="departmentId" name="DepartmentId" class="searchable-dropdown w-full">
+                                            <option value="0">Select Department</option>
+                                            @foreach (var dept in ViewBag.Departments as IEnumerable<dynamic>)
+                                            {
+                                                <option value="@dept.Id">@dept.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                                        <select id="designationId" name="DesignationId" class="searchable-dropdown w-full">
+                                            <option value="0">Select Designation</option>
+                                            @foreach (var desig in ViewBag.Designations as IEnumerable<dynamic>)
+                                            {
+                                                <option value="@desig.Id">@desig.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
+                                    <input type="date" id="dateOfJoining" name="DateOfJoining" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                </div>
+
+                                <div>
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" id="eligibleForLease" name="EligibleForLease" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                                        <span class="ml-2 text-sm text-gray-700">Eligible for Lease</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Salary Details -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Salary Details</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Salary</label>
+                                        <input type="number" step="0.01" id="totalSalary" name="TotalSalary" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance</label>
+                                        <input type="number" step="0.01" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <p class="text-xs text-gray-500 mt-1">HRA = 2 × Salary (max one month salary)</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Travel Allowance</label>
+                                        <input type="number" step="0.01" id="travelAllowance" name="TravelAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Medical Allowance</label>
+                                        <input type="number" step="0.01" id="medicalAllowance" name="MedicalAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Other Allowance</label>
+                                        <input type="number" step="0.01" id="otherAllowance" name="OtherAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Gross Salary After Deductions</label>
+                                        <input type="number" step="0.01" id="grossSalaryAfterDeductions" name="GrossSalaryAfterDeductions" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            @* <input type="hidden" id="isActive" name="IsActive" value="true" /> *@
+                        </form>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex justify-end space-x-3">
+                            <button onclick="closeDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button onclick="saveEmployee()" id="saveButton" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center">
+                                <span id="saveButtonText">Save Employee</span>
+                                <div id="saveButtonSpinner" class="ml-2 hidden">
+                                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Slide-over Drawer -->
+<div id="detailsDrawer" class="fixed inset-0 overflow-hidden z-50 hidden">
+    <div class="absolute inset-0">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300" onclick="closeDetailsDrawer()"></div>
+        <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+            <div class="w-screen max-w-2xl transform transition ease-in-out duration-300">
+                <div class="h-full flex flex-col bg-white shadow-xl">
+                    <!-- Header -->
+                    <div class="px-6 py-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xl font-semibold">Employee Details</h2>
+                                <p class="text-indigo-100 text-sm">Complete information about this employee</p>
+                            </div>
+                            <button onclick="closeDetailsDrawer()" class="text-white hover:text-gray-200">
+                                <i class="ri-close-line text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Details Content -->
+                    <div class="flex-1 overflow-y-auto px-6 py-6">
+                        <dl id="employeeDetails" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <!-- Details will be populated by JavaScript -->
+                        </dl>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex justify-end">
+                            <button onclick="closeDetailsDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-red-600">Delete Employee</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-500 text-3xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-700">
+                        Are you sure you want to permanently delete <strong id="deleteEmployeeName"></strong>?
+                        This action cannot be undone.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+            </button>
+            <button onclick="deleteEmployee()" id="deleteButton" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center">
+                <span id="deleteButtonText">Delete</span>
+                <div id="deleteButtonSpinner" class="ml-2 hidden">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+    let currentMode = 'create'; // 'create' or 'edit'
+    let currentEmployeeId = null;
+    let deleteEmployeeId = null;
+
     $(document).ready(function () {
+        // Initialize Select2 dropdowns
         $('.searchable-dropdown').select2({
             placeholder: "Select an option",
             allowClear: true,
-            width: '100%'
+            width: '100%',
+            dropdownParent: $('#formDrawer')
         });
-    });
-</script>
-<script>
-    function calculateGrossSalary() {
-        const totalSalary = parseFloat(document.getElementById('TotalSalary').value) || 0;
-        const hra = parseFloat(document.getElementById('HouseRentAllowance').value) || 0;
-        const travel = parseFloat(document.getElementById('TravelAllowance').value) || 0;
-        const medical = parseFloat(document.getElementById('MedicalAllowance').value) || 0;
-        const other = parseFloat(document.getElementById('OtherAllowance').value) || 0;
 
-        const gross = totalSalary - (hra + travel + medical + other);
-        document.getElementById('GrossSalaryAfterDeductions').value = gross.toFixed(2);
+        // Setup salary calculation
+        setupSalaryCalculation();
+
+        // Setup PAN uppercase conversion
+        $('#pan').on('input', function () {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Setup validation error clearing on input
+        setupValidationErrorClearing();
+    });
+
+    function setupValidationErrorClearing() {
+        // Clear validation errors when user starts typing
+        $(document).on('input change', '#formDrawer input, #formDrawer select', function () {
+            const input = $(this)[0];
+            if (input.classList.contains('border-red-500')) {
+                input.classList.remove('border-red-500', 'border-2');
+
+                // Remove field-specific error message
+                const errorSpan = input.parentNode.querySelector('.field-error');
+                if (errorSpan) {
+                    errorSpan.remove();
+                }
+            }
+        });
     }
 
-    document.getElementById('TotalSalary').addEventListener('input', calculateGrossSalary);
-    document.getElementById('HouseRentAllowance').addEventListener('input', calculateGrossSalary);
-    document.getElementById('TravelAllowance').addEventListener('input', calculateGrossSalary);
-    document.getElementById('MedicalAllowance').addEventListener('input', calculateGrossSalary);
-    document.getElementById('OtherAllowance').addEventListener('input', calculateGrossSalary);
+    function openCreateDrawer() {
+        currentMode = 'create';
+        currentEmployeeId = null;
+
+        document.getElementById('drawerTitle').textContent = 'Add New Employee';
+        document.getElementById('saveButtonText').textContent = 'Create Employee';
+
+        // Reset form
+        document.getElementById('employeeForm').reset();
+        document.getElementById('employeeId').value = '';
+
+        // Show drawer with animation
+        const drawer = document.getElementById('formDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        // Re-initialize select2
+        $('.searchable-dropdown').select2('destroy').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#formDrawer')
+        });
+    }
+
+    function openEditDrawer(employeeId) {
+        currentMode = 'edit';
+        currentEmployeeId = employeeId;
+
+        document.getElementById('drawerTitle').textContent = 'Edit Employee';
+        document.getElementById('saveButtonText').textContent = 'Update Employee';
+
+        // Show drawer first
+        const drawer = document.getElementById('formDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        // Load employee data
+        loadEmployeeData(employeeId);
+    }
+
+    function openDetailsDrawer(employeeId) {
+        // Show drawer with animation
+        const drawer = document.getElementById('detailsDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        // Load employee details
+        loadEmployeeDetails(employeeId);
+    }
+
+    function closeDrawer() {
+        const drawer = document.getElementById('formDrawer');
+        drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+        }, 300);
+    }
+
+    function closeDetailsDrawer() {
+        const drawer = document.getElementById('detailsDrawer');
+        drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+        }, 300);
+    }
+
+    function confirmDelete(employeeId, employeeName) {
+        deleteEmployeeId = employeeId;
+        document.getElementById('deleteEmployeeName').textContent = employeeName;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        deleteEmployeeId = null;
+    }
+
+    function loadEmployeeData(employeeId) {
+        fetch(`/Employee/GetEmployee/${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const employee = data.employee;
+
+                    document.getElementById('employeeId').value = employee.id;
+                    document.getElementById('code').value = employee.code || '';
+                    document.getElementById('name').value = employee.name || '';
+                    document.getElementById('dateOfBirth').value = employee.dateOfBirth ? employee.dateOfBirth.split('T')[0] : '';
+                    document.getElementById('email').value = employee.email || '';
+                    document.getElementById('aadhar').value = employee.aadhar || '';
+                    document.getElementById('pan').value = employee.pan || '';
+                    document.getElementById('dateOfJoining').value = employee.dateOfJoining ? employee.dateOfJoining.split('T')[0] : '';
+                    document.getElementById('eligibleForLease').checked = employee.eligibleForLease || false;
+                    document.getElementById('totalSalary').value = employee.totalSalary || '';
+                    document.getElementById('houseRentAllowance').value = employee.houseRentAllowance || '';
+                    document.getElementById('travelAllowance').value = employee.travelAllowance || '';
+                    document.getElementById('medicalAllowance').value = employee.medicalAllowance || '';
+                    document.getElementById('otherAllowance').value = employee.otherAllowance || '';
+                    document.getElementById('grossSalaryAfterDeductions').value = employee.grossSalaryAfterDeductions || '';
+
+                    // Set select2 values
+                    $('#gender').val(employee.gender).trigger('change');
+                    $('#departmentId').val(employee.departmentId).trigger('change');
+                    $('#designationId').val(employee.designationId).trigger('change');
+
+                    calculateGrossSalary();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employee data:', error);
+            });
+    }
+
+    function loadEmployeeDetails(employeeId) {
+        fetch(`/Employee/GetEmployee/${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const employee = data.employee;
+                    const detailsContainer = document.getElementById('employeeDetails');
+
+                    detailsContainer.innerHTML = `
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Code</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Name</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gender</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Email</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">PAN</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Department</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Designation</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.totalSalary) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.houseRentAllowance) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.travelAllowance) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.medicalAllowance) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Other Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.otherAllowance) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(employee.grossSalaryAfterDeductions) || '-'}</dd>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employee details:', error);
+            });
+    }
+
+    function saveEmployee() {
+        const button = document.getElementById('saveButton');
+        const buttonText = document.getElementById('saveButtonText');
+        const buttonSpinner = document.getElementById('saveButtonSpinner');
+
+        // Clear previous validation errors
+        clearValidationErrors();
+
+        // Show loading state
+        button.disabled = true;
+        button.classList.add('opacity-75');
+        buttonSpinner.classList.remove('hidden');
+
+        // Prepare form data
+        const form = document.getElementById('employeeForm');
+        const formData = new FormData();
+
+        // Add all form fields to FormData
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                formData.append(input.name, input.checked ? 'true' : 'false');
+            } else if (input.name && input.name !== '__RequestVerificationToken') {
+                formData.append(input.name, input.value || '');
+            }
+        });
+
+        // Add anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        formData.append('__RequestVerificationToken', token);
+
+        // Debug: Log form data
+        console.log('Form data being sent:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        // Determine URL based on mode
+        const url = currentMode === 'create' ? '/Employee/Create' : '/Employee/Edit';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Server response:', data); // Debug log
+                if (data.success) {
+                    closeDrawer();
+                    showSuccessMessage(data.message || 'Employee saved successfully!');
+                    // Refresh the page to show updated data
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    // Show validation errors
+                    if (data.errors) {
+                        console.log('Validation errors:', data.errors); // Debug log
+                        showValidationErrors(data.errors);
+                    } else {
+                        showErrorMessage(data.message || 'Failed to save employee.');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error saving employee:', error);
+                showErrorMessage('An error occurred while saving the employee.');
+            })
+            .finally(() => {
+                // Reset button state
+                button.disabled = false;
+                button.classList.remove('opacity-75');
+                buttonSpinner.classList.add('hidden');
+            });
+    }
+
+    function deleteEmployee() {
+        const button = document.getElementById('deleteButton');
+        const buttonText = document.getElementById('deleteButtonText');
+        const buttonSpinner = document.getElementById('deleteButtonSpinner');
+
+        // Show loading state
+        button.disabled = true;
+        button.classList.add('opacity-75');
+        buttonSpinner.classList.remove('hidden');
+        buttonText.textContent = 'Deleting...';
+
+        // Get anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        const formData = new FormData();
+        formData.append('Id', deleteEmployeeId);
+        formData.append('__RequestVerificationToken', token);
+
+        fetch('/Employee/DeleteConfirmed', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeDeleteModal();
+                    showSuccessMessage(data.message || 'Employee deleted successfully!');
+                    // Refresh the page to show updated data
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showErrorMessage(data.message || 'Failed to delete employee.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting employee:', error);
+                showErrorMessage('An error occurred while deleting the employee.');
+            })
+            .finally(() => {
+                // Reset button state
+                button.disabled = false;
+                button.classList.remove('opacity-75');
+                buttonSpinner.classList.add('hidden');
+                buttonText.textContent = 'Delete';
+            });
+    }
+
+    function setupSalaryCalculation() {
+        const salaryInputs = ['totalSalary', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance'];
+
+        salaryInputs.forEach(inputId => {
+            document.getElementById(inputId).addEventListener('input', calculateGrossSalary);
+        });
+    }
+
+    function calculateGrossSalary() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const hra = parseFloat(document.getElementById('houseRentAllowance').value) || 0;
+        const travel = parseFloat(document.getElementById('travelAllowance').value) || 0;
+        const medical = parseFloat(document.getElementById('medicalAllowance').value) || 0;
+        const other = parseFloat(document.getElementById('otherAllowance').value) || 0;
+
+        const gross = totalSalary - (hra + travel + medical + other);
+        document.getElementById('grossSalaryAfterDeductions').value = gross.toFixed(2);
+    }
+
+    function showValidationErrors(errors) {
+        const summaryDiv = document.getElementById('validationSummary');
+        summaryDiv.innerHTML = '';
+        summaryDiv.classList.add('hidden');
+
+        if (errors && Object.keys(errors).length > 0) {
+            let errorList = '<h4 class="font-semibold mb-2">Please correct the following errors:</h4><ul class="list-disc list-inside space-y-1">';
+
+            Object.keys(errors).forEach(field => {
+                errors[field].forEach(error => {
+                    errorList += `<li class="text-sm">${error}</li>`;
+
+                    // Show field-specific error by finding the input and adding error styling
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.classList.add('border-red-500', 'border-2');
+
+                        // Create or update error message for this field
+                        let errorSpan = input.parentNode.querySelector('.field-error');
+                        if (!errorSpan) {
+                            errorSpan = document.createElement('span');
+                            errorSpan.className = 'field-error text-red-600 text-sm mt-1 block';
+                            input.parentNode.appendChild(errorSpan);
+                        }
+                        errorSpan.textContent = error;
+                    }
+                });
+            });
+
+            errorList += '</ul>';
+            summaryDiv.innerHTML = errorList;
+            summaryDiv.classList.remove('hidden');
+
+            // Scroll to the top of the drawer to show the error summary
+            document.querySelector('#formDrawer .flex-1.overflow-y-auto').scrollTop = 0;
+        }
+    }
+
+    function clearValidationErrors() {
+        const summaryDiv = document.getElementById('validationSummary');
+        summaryDiv.classList.add('hidden');
+        summaryDiv.innerHTML = '';
+
+        // Clear field-specific errors
+        document.querySelectorAll('#formDrawer input, #formDrawer select').forEach(input => {
+            input.classList.remove('border-red-500', 'border-2');
+        });
+
+        // Remove error messages
+        document.querySelectorAll('.field-error').forEach(errorSpan => {
+            errorSpan.remove();
+        });
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    }
+
+    function formatCurrency(amount) {
+        if (!amount) return '';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
+    }
+
+    function showSuccessMessage(message) {
+        // Create and show success toast/alert
+        const alert = document.createElement('div');
+        alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
+        alert.innerHTML = `
+            <div class="flex items-center">
+                <i class="ri-check-line mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(alert);
+
+        // Trigger enter animation
+        setTimeout(() => {
+            alert.classList.remove('toast-enter');
+            alert.classList.add('toast-enter-active');
+        }, 10);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            alert.classList.remove('toast-enter-active');
+            alert.classList.add('toast-exit-active');
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    }
+
+    function showErrorMessage(message) {
+        // Create and show error toast/alert
+        const alert = document.createElement('div');
+        alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
+        alert.innerHTML = `
+            <div class="flex items-center">
+                <i class="ri-error-warning-line mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(alert);
+
+        // Trigger enter animation
+        setTimeout(() => {
+            alert.classList.remove('toast-enter');
+            alert.classList.add('toast-enter-active');
+        }, 10);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            alert.classList.remove('toast-enter-active');
+            alert.classList.add('toast-exit-active');
+            setTimeout(() => alert.remove(), 300);
+        }, 5000); // Show error messages longer
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('bg-black') && event.target.classList.contains('bg-opacity-50')) {
+            if (!document.getElementById('formDrawer').classList.contains('hidden')) {
+                closeDrawer();
+            }
+            if (!document.getElementById('detailsDrawer').classList.contains('hidden')) {
+                closeDetailsDrawer();
+            }
+            if (!document.getElementById('deleteModal').classList.contains('hidden')) {
+                closeDeleteModal();
+            }
+        }
+    });
 </script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
