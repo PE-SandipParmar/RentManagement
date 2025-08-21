@@ -600,7 +600,43 @@
 
         // Setup validation error clearing on input
         setupValidationErrorClearing();
+
+        setupEnhancedDeductionValidation();
+         restrictDeductionInput();
     });
+    // Restrict input to prevent invalid characters
+    function restrictDeductionInput() {
+        const deductionFields = ['pf', 'professionalTax', 'esi'];
+
+        deductionFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+
+            // Prevent paste of invalid values
+            field.addEventListener('paste', function (e) {
+                setTimeout(() => {
+                    const value = parseFloat(this.value);
+                    if (isNaN(value) || value < 0) {
+                        this.value = '';
+                        showFieldError(fieldId, 'Invalid value pasted. Please enter a valid positive number.');
+                    }
+                }, 1);
+            });
+
+            // Additional keypress validation
+            field.addEventListener('keypress', function (e) {
+                // Only allow numbers, decimal point, backspace, delete, tab
+                const allowedKeys = [8, 9, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 190, 110];
+                if (allowedKeys.indexOf(e.keyCode) === -1) {
+                    e.preventDefault();
+                }
+
+                // Prevent multiple decimal points
+                if ((e.keyCode === 190 || e.keyCode === 110) && this.value.indexOf('.') !== -1) {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
 
     function setupFormValidations() {
         // Name validation - only alphabetic characters and spaces
@@ -1109,8 +1145,283 @@
                 console.error('Error loading employee details:', error);
             });
     }
+    function setupEnhancedDeductionValidation() {
+        // Real-time validation for PF
+        $('#pf').on('input blur', function () {
+            validatePF();
+        });
 
+        // Real-time validation for Professional Tax
+        $('#professionalTax').on('input blur', function () {
+            validateProfessionalTax();
+        });
+
+        // Real-time validation for ESI
+        $('#esi').on('input blur', function () {
+            validateESI();
+        });
+
+        // Validate when total salary changes
+        $('#totalSalary').on('input blur', function () {
+            validateAllDeductions();
+        });
+    }
+
+    // Enhanced field error/warning functions
+    function showFieldWarning(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        // Remove error styling but keep warning styling
+        field.classList.remove('input-error');
+        field.classList.add('border-yellow-400');
+
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.className = 'text-yellow-600 text-sm mt-1'; // Warning color instead of error
+            errorDiv.classList.remove('hidden');
+        }
+    }
+
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        if (field) {
+            field.classList.remove('input-error', 'border-yellow-400');
+        }
+        if (errorDiv) {
+            errorDiv.textContent = '';
+            errorDiv.className = 'error-message hidden';
+            errorDiv.classList.add('hidden');
+        }
+    }
+
+    // Enhanced auto-calculation with validation
+    function calculateAutoDeductionsWithValidation() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+        if (totalSalary <= 0) {
+            document.getElementById('pf').value = '0.00';
+            document.getElementById('professionalTax').value = '0.00';
+            document.getElementById('esi').value = '0.00';
+            return;
+        }
+
+        // Calculate and set PF
+        const basicSalary = totalSalary * 0.5;
+        const pfAmount = Math.min(basicSalary * 0.12, 1800);
+        document.getElementById('pf').value = pfAmount.toFixed(2);
+
+        // Calculate and set Professional Tax
+        let professionalTax = 0;
+        if (totalSalary <= 21000) {
+            professionalTax = 0;
+        } else if (totalSalary <= 25000) {
+            professionalTax = 150;
+        } else {
+            professionalTax = 200;
+        }
+        document.getElementById('professionalTax').value = professionalTax.toFixed(2);
+
+        // Calculate and set ESI
+        let esiAmount = 0;
+        if (totalSalary <= 25000) {
+            esiAmount = totalSalary * 0.0075;
+        }
+        document.getElementById('esi').value = esiAmount.toFixed(2);
+
+        // Validate all calculated values
+        validateAllDeductions();
+        calculateGrossSalary();
+    }
+
+    // Override the existing function
+    function calculateAutoDeductions() {
+        calculateAutoDeductionsWithValidation();
+    }
+
+    // Enhanced form validation that includes deduction validation
+    function validateFormWithDeductions() {
+        let isValid = validateForm(); // Call existing validation
+
+        // Add deduction validation
+        const deductionsValid = validateAllDeductions();
+
+        return isValid && deductionsValid;
+    }
+    function validateAllDeductions() {
+        const pfValid = validatePF();
+        const ptValid = validateProfessionalTax();
+        const esiValid = validateESI();
+
+        // Additional validation: Total deductions should not exceed salary
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const pf = parseFloat(document.getElementById('pf').value) || 0;
+        const professionalTax = parseFloat(document.getElementById('professionalTax').value) || 0;
+        const esi = parseFloat(document.getElementById('esi').value) || 0;
+
+        const totalDeductions = pf + professionalTax + esi;
+
+        if (totalSalary > 0 && totalDeductions > totalSalary) {
+            showFieldError('grossSalary', `Total deductions (₹${totalDeductions.toFixed(2)}) cannot exceed total salary (₹${totalSalary.toFixed(2)})`);
+            return false;
+        } else {
+            clearFieldError('grossSalary');
+        }
+
+        return pfValid && ptValid && esiValid;
+    }
+    function validateProfessionalTax() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const ptValue = parseFloat(document.getElementById('professionalTax').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('professionalTax');
+
+        if (ptValue < 0) {
+            showFieldError('professionalTax', 'Professional Tax cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (ptValue > 0) {
+                showFieldError('professionalTax', 'Cannot set Professional Tax without total salary');
+                return false;
+            }
+            return true;
+        }
+        // Professional Tax slabs (as per most Indian states)
+        let maxAllowedPT = 0;
+        let expectedPT = 0;
+        let salaryRange = '';
+
+        if (totalSalary <= 21000) {
+            maxAllowedPT = 0;
+            expectedPT = 0;
+            salaryRange = '≤ ₹21,000';
+        } else if (totalSalary <= 25000) {
+            maxAllowedPT = 150;
+            expectedPT = 150;
+            salaryRange = '₹21,001 - ₹25,000';
+        } else {
+            maxAllowedPT = 200;
+            expectedPT = 200;
+            salaryRange = '> ₹25,000';
+        }
+
+        if (ptValue > maxAllowedPT) {
+            if (maxAllowedPT === 0) {
+                showFieldError('professionalTax', `Professional Tax not applicable for salary ${salaryRange}`);
+            } else {
+                showFieldError('professionalTax', `Professional Tax cannot exceed ₹${maxAllowedPT} for salary range ${salaryRange}`);
+            }
+            return false;
+        }
+
+        // Warning for incorrect values
+        if (ptValue !== expectedPT && totalSalary > 0) {
+            if (expectedPT === 0) {
+                if (ptValue > 0) {
+                    showFieldWarning('professionalTax', `Professional Tax is typically ₹0 for salary ${salaryRange}`);
+                }
+            } else {
+                showFieldWarning('professionalTax', `Professional Tax is typically ₹${expectedPT} for salary range ${salaryRange}`);
+            }
+        }
+
+        return true;
+    }
+    function validateESI() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const esiValue = parseFloat(document.getElementById('esi').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('esi');
+
+        if (esiValue < 0) {
+            showFieldError('esi', 'ESI cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (esiValue > 0) {
+                showFieldError('esi', 'Cannot set ESI without total salary');
+                return false;
+            }
+            return true;
+        }
+
+        // ESI is applicable only for salary <= 25,000
+        if (totalSalary > 25000) {
+            if (esiValue > 0) {
+                showFieldError('esi', 'ESI not applicable for salary > ₹25,000');
+                return false;
+            }
+            return true;
+        }
+
+        // Calculate maximum allowed ESI (0.75% of gross salary)
+        const maxAllowedESI = totalSalary * 0.0075;
+
+        if (esiValue > maxAllowedESI) {
+            showFieldError('esi', `ESI cannot exceed ₹${maxAllowedESI.toFixed(2)} (0.75% of salary ₹${totalSalary.toFixed(2)})`);
+            return false;
+        }
+
+        // Warning for unusual values
+        const expectedESI = maxAllowedESI;
+        if (esiValue > 0 && Math.abs(esiValue - expectedESI) > 1) {
+            showFieldWarning('esi', `ESI is typically ₹${expectedESI.toFixed(2)} for this salary`);
+        }
+
+        return true;
+    }
+
+    function validatePF() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const pfValue = parseFloat(document.getElementById('pf').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('pf');
+
+        if (pfValue < 0) {
+            showFieldError('pf', 'PF cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (pfValue > 0) {
+                showFieldError('pf', 'Cannot set PF without total salary');
+                return false;
+            }
+            return true;
+        }
+
+        // Calculate maximum allowed PF
+        // Basic salary is typically 50% of total salary
+        const basicSalary = totalSalary * 0.5;
+        const maxPFByPercentage = basicSalary * 0.12; // 12% of basic salary
+        const maxPFByLimit = 1800; // Maximum statutory limit
+        const maxAllowedPF = Math.min(maxPFByPercentage, maxPFByLimit);
+
+        if (pfValue > maxAllowedPF) {
+            showFieldError('pf', `PF cannot exceed ₹${maxAllowedPF.toFixed(2)} (12% of basic salary ₹${basicSalary.toFixed(2)}, max ₹1,800)`);
+            return false;
+        }
+
+        // Warning for unusual values
+        if (pfValue > 0 && pfValue < (maxAllowedPF * 0.5)) {
+            showFieldWarning('pf', `PF is typically ₹${maxAllowedPF.toFixed(2)} for this salary range`);
+        }
+
+        return true;
+    }
     function saveEmployee() {
+        if (!validateFormWithDeductions()) {
+            showErrorMessage('Please correct all validation errors before saving.');
+            return;
+        }
         if (!validateForm()) {
             return;
         }
