@@ -97,7 +97,7 @@ namespace RentManagement.Controllers
                     Username = model.Username,
                     PasswordHash = passwordHash,
                     Salt = salt,
-                    Role = model.IsAdminRegistration ? model.Role : UserRole.Employee,
+                    Role = model.IsAdminRegistration ? model.Role : UserRole.Checker,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     PhoneNumber = model.PhoneNumber,
@@ -214,8 +214,8 @@ namespace RentManagement.Controllers
                 return user.Role switch
                 {
                     UserRole.Admin => RedirectToAction("Dashboard", "Admin"),
-                    UserRole.Employee => RedirectToAction("Dashboard"),
-                    UserRole.Vendor => RedirectToAction("Dashboard"),
+                    UserRole.Checker => RedirectToAction("Dashboard"),
+                    UserRole.Maker => RedirectToAction("Dashboard"),
                     _ => RedirectToAction("Dashboard")
                 };
             }

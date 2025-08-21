@@ -94,7 +94,7 @@ namespace RentManagement.Controllers
             var model = new RegisterViewModel
             {
                 IsAdminRegistration = true,
-                Role = UserRole.Employee
+                Role = UserRole.Maker
             };
             return View(model);
         }

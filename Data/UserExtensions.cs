@@ -9,8 +9,8 @@ namespace RentManagement.Data
             return user.Role switch
             {
                 UserRole.Admin => "bg-danger",
-                UserRole.Employee => "bg-primary",
-                UserRole.Vendor => "bg-warning",
+                UserRole.Maker => "bg-primary",
+                UserRole.Checker => "bg-warning",
                 _ => "bg-secondary"
             };
         }
@@ -46,7 +46,7 @@ namespace RentManagement.Data
         {
             return currentUser.Role switch
             {
-                UserRole.Admin => new List<UserRole> { UserRole.Employee, UserRole.Vendor, UserRole.Admin },
+                UserRole.Admin => new List<UserRole> { UserRole.Maker, UserRole.Checker, UserRole.Admin },
                 _ => new List<UserRole> { currentUser.Role }
             };
         }
