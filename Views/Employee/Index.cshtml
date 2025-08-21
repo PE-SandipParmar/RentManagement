@@ -3,36 +3,106 @@
     ViewData["Title"] = "Employees";
 }
 
+@Html.AntiForgeryToken()
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+    }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151;
+            line-height: 28px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
+
+    /* Toast notification animations */
+    .toast-enter {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    .toast-enter-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 300ms ease-out, opacity 300ms ease-out;
+    }
+
+    .toast-exit {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast-exit-active {
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 300ms ease-in, opacity 300ms ease-in;
+    }
+
+    .input-error {
+        border-color: #ef4444 !important;
+        border-width: 2px !important;
+    }
+
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+
 <div class="bg-white shadow rounded-lg">
+   
+    <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-200">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="Index.html" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+                        <i class="ri-home-line mr-2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="ri-arrow-right-s-line text-gray-400"></i>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Employees</h1>
-            <a href="@Url.Action("Create")" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200">
+            <h1 class="text-2xl font-bold text-gray-900">Employee Management</h1>
+            <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
+                <i class="ri-add-line mr-2"></i>
                 Add New Employee
-            </a>
+            </button>
         </div>
     </div>
 
-  
-
-
-    <form method="get" >
+    <!-- Search and Filters -->
+    <form method="get">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex space-x-4 items-center">
                 <input type="hidden" name="page" value="1" />
-
                 <div class="flex-1">
                     <input type="text" name="search" value="@ViewBag.Search"
                            placeholder="Search by name, email or code..."
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-
-
-
                 <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition duration-200">
                     Search
                 </button>
-
                 @if (!string.IsNullOrEmpty(ViewBag.Search as string))
                 {
                     <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md font-medium transition duration-200">
@@ -42,13 +112,14 @@
             </div>
         </div>
         <div class="px-6 py-4 border-b border-gray-200">
-            <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()" style="float: right;"></select>
-            <label for="PageSize" class="text-sm text-gray-700" style="float: right;padding-top: 5px;padding-right: 9px;">Rows per page</label>
-            <br />
+            <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm float-right" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()">
+            </select>
+            <label for="PageSize" class="text-sm text-gray-700 float-right pt-1 pr-2">Rows per page</label>
+            <div class="clear-both"></div>
         </div>
     </form>
 
-
+    <!-- Table -->
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -58,14 +129,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HRA</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Travel Allowance</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medical Allowance</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Allowance</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gross Salary After Deductions</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                   
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -86,25 +150,7 @@
                             <div class="text-sm text-gray-900">@employee.DesignationName</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.TotalSalary?.ToString("C") ?? "N/A")</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.HouseRentAllowance?.ToString("C") ?? "N/A")</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.TravelAllowance?.ToString("C") ?? "N/A") </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.MedicalAllowance?.ToString("C") ?? "N/A") </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.OtherAllowance?.ToString("C") ?? "N/A") </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.GrossSalaryAfterDeductions?.ToString("C") ?? "N/A") </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@employee.CreatedAt.ToString("MMM dd, yyyy")</div>
+                            <div class="text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("N2") ?? "0.00")</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">
@@ -117,19 +163,23 @@
                             </form>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <a href="@Url.Action("Details", new { id = employee.Id })" class="text-blue-600 hover:text-blue-900"><i class="ri-eye-line"></i></a>
-                            <a href="@Url.Action("Edit", new { id = employee.Id })" class="text-indigo-600 hover:text-indigo-900"><i class="ri-edit-line"></i></a>
-                            <a href="@Url.Action("Delete", new { id = employee.Id })" class="text-red-600 hover:text-red-900"><i class="ri-delete-bin-line"></i></a>
-                       
-                           
+                            <button onclick="openDetailsDrawer(@employee.Id)" class="text-blue-600 hover:text-blue-900 p-1">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="openEditDrawer(@employee.Id)" class="text-indigo-600 hover:text-indigo-900 p-1">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDelete(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-900 p-1">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-
     </div>
 
+    <!-- Empty State -->
     @if (!Model.Items.Any())
     {
         <div class="px-6 py-12 text-center">
@@ -140,21 +190,20 @@
                 }
                 else
                 {
-                    <p>No employees found. <a href="@Url.Action("Create")" class="text-blue-600 hover:underline">Create the first employee</a>.</p>
+                    <p>No employees found. <button onclick="openCreateDrawer()" class="text-blue-600 hover:underline">Create the first employee</button>.</p>
                 }
             </div>
         </div>
     }
 
+    <!-- Pagination -->
     <div class="px-6 py-4 border-t border-gray-200">
         <div class="flex items-center justify-between">
             <div class="text-sm text-gray-700">
                 Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
                 to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
                 of @Model.TotalItems results
-
             </div>
-
             <div class="flex space-x-1">
                 @if (Model.HasPreviousPage)
                 {
@@ -165,25 +214,19 @@
                 }
                 else
                 {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">
-                        Previous
-                    </span>
+                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Previous</span>
                 }
 
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
                     if (i == Model.PageNumber)
                     {
-                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">
-                            @i
-                        </span>
+                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
                     }
                     else
                     {
                         <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search })"
-                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                            @i
-                        </a>
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">@i</a>
                     }
                 }
 
@@ -196,13 +239,1662 @@
                 }
                 else
                 {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">
-                        Next
-                    </span>
+                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Next</span>
                 }
             </div>
         </div>
     </div>
-
-
 </div>
+
+<!-- Create/Edit Slide-over Drawer -->
+<div id="formDrawer" class="fixed inset-0 overflow-hidden z-50 hidden">
+    <div class="absolute inset-0">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300" onclick="closeDrawer()"></div>
+        <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+            <div class="w-screen max-w-2xl transform transition ease-in-out duration-300">
+                <div class="h-full flex flex-col bg-white shadow-xl">
+                    <!-- Header -->
+                    <div class="px-6 py-4 bg-blue-600 text-white">
+                        <div class="flex items-center justify-between">
+                            <h2 id="drawerTitle" class="text-xl font-semibold">Add Employee</h2>
+                            <button onclick="closeDrawer()" class="text-white hover:text-gray-200">
+                                <i class="ri-close-line text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form Content -->
+                    <div class="flex-1 overflow-y-auto">
+                        <form id="employeeForm" class="px-6 py-4 space-y-6">
+                            <input type="hidden" id="employeeId" name="Id" />
+
+                            <div id="validationSummary" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+
+                            <!-- Basic Information -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Basic Information</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                                        <input type="text" id="code" name="Code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" readonly placeholder="Code is Auto Generated" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-500">*</span></label>
+                                        <input type="text" id="name" name="Name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter full name" />
+                                        <div id="nameError" class="error-message hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
+                                        <input type="date" id="dateOfBirth" name="DateOfBirth" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                        <div id="dobError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
+                                        <select id="gender" name="Gender" class="searchable-dropdown w-full">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <div id="genderError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                                    <input type="email" id="email" name="Email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter email address" />
+                                    <div id="emailError" class="error-message hidden"></div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Aadhar Number <span class="text-red-500">*</span></label>
+                                        <input type="text" id="aadhar" name="Aadhar" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 12-digit Aadhar number" />
+                                        <div id="aadharError" class="error-message hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">PAN Number <span class="text-red-500">*</span></label>
+                                        <input type="text" id="pan" name="Pan" maxlength="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" placeholder="ABCDE1234F" />
+                                        <div id="panError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Job Details -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Job Details</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
+                                        <select id="departmentId" name="DepartmentId" class="searchable-dropdown w-full">
+                                            <option value="">Select Department</option>
+                                            @foreach (var dept in ViewBag.Departments as IEnumerable<dynamic>)
+                                            {
+                                                <option value="@dept.Id">@dept.Name</option>
+                                            }
+                                        </select>
+                                        <div id="departmentError" class="error-message hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Designation <span class="text-red-500">*</span></label>
+                                        <select id="designationId" name="DesignationId" class="searchable-dropdown w-full">
+                                            <option value="">Select Designation</option>
+                                            @foreach (var desig in ViewBag.Designations as IEnumerable<dynamic>)
+                                            {
+                                                <option value="@desig.Id">@desig.Name</option>
+                                            }
+                                        </select>
+                                        <div id="designationError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Joining <span class="text-red-500">*</span></label>
+                                    <input type="date" id="dateOfJoining" name="DateOfJoining" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    <div id="joiningDateError" class="error-message hidden"></div>
+                                </div>
+
+                                <div>
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" id="eligibleForLease" name="EligibleForLease" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                                        <span class="ml-2 text-sm text-gray-700">Eligible for Lease</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Salary Details -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Salary Details</h3>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Salary (₹) <span class="text-red-500">*</span></label>
+                                        <input type="number" step="0.01" min="0" id="totalSalary" name="TotalSalary" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <div id="totalSalaryError" class="error-message hidden"></div>
+                                    </div>
+                                   @*  <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
+                                        <input type="number" step="0.01" min="0" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: (Total Salary × 20%) × 2 (max: Total Salary)</p>
+                                        <div id="hraError" class="error-message hidden"></div>
+                                    </div> *@
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
+                                        <input type="number" step="0.01" min="0" id="houseRentAllowanceDisplay"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                                               placeholder="0.00" readonly />
+                                        <input type="hidden" id="houseRentAllowance" name="HouseRentAllowance" />
+                                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: (Total Salary × 20%) × 2 (max: Total Salary)</p>
+                                        <div id="hraError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Travel Allowance (₹)</label>
+                                        <input type="number" step="0.01" min="0" id="travelAllowance" name="TravelAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <div id="travelAllowanceError" class="error-message hidden"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Medical Allowance (₹)</label>
+                                        <input type="number" step="0.01" min="0" id="medicalAllowance" name="MedicalAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <div id="medicalAllowanceError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Other Allowance (₹)</label>
+                                        <input type="number" step="0.01" min="0" id="otherAllowance" name="OtherAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <div id="otherAllowanceError" class="error-message hidden"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Deductions Section -->
+                               @*  <div class="pt-4 border-t border-gray-200">
+                                    <h4 class="text-md font-medium text-gray-900 mb-4">Deductions</h4>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">PF (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="pf" name="PF" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                            <div id="pfError" class="error-message hidden"></div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Professional Tax (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                            <div id="professionalTaxError" class="error-message hidden"></div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">ESI (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="esi" name="ESI" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                            <div id="esiError" class="error-message hidden"></div>
+                                        </div>
+                                    </div>
+                                </div> *@
+                                <!-- Replace the existing deductions section in your form with this updated version -->
+                                <!-- Deductions Section -->
+                                <div class="pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h4 class="text-md font-medium text-gray-900">Deductions</h4>
+                                        <button type="button" onclick="calculateAutoDeductions()"
+                                                class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition duration-200">
+                                            <i class="ri-calculator-line mr-1"></i>
+                                            Auto Calculate
+                                        </button>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">PF (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="pf" name="PF"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                   placeholder="0.00" />
+                                            <p id="pfHelper" class="text-xs text-gray-500 mt-1">12% of basic salary, max ₹1,800</p>
+                                            <div id="pfError" class="error-message hidden"></div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Professional Tax (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                   placeholder="0.00" />
+                                            <p id="ptHelper" class="text-xs text-gray-500 mt-1">
+                                                ₹0 (≤₹21,000), ₹150 (₹21,001-₹25,000), ₹200 (>₹25,000)
+                                            </p>
+                                            <div id="professionalTaxError" class="error-message hidden"></div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">ESI (₹)</label>
+                                            <input type="number" step="0.01" min="0" id="esi" name="ESI"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                   placeholder="0.00" />
+                                            <p id="esiHelper" class="text-xs text-gray-500 mt-1">0.75% of salary (applicable only if salary ≤ ₹25,000)</p>
+                                            <div id="esiError" class="error-message hidden"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Deduction Summary -->
+                                    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                        <h5 class="text-sm font-semibold text-blue-800 mb-2">Deduction Rules Summary:</h5>
+                                        <div class="text-xs text-blue-700 space-y-1">
+                                            <div><strong>PF:</strong> 12% of basic salary (50% of total), maximum ₹1,800/month</div>
+                                            <div><strong>Professional Tax:</strong> ₹0 (≤₹21,000), ₹150 (₹21,001-₹25,000), ₹200 (>₹25,000)</div>
+                                            <div><strong>ESI:</strong> 0.75% of gross salary, applicable only if monthly salary ≤ ₹25,000</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Gross Salary After Deductions (₹)</label>
+                                    <input type="number" step="0.01" id="grossSalaryAfterDeductions" name="GrossSalaryAfterDeductions" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" placeholder="0.00" />
+                                    <p class="text-xs text-gray-500 mt-1">Total Salary - (PF + Professional Tax + ESI)</p>
+                                    <div id="grossSalaryError" class="error-message hidden"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex justify-end space-x-3">
+                            <button onclick="closeDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button onclick="saveEmployee()" id="saveButton" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center">
+                                <span id="saveButtonText">Save Employee</span>
+                                <div id="saveButtonSpinner" class="ml-2 hidden">
+                                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Slide-over Drawer -->
+<div id="detailsDrawer" class="fixed inset-0 overflow-hidden z-50 hidden">
+    <div class="absolute inset-0">
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300" onclick="closeDetailsDrawer()"></div>
+        <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+            <div class="w-screen max-w-2xl transform transition ease-in-out duration-300">
+                <div class="h-full flex flex-col bg-white shadow-xl">
+                    <!-- Header -->
+                    <div class="px-6 py-4 bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xl font-semibold">Employee Details</h2>
+                                <p class="text-indigo-100 text-sm">Complete information about this employee</p>
+                            </div>
+                            <button onclick="closeDetailsDrawer()" class="text-white hover:text-gray-200">
+                                <i class="ri-close-line text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Details Content -->
+                    <div class="flex-1 overflow-y-auto px-6 py-6">
+                        <dl id="employeeDetails" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <!-- Details will be populated by JavaScript -->
+                        </dl>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div class="flex justify-end">
+                            <button onclick="closeDetailsDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-red-600">Delete Employee</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-500 text-3xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-700">
+                        Are you sure you want to permanently delete <strong id="deleteEmployeeName"></strong>?
+                        This action cannot be undone.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+            </button>
+            <button onclick="deleteEmployee()" id="deleteButton" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 flex items-center">
+                <span id="deleteButtonText">Delete</span>
+                <div id="deleteButtonSpinner" class="ml-2 hidden">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    let currentMode = 'create';
+    let currentEmployeeId = null;
+    let deleteEmployeeId = null;
+
+    $(document).ready(function () {
+        // Initialize Select2 dropdowns
+        $('.searchable-dropdown').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#formDrawer')
+        });
+
+        // Setup all validations and event listeners
+        setupFormValidations();
+        setupSalaryCalculation();
+        setupDateValidations();
+
+        // Setup validation error clearing on input
+        setupValidationErrorClearing();
+
+        setupEnhancedDeductionValidation();
+         restrictDeductionInput();
+    });
+    // Restrict input to prevent invalid characters
+    function restrictDeductionInput() {
+        const deductionFields = ['pf', 'professionalTax', 'esi'];
+
+        deductionFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+
+            // Prevent paste of invalid values
+            field.addEventListener('paste', function (e) {
+                setTimeout(() => {
+                    const value = parseFloat(this.value);
+                    if (isNaN(value) || value < 0) {
+                        this.value = '';
+                        showFieldError(fieldId, 'Invalid value pasted. Please enter a valid positive number.');
+                    }
+                }, 1);
+            });
+
+            // Additional keypress validation
+            field.addEventListener('keypress', function (e) {
+                // Only allow numbers, decimal point, backspace, delete, tab
+                const allowedKeys = [8, 9, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 190, 110];
+                if (allowedKeys.indexOf(e.keyCode) === -1) {
+                    e.preventDefault();
+                }
+
+                // Prevent multiple decimal points
+                if ((e.keyCode === 190 || e.keyCode === 110) && this.value.indexOf('.') !== -1) {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
+
+    function setupFormValidations() {
+        // Name validation - only alphabetic characters and spaces
+        $('#name').on('input', function () {
+            const value = this.value;
+            const regex = /^[a-zA-Z\s]*$/;
+            if (!regex.test(value)) {
+                this.value = value.replace(/[^a-zA-Z\s]/g, '');
+                showFieldError('name', 'Only alphabetic characters and spaces are allowed');
+            } else {
+                clearFieldError('name');
+            }
+        });
+
+        // Aadhar validation - only 12 digits
+        $('#aadhar').on('input', function () {
+            let value = this.value.replace(/\D/g, ''); // Remove non-digits
+            if (value.length > 12) {
+                value = value.substring(0, 12);
+            }
+            this.value = value;
+
+            if (value.length > 0 && value.length < 12) {
+                showFieldError('aadhar', 'Aadhar number must be exactly 12 digits');
+            } else if (value.length === 12) {
+                clearFieldError('aadhar');
+                // Check for uniqueness (you'll need to implement this on server side)
+                validateAadharUniqueness(value);
+            }
+        });
+
+        // Enhanced PAN validation - exact format validation
+        $('#pan').on('input', function () {
+            let value = this.value.toUpperCase();
+            // Remove invalid characters
+            value = value.replace(/[^A-Z0-9]/g, '');
+
+            // Apply character position restrictions
+            let formattedValue = '';
+            for (let i = 0; i < Math.min(value.length, 10); i++) {
+                if (i < 5) {
+                    // First 5 positions: only letters
+                    if (/[A-Z]/.test(value[i])) {
+                        formattedValue += value[i];
+                    }
+                } else if (i >= 5 && i < 9) {
+                    // Positions 6-9: only digits
+                    if (/[0-9]/.test(value[i])) {
+                        formattedValue += value[i];
+                    }
+                } else if (i === 9) {
+                    // Position 10: only letter
+                    if (/[A-Z]/.test(value[i])) {
+                        formattedValue += value[i];
+                    }
+                }
+            }
+
+            this.value = formattedValue;
+
+            // Validate format
+            if (formattedValue.length === 0) {
+                clearFieldError('pan');
+            } else if (formattedValue.length < 10) {
+                showFieldError('pan', 'PAN must be exactly 10 characters (Format: ABCDE1234F)');
+            } else if (formattedValue.length === 10) {
+                const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+                if (panRegex.test(formattedValue)) {
+                    clearFieldError('pan');
+                } else {
+                    showFieldError('pan', 'Invalid PAN format. Must be: 5 letters + 4 digits + 1 letter');
+                }
+            }
+        });
+
+        // Prevent invalid keystrokes for PAN
+        $('#pan').on('keydown', function (e) {
+            const currentValue = this.value;
+            const currentPos = this.selectionStart;
+
+            // Allow control keys
+            if ([8, 9, 27, 46, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                (e.keyCode === 65 && e.ctrlKey === true) ||
+                (e.keyCode === 67 && e.ctrlKey === true) ||
+                (e.keyCode === 86 && e.ctrlKey === true) ||
+                (e.keyCode === 88 && e.ctrlKey === true)) {
+                return;
+            }
+
+            // If we're at max length, don't allow more input
+            if (currentValue.length >= 10 && currentPos >= currentValue.length) {
+                e.preventDefault();
+                return;
+            }
+
+            // Position-based validation
+            if (currentPos < 5) {
+                // First 5 positions: only letters
+                if (!(e.keyCode >= 65 && e.keyCode <= 90)) {
+                    e.preventDefault();
+                }
+            } else if (currentPos >= 5 && currentPos < 9) {
+                // Positions 6-9: only digits
+                if (!(e.keyCode >= 48 && e.keyCode <= 57) && !(e.keyCode >= 96 && e.keyCode <= 105)) {
+                    e.preventDefault();
+                }
+            } else if (currentPos === 9) {
+                // Position 10: only letter
+                if (!(e.keyCode >= 65 && e.keyCode <= 90)) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Salary field validations - prevent negative values
+        const salaryFields = ['totalSalary', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi'];
+
+        salaryFields.forEach(fieldId => {
+            $(`#${fieldId}`).on('input', function () {
+                let value = parseFloat(this.value);
+                if (value < 0) {
+                    this.value = '';
+                    showFieldError(fieldId, 'Negative values are not allowed');
+                } else {
+                    clearFieldError(fieldId);
+                }
+            });
+
+            // Prevent key input of negative signs and invalid characters
+            $(`#${fieldId}`).on('keydown', function (e) {
+                // Allow: backspace, delete, tab, escape, enter
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true) ||
+                    // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                    return;
+                }
+
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode !== 190 && e.keyCode !== 110) {
+                    e.preventDefault();
+                }
+
+                // Prevent minus sign
+                if (e.keyCode === 189 || e.keyCode === 109) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Select2 clear button functionality
+        $('#departmentId, #designationId, #gender').on('select2:clear', function () {
+            $(this).val('').trigger('change');
+            clearFieldError(this.id);
+        });
+    }
+
+    function setupDateValidations() {
+        // Set max date for date of birth (18 years ago)
+        const today = new Date();
+        const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        const maxDobDate = eighteenYearsAgo.toISOString().split('T')[0];
+        document.getElementById('dateOfBirth').max = maxDobDate;
+
+        // Set max date for joining date (today)
+        const maxJoiningDate = today.toISOString().split('T')[0];
+        document.getElementById('dateOfJoining').max = maxJoiningDate;
+
+        // Date of birth validation
+        $('#dateOfBirth').on('change', function () {
+            const selectedDate = new Date(this.value);
+            const minAge = new Date();
+            minAge.setFullYear(minAge.getFullYear() - 18);
+
+            if (selectedDate > minAge) {
+                showFieldError('dateOfBirth', 'Employee must be at least 18 years old');
+                this.value = '';
+            } else {
+                clearFieldError('dateOfBirth');
+            }
+        });
+
+        // Joining date validation
+        $('#dateOfJoining').on('change', function () {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+
+            if (selectedDate > today) {
+                showFieldError('dateOfJoining', 'Joining date cannot be in the future');
+                this.value = '';
+            } else {
+                clearFieldError('dateOfJoining');
+            }
+        });
+    }
+
+    function setupValidationErrorClearing() {
+        $(document).on('input change', '#formDrawer input, #formDrawer select', function () {
+            if (this.classList.contains('input-error')) {
+                clearFieldError(this.id);
+            }
+        });
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        field.classList.add('input-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+    }
+
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        if (field) field.classList.remove('input-error');
+        if (errorDiv) {
+            errorDiv.textContent = '';
+            errorDiv.classList.add('hidden');
+        }
+    }
+
+    function validateAadharUniqueness(aadharNumber) {
+        // This should make an AJAX call to check uniqueness on the server
+        // For now, we'll just clear the error if format is correct
+        if (aadharNumber.length === 12) {
+            fetch(`/Employee/ValidateAadhar?aadhar=${aadharNumber}&employeeId=${currentEmployeeId || 0}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.isUnique) {
+                        showFieldError('aadhar', 'This Aadhar number is already registered');
+                    } else {
+                        clearFieldError('aadhar');
+                    }
+                })
+                .catch(() => {
+                    // If validation fails, just clear the error
+                    clearFieldError('aadhar');
+                });
+        }
+    }
+
+    function openCreateDrawer() {
+        currentMode = 'create';
+        currentEmployeeId = null;
+
+        document.getElementById('drawerTitle').textContent = 'Add New Employee';
+        document.getElementById('saveButtonText').textContent = 'Create Employee';
+
+        // Reset form
+        document.getElementById('employeeForm').reset();
+        document.getElementById('employeeId').value = '';
+        clearAllErrors();
+
+        // Show drawer with animation
+        const drawer = document.getElementById('formDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        // Re-initialize select2
+        $('.searchable-dropdown').select2('destroy').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#formDrawer')
+        });
+    }
+
+    function openEditDrawer(employeeId) {
+        currentMode = 'edit';
+        currentEmployeeId = employeeId;
+
+        document.getElementById('drawerTitle').textContent = 'Edit Employee';
+        document.getElementById('saveButtonText').textContent = 'Update Employee';
+        clearAllErrors();
+
+        // Show drawer first
+        const drawer = document.getElementById('formDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        // Load employee data
+        loadEmployeeData(employeeId);
+    }
+
+    function openDetailsDrawer(employeeId) {
+        const drawer = document.getElementById('detailsDrawer');
+        drawer.classList.remove('hidden');
+        setTimeout(() => {
+            drawer.querySelector('.w-screen').classList.add('translate-x-0');
+        }, 10);
+
+        loadEmployeeDetails(employeeId);
+    }
+
+    function closeDrawer() {
+        const drawer = document.getElementById('formDrawer');
+        drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+        }, 300);
+    }
+
+    function closeDetailsDrawer() {
+        const drawer = document.getElementById('detailsDrawer');
+        drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+        }, 300);
+    }
+
+    function confirmDelete(employeeId, employeeName) {
+        deleteEmployeeId = employeeId;
+        document.getElementById('deleteEmployeeName').textContent = employeeName;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        deleteEmployeeId = null;
+    }
+
+    function clearAllErrors() {
+        const errorFields = ['name', 'dateOfBirth', 'gender', 'email', 'aadhar', 'pan', 'department', 'designation', 'dateOfJoining', 'totalSalary', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi', 'grossSalary'];
+        errorFields.forEach(field => clearFieldError(field));
+
+        const summaryDiv = document.getElementById('validationSummary');
+        summaryDiv.classList.add('hidden');
+        summaryDiv.innerHTML = '';
+    }
+
+    function validateForm() {
+        let isValid = true;
+        clearAllErrors();
+
+        // Required field validations
+        const requiredFields = [
+            { id: 'name', message: 'Name is required' },
+            { id: 'dateOfBirth', message: 'Date of birth is required' },
+            { id: 'gender', message: 'Gender is required' },
+            { id: 'email', message: 'Email is required' },
+            { id: 'aadhar', message: 'Aadhar number is required' },
+            { id: 'pan', message: 'PAN number is required' },
+            { id: 'departmentId', message: 'Department is required' },
+            { id: 'designationId', message: 'Designation is required' },
+            { id: 'dateOfJoining', message: 'Joining date is required' },
+            { id: 'totalSalary', message: 'Total salary is required' }
+        ];
+
+        requiredFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (!element.value || element.value.trim() === '' || element.value === '0') {
+                showFieldError(field.id, field.message);
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    function loadEmployeeData(employeeId) {
+        fetch(`/Employee/GetEmployee/${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const employee = data.employee;
+
+                    document.getElementById('employeeId').value = employee.id;
+                    document.getElementById('code').value = employee.code || '';
+                    document.getElementById('name').value = employee.name || '';
+                    document.getElementById('dateOfBirth').value = employee.dateOfBirth ? employee.dateOfBirth.split('T')[0] : '';
+                    document.getElementById('email').value = employee.email || '';
+                    document.getElementById('aadhar').value = employee.aadhar || '';
+                    document.getElementById('pan').value = employee.pan || '';
+                    document.getElementById('dateOfJoining').value = employee.dateOfJoining ? employee.dateOfJoining.split('T')[0] : '';
+                    document.getElementById('eligibleForLease').checked = employee.eligibleForLease || false;
+                    document.getElementById('totalSalary').value = employee.totalSalary || '';
+                    document.getElementById('houseRentAllowance').value = employee.houseRentAllowance || '';
+                    document.getElementById('houseRentAllowanceDisplay').value = employee.houseRentAllowance || '';
+                    document.getElementById('travelAllowance').value = employee.travelAllowance || '';
+                    document.getElementById('medicalAllowance').value = employee.medicalAllowance || '';
+                    document.getElementById('otherAllowance').value = employee.otherAllowance || '';
+                    document.getElementById('pf').value = employee.pf || '';
+                    document.getElementById('professionalTax').value = employee.professionalTax || '';
+                    document.getElementById('esi').value = employee.esi || '';
+                    document.getElementById('grossSalaryAfterDeductions').value = employee.grossSalaryAfterDeductions || '';
+
+                    // Set select2 values
+                    $('#gender').val(employee.gender).trigger('change');
+                    $('#departmentId').val(employee.departmentId).trigger('change');
+                    $('#designationId').val(employee.designationId).trigger('change');
+
+                    calculateGrossSalary();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employee data:', error);
+            });
+    }
+
+    function loadEmployeeDetails(employeeId) {
+        fetch(`/Employee/GetEmployee/${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const employee = data.employee;
+                    const detailsContainer = document.getElementById('employeeDetails');
+
+                    detailsContainer.innerHTML = `
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Code</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Name</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gender</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Email</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">PAN</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Department</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Designation</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Other Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">PF</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">ESI</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employee details:', error);
+            });
+    }
+    function setupEnhancedDeductionValidation() {
+        // Real-time validation for PF
+        $('#pf').on('input blur', function () {
+            validatePF();
+        });
+
+        // Real-time validation for Professional Tax
+        $('#professionalTax').on('input blur', function () {
+            validateProfessionalTax();
+        });
+
+        // Real-time validation for ESI
+        $('#esi').on('input blur', function () {
+            validateESI();
+        });
+
+        // Validate when total salary changes
+        $('#totalSalary').on('input blur', function () {
+            validateAllDeductions();
+        });
+    }
+
+    // Enhanced field error/warning functions
+    function showFieldWarning(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        // Remove error styling but keep warning styling
+        field.classList.remove('input-error');
+        field.classList.add('border-yellow-400');
+
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.className = 'text-yellow-600 text-sm mt-1'; // Warning color instead of error
+            errorDiv.classList.remove('hidden');
+        }
+    }
+
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.getElementById(fieldId + 'Error');
+
+        if (field) {
+            field.classList.remove('input-error', 'border-yellow-400');
+        }
+        if (errorDiv) {
+            errorDiv.textContent = '';
+            errorDiv.className = 'error-message hidden';
+            errorDiv.classList.add('hidden');
+        }
+    }
+
+    // Enhanced auto-calculation with validation
+    function calculateAutoDeductionsWithValidation() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+        if (totalSalary <= 0) {
+            document.getElementById('pf').value = '0.00';
+            document.getElementById('professionalTax').value = '0.00';
+            document.getElementById('esi').value = '0.00';
+            return;
+        }
+
+        // Calculate and set PF
+        const basicSalary = totalSalary * 0.5;
+        const pfAmount = Math.min(basicSalary * 0.12, 1800);
+        document.getElementById('pf').value = pfAmount.toFixed(2);
+
+        // Calculate and set Professional Tax
+        let professionalTax = 0;
+        if (totalSalary <= 21000) {
+            professionalTax = 0;
+        } else if (totalSalary <= 25000) {
+            professionalTax = 150;
+        } else {
+            professionalTax = 200;
+        }
+        document.getElementById('professionalTax').value = professionalTax.toFixed(2);
+
+        // Calculate and set ESI
+        let esiAmount = 0;
+        if (totalSalary <= 25000) {
+            esiAmount = totalSalary * 0.0075;
+        }
+        document.getElementById('esi').value = esiAmount.toFixed(2);
+
+        // Validate all calculated values
+        validateAllDeductions();
+        calculateGrossSalary();
+    }
+
+    // Override the existing function
+    function calculateAutoDeductions() {
+        calculateAutoDeductionsWithValidation();
+    }
+
+    // Enhanced form validation that includes deduction validation
+    function validateFormWithDeductions() {
+        let isValid = validateForm(); // Call existing validation
+
+        // Add deduction validation
+        const deductionsValid = validateAllDeductions();
+
+        return isValid && deductionsValid;
+    }
+    function validateAllDeductions() {
+        const pfValid = validatePF();
+        const ptValid = validateProfessionalTax();
+        const esiValid = validateESI();
+
+        // Additional validation: Total deductions should not exceed salary
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const pf = parseFloat(document.getElementById('pf').value) || 0;
+        const professionalTax = parseFloat(document.getElementById('professionalTax').value) || 0;
+        const esi = parseFloat(document.getElementById('esi').value) || 0;
+
+        const totalDeductions = pf + professionalTax + esi;
+
+        if (totalSalary > 0 && totalDeductions > totalSalary) {
+            showFieldError('grossSalary', `Total deductions (₹${totalDeductions.toFixed(2)}) cannot exceed total salary (₹${totalSalary.toFixed(2)})`);
+            return false;
+        } else {
+            clearFieldError('grossSalary');
+        }
+
+        return pfValid && ptValid && esiValid;
+    }
+    function validateProfessionalTax() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const ptValue = parseFloat(document.getElementById('professionalTax').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('professionalTax');
+
+        if (ptValue < 0) {
+            showFieldError('professionalTax', 'Professional Tax cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (ptValue > 0) {
+                showFieldError('professionalTax', 'Cannot set Professional Tax without total salary');
+                return false;
+            }
+            return true;
+        }
+        // Professional Tax slabs (as per most Indian states)
+        let maxAllowedPT = 0;
+        let expectedPT = 0;
+        let salaryRange = '';
+
+        if (totalSalary <= 21000) {
+            maxAllowedPT = 0;
+            expectedPT = 0;
+            salaryRange = '≤ ₹21,000';
+        } else if (totalSalary <= 25000) {
+            maxAllowedPT = 150;
+            expectedPT = 150;
+            salaryRange = '₹21,001 - ₹25,000';
+        } else {
+            maxAllowedPT = 200;
+            expectedPT = 200;
+            salaryRange = '> ₹25,000';
+        }
+
+        if (ptValue > maxAllowedPT) {
+            if (maxAllowedPT === 0) {
+                showFieldError('professionalTax', `Professional Tax not applicable for salary ${salaryRange}`);
+            } else {
+                showFieldError('professionalTax', `Professional Tax cannot exceed ₹${maxAllowedPT} for salary range ${salaryRange}`);
+            }
+            return false;
+        }
+
+        // Warning for incorrect values
+        if (ptValue !== expectedPT && totalSalary > 0) {
+            if (expectedPT === 0) {
+                if (ptValue > 0) {
+                    showFieldWarning('professionalTax', `Professional Tax is typically ₹0 for salary ${salaryRange}`);
+                }
+            } else {
+                showFieldWarning('professionalTax', `Professional Tax is typically ₹${expectedPT} for salary range ${salaryRange}`);
+            }
+        }
+
+        return true;
+    }
+    function validateESI() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const esiValue = parseFloat(document.getElementById('esi').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('esi');
+
+        if (esiValue < 0) {
+            showFieldError('esi', 'ESI cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (esiValue > 0) {
+                showFieldError('esi', 'Cannot set ESI without total salary');
+                return false;
+            }
+            return true;
+        }
+
+        // ESI is applicable only for salary <= 25,000
+        if (totalSalary > 25000) {
+            if (esiValue > 0) {
+                showFieldError('esi', 'ESI not applicable for salary > ₹25,000');
+                return false;
+            }
+            return true;
+        }
+
+        // Calculate maximum allowed ESI (0.75% of gross salary)
+        const maxAllowedESI = totalSalary * 0.0075;
+
+        if (esiValue > maxAllowedESI) {
+            showFieldError('esi', `ESI cannot exceed ₹${maxAllowedESI.toFixed(2)} (0.75% of salary ₹${totalSalary.toFixed(2)})`);
+            return false;
+        }
+
+        // Warning for unusual values
+        const expectedESI = maxAllowedESI;
+        if (esiValue > 0 && Math.abs(esiValue - expectedESI) > 1) {
+            showFieldWarning('esi', `ESI is typically ₹${expectedESI.toFixed(2)} for this salary`);
+        }
+
+        return true;
+    }
+
+    function validatePF() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const pfValue = parseFloat(document.getElementById('pf').value) || 0;
+
+        // Clear previous errors
+        clearFieldError('pf');
+
+        if (pfValue < 0) {
+            showFieldError('pf', 'PF cannot be negative');
+            return false;
+        }
+
+        if (totalSalary <= 0) {
+            if (pfValue > 0) {
+                showFieldError('pf', 'Cannot set PF without total salary');
+                return false;
+            }
+            return true;
+        }
+
+        // Calculate maximum allowed PF
+        // Basic salary is typically 50% of total salary
+        const basicSalary = totalSalary * 0.5;
+        const maxPFByPercentage = basicSalary * 0.12; // 12% of basic salary
+        const maxPFByLimit = 1800; // Maximum statutory limit
+        const maxAllowedPF = Math.min(maxPFByPercentage, maxPFByLimit);
+
+        if (pfValue > maxAllowedPF) {
+            showFieldError('pf', `PF cannot exceed ₹${maxAllowedPF.toFixed(2)} (12% of basic salary ₹${basicSalary.toFixed(2)}, max ₹1,800)`);
+            return false;
+        }
+
+        // Warning for unusual values
+        if (pfValue > 0 && pfValue < (maxAllowedPF * 0.5)) {
+            showFieldWarning('pf', `PF is typically ₹${maxAllowedPF.toFixed(2)} for this salary range`);
+        }
+
+        return true;
+    }
+    function saveEmployee() {
+        if (!validateFormWithDeductions()) {
+            showErrorMessage('Please correct all validation errors before saving.');
+            return;
+        }
+        if (!validateForm()) {
+            return;
+        }
+
+        const button = document.getElementById('saveButton');
+        const buttonText = document.getElementById('saveButtonText');
+        const buttonSpinner = document.getElementById('saveButtonSpinner');
+
+        // Show loading state
+        button.disabled = true;
+        button.classList.add('opacity-75');
+        buttonSpinner.classList.remove('hidden');
+
+        // Prepare form data
+        const form = document.getElementById('employeeForm');
+        const formData = new FormData();
+
+        // Add all form fields to FormData
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                formData.append(input.name, input.checked ? 'true' : 'false');
+            } else if (input.name && input.name !== '__RequestVerificationToken') {
+                formData.append(input.name, input.value || '');
+            }
+        });
+
+          // Explicitly add calculated readonly fields
+    formData.set('HouseRentAllowance', document.getElementById('houseRentAllowance').value || '0');
+    formData.set('GrossSalaryAfterDeductions', document.getElementById('grossSalaryAfterDeductions').value || '0');
+
+
+        // Add anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        formData.append('__RequestVerificationToken', token);
+
+        // Determine URL based on mode
+        const url = currentMode === 'create' ? '/Employee/Create' : '/Employee/Edit';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeDrawer();
+                    showSuccessMessage(data.message || 'Employee saved successfully!');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    if (data.errors) {
+                        showValidationErrors(data.errors);
+                    } else {
+                        showErrorMessage(data.message || 'Failed to save employee.');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error saving employee:', error);
+                showErrorMessage('An error occurred while saving the employee.');
+            })
+            .finally(() => {
+                // Reset button state
+                button.disabled = false;
+                button.classList.remove('opacity-75');
+                buttonSpinner.classList.add('hidden');
+            });
+    }
+
+    function deleteEmployee() {
+        const button = document.getElementById('deleteButton');
+        const buttonText = document.getElementById('deleteButtonText');
+        const buttonSpinner = document.getElementById('deleteButtonSpinner');
+
+        // Show loading state
+        button.disabled = true;
+        button.classList.add('opacity-75');
+        buttonSpinner.classList.remove('hidden');
+        buttonText.textContent = 'Deleting...';
+
+        // Get anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        const formData = new FormData();
+        formData.append('Id', deleteEmployeeId);
+        formData.append('__RequestVerificationToken', token);
+
+        fetch('/Employee/DeleteConfirmed', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    closeDeleteModal();
+                    showSuccessMessage(data.message || 'Employee deleted successfully!');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showErrorMessage(data.message || 'Failed to delete employee.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting employee:', error);
+                showErrorMessage('An error occurred while deleting the employee.');
+            })
+            .finally(() => {
+                // Reset button state
+                button.disabled = false;
+                button.classList.remove('opacity-75');
+                buttonSpinner.classList.add('hidden');
+                buttonText.textContent = 'Delete';
+            });
+    }
+
+    // function setupSalaryCalculation() {
+    //     const salaryInputs = ['totalSalary', 'pf', 'professionalTax', 'esi'];
+
+    //     salaryInputs.forEach(inputId => {
+    //         document.getElementById(inputId).addEventListener('input', function () {
+    //             calculateHRA();
+    //             calculateGrossSalary();
+    //         });
+    //     });
+
+    //     // Also calculate HRA when total salary changes
+    //     document.getElementById('totalSalary').addEventListener('input', function () {
+    //         calculateHRA();
+    //         calculateGrossSalary();
+    //     });
+    // }
+
+    // function calculateHRA() {
+    //     const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+    //     if (totalSalary > 0) {
+    //         // HRA = (Total Salary × 20%) × 2, with maximum limit of total salary
+    //         const hraCalculated = Math.min((totalSalary * 0.20) * 2, totalSalary);
+    //         document.getElementById('houseRentAllowance').value = hraCalculated.toFixed(2);
+    //     } else {
+    //         document.getElementById('houseRentAllowance').value = '0.00';
+    //     }
+    // }
+
+    // function calculateGrossSalary() {
+    //     const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+    //     const pf = parseFloat(document.getElementById('pf').value) || 0;
+    //     const professionalTax = parseFloat(document.getElementById('professionalTax').value) || 0;
+    //     const esi = parseFloat(document.getElementById('esi').value) || 0;
+
+    //     const totalDeductions = pf + professionalTax + esi;
+    //     const gross = totalSalary - totalDeductions;
+
+    //     // Update the field
+    //     document.getElementById('grossSalaryAfterDeductions').value = gross >= 0 ? gross.toFixed(2) : '0.00';
+
+    //     // Show validation if deductions exceed salary
+    //     if (totalDeductions > totalSalary && totalSalary > 0) {
+    //         showFieldError('grossSalary', 'Total deductions cannot exceed total salary');
+    //     } else if (gross < 0 && totalSalary > 0) {
+    //         showFieldError('grossSalary', 'Gross salary cannot be negative');
+    //     } else {
+    //         clearFieldError('grossSalary');
+    //     }
+    // }
+    function setupSalaryCalculation() {
+        const salaryInputs = ['totalSalary', 'pf', 'professionalTax', 'esi'];
+
+        salaryInputs.forEach(inputId => {
+            document.getElementById(inputId).addEventListener('input', function () {
+                if (inputId === 'totalSalary') {
+                    calculateHRA();
+                    calculateAutoDeductions();
+                }
+                calculateGrossSalary();
+            });
+        });
+
+        // Add change event for total salary to calculate deductions
+        document.getElementById('totalSalary').addEventListener('blur', calculateAutoDeductions);
+    }
+
+    function calculateAutoDeductions() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+        if (totalSalary <= 0) {
+            document.getElementById('pf').value = '0.00';
+            document.getElementById('professionalTax').value = '0.00';
+            document.getElementById('esi').value = '0.00';
+            return;
+        }
+
+        // Calculate PF (12% of basic salary, max Rs. 1,800)
+        // Assuming basic salary is 50% of total salary (common practice)
+        const basicSalary = totalSalary * 0.5;
+        const pfAmount = Math.min(basicSalary * 0.12, 1800);
+        document.getElementById('pf').value = pfAmount.toFixed(2);
+
+        // Calculate Professional Tax based on monthly salary slabs (as per most Indian states)
+        let professionalTax = 0;
+        if (totalSalary <= 21000) {
+            professionalTax = 0;
+        } else if (totalSalary <= 25000) {
+            professionalTax = 150;
+        } else {
+            professionalTax = 200;
+        }
+        document.getElementById('professionalTax').value = professionalTax.toFixed(2);
+
+        // Calculate ESI (0.75% of salary, applicable only if salary <= Rs. 25,000)
+        let esiAmount = 0;
+        if (totalSalary <= 25000) {
+            esiAmount = totalSalary * 0.0075;
+        }
+        document.getElementById('esi').value = esiAmount.toFixed(2);
+
+        // Update helper text
+        updateDeductionHelperText(totalSalary);
+
+        // Recalculate gross salary
+        calculateGrossSalary();
+    }
+
+    function updateDeductionHelperText(totalSalary) {
+        // Update PF helper text
+        const pfHelper = document.getElementById('pfHelper');
+        const basicSalary = totalSalary * 0.5;
+        const maxPF = Math.min(basicSalary * 0.12, 1800);
+        pfHelper.textContent = `Auto-calculated: 12% of basic salary (₹${basicSalary.toFixed(2)}), Max: ₹1,800 → ₹${maxPF.toFixed(2)}`;
+
+        // Update PT helper text
+        const ptHelper = document.getElementById('ptHelper');
+        if (totalSalary <= 21000) {
+            ptHelper.textContent = 'Auto-calculated: Not applicable (Salary ≤ ₹21,000)';
+        } else if (totalSalary <= 25000) {
+            ptHelper.textContent = 'Auto-calculated: ₹150 (Salary ₹21,001 - ₹25,000)';
+        } else {
+            ptHelper.textContent = 'Auto-calculated: ₹200 (Salary > ₹25,000)';
+        }
+
+        // Update ESI helper text
+        const esiHelper = document.getElementById('esiHelper');
+        if (totalSalary > 25000) {
+            esiHelper.textContent = 'Auto-calculated: Not applicable (Salary > ₹25,000)';
+        } else {
+            const esiAmount = totalSalary * 0.0075;
+            esiHelper.textContent = `Auto-calculated: 0.75% of salary → ₹${esiAmount.toFixed(2)}`;
+        }
+    }
+
+    // function calculateHRA() {
+    //     const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+    //     if (totalSalary > 0) {
+    //         // HRA = (Total Salary × 20%) × 2, with maximum limit of total salary
+    //         const hraCalculated = Math.min((totalSalary * 0.20) * 2, totalSalary);
+    //         document.getElementById('houseRentAllowance').value = hraCalculated.toFixed(2);
+    //     } else {
+    //         document.getElementById('houseRentAllowance').value = '0.00';
+    //     }
+    // }
+    function calculateHRA() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+
+        if (totalSalary > 0) {
+            const hraCalculated = Math.min((totalSalary * 0.20) * 2, totalSalary);
+            const hraValue = hraCalculated.toFixed(2);
+
+            // Set both display and hidden fields
+            document.getElementById('houseRentAllowanceDisplay').value = hraValue;
+            document.getElementById('houseRentAllowance').value = hraValue;
+        } else {
+            document.getElementById('houseRentAllowanceDisplay').value = '0.00';
+            document.getElementById('houseRentAllowance').value = '0.00';
+        }
+    }
+
+    function calculateGrossSalary() {
+        const totalSalary = parseFloat(document.getElementById('totalSalary').value) || 0;
+        const pf = parseFloat(document.getElementById('pf').value) || 0;
+        const professionalTax = parseFloat(document.getElementById('professionalTax').value) || 0;
+        const esi = parseFloat(document.getElementById('esi').value) || 0;
+
+        // Validate PF limit
+        const basicSalary = totalSalary * 0.5;
+        const maxPF = Math.min(basicSalary * 0.12, 1800);
+        if (pf > maxPF && totalSalary > 0) {
+            showFieldError('pf', `PF cannot exceed Rs. ${maxPF.toFixed(2)} (12% of basic salary, max Rs. 1,800)`);
+        } else {
+            clearFieldError('pf');
+        }
+
+        // Validate Professional Tax limit
+        let maxPT = 0;
+        if (totalSalary > 25000) {
+            maxPT = 200;
+        } else if (totalSalary > 21000) {
+            maxPT = 150;
+        }
+
+        if (professionalTax > maxPT && totalSalary > 0) {
+            if (maxPT === 0) {
+                showFieldError('professionalTax', 'Professional Tax not applicable for salary ≤ Rs. 21,000');
+            } else {
+                showFieldError('professionalTax', `Professional Tax cannot exceed Rs. ${maxPT} for this salary range`);
+            }
+        } else {
+            clearFieldError('professionalTax');
+        }
+
+        // Validate ESI limit
+        if (totalSalary > 25000 && esi > 0) {
+            showFieldError('esi', 'ESI not applicable for salary > Rs. 25,000');
+        } else if (totalSalary <= 25000 && totalSalary > 0) {
+            const maxESI = totalSalary * 0.0075;
+            if (esi > maxESI) {
+                showFieldError('esi', `ESI cannot exceed Rs. ${maxESI.toFixed(2)} (0.75% of salary)`);
+            } else {
+                clearFieldError('esi');
+            }
+        } else {
+            clearFieldError('esi');
+        }
+
+        const totalDeductions = pf + professionalTax + esi;
+        const gross = totalSalary - totalDeductions;
+
+        // Update the field
+        document.getElementById('grossSalaryAfterDeductions').value = gross >= 0 ? gross.toFixed(2) : '0.00';
+
+        // Show validation if deductions exceed salary
+        if (totalDeductions > totalSalary && totalSalary > 0) {
+            showFieldError('grossSalary', 'Total deductions cannot exceed total salary');
+        } else if (gross < 0 && totalSalary > 0) {
+            showFieldError('grossSalary', 'Gross salary cannot be negative');
+        } else {
+            clearFieldError('grossSalary');
+        }
+    }
+    function showValidationErrors(errors) {
+        const summaryDiv = document.getElementById('validationSummary');
+        summaryDiv.innerHTML = '';
+        summaryDiv.classList.add('hidden');
+
+        if (errors && Object.keys(errors).length > 0) {
+            let errorList = '<h4 class="font-semibold mb-2">Please correct the following errors:</h4><ul class="list-disc list-inside space-y-1">';
+
+            Object.keys(errors).forEach(field => {
+                errors[field].forEach(error => {
+                    errorList += `<li class="text-sm">${error}</li>`;
+                    showFieldError(field, error);
+                });
+            });
+
+            errorList += '</ul>';
+            summaryDiv.innerHTML = errorList;
+            summaryDiv.classList.remove('hidden');
+
+            // Scroll to the top of the drawer to show the error summary
+            document.querySelector('#formDrawer .flex-1.overflow-y-auto').scrollTop = 0;
+        }
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-GB');
+    }
+
+    function formatCurrency(amount) {
+        if (!amount) return '0.00';
+        return parseFloat(amount).toFixed(2);
+    }
+
+    function showSuccessMessage(message) {
+        const alert = document.createElement('div');
+        alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
+        alert.innerHTML = `
+            <div class="flex items-center">
+                <i class="ri-check-line mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(alert);
+
+        // Trigger enter animation
+        setTimeout(() => {
+            alert.classList.remove('toast-enter');
+            alert.classList.add('toast-enter-active');
+        }, 10);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            alert.classList.remove('toast-enter-active');
+            alert.classList.add('toast-exit-active');
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    }
+
+    function showErrorMessage(message) {
+        const alert = document.createElement('div');
+        alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
+        alert.innerHTML = `
+            <div class="flex items-center">
+                <i class="ri-error-warning-line mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(alert);
+
+        // Trigger enter animation
+        setTimeout(() => {
+            alert.classList.remove('toast-enter');
+            alert.classList.add('toast-enter-active');
+        }, 10);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            alert.classList.remove('toast-enter-active');
+            alert.classList.add('toast-exit-active');
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('bg-black') && event.target.classList.contains('bg-opacity-50')) {
+            if (!document.getElementById('formDrawer').classList.contains('hidden')) {
+                closeDrawer();
+            }
+            if (!document.getElementById('detailsDrawer').classList.contains('hidden')) {
+                closeDetailsDrawer();
+            }
+            if (!document.getElementById('deleteModal').classList.contains('hidden')) {
+                closeDeleteModal();
+            }
+        }
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

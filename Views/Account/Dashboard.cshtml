@@ -11,7 +11,7 @@
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900 flex items-center">
         <i class="fas fa-tachometer-alt mr-3"></i>Welcome, @Model.CurrentUser.FirstName!
-        <span class="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @(Model.CurrentUser.Role == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : Model.CurrentUser.Role == RentManagement.Models.UserRole.Employee ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
+        <span class="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @(Model.CurrentUser.Role == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : Model.CurrentUser.Role == RentManagement.Models.UserRole.Checker ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
             @Model.CurrentUser.Role.GetDisplayName()
         </span>
     </h1>
@@ -124,13 +124,13 @@
                 {
                     <div class="mb-4">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @(roleCount.Key == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : roleCount.Key == RentManagement.Models.UserRole.Employee ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium @(roleCount.Key == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : roleCount.Key == RentManagement.Models.UserRole.Checker ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
                                 @roleCount.Key.GetDisplayName()
                             </span>
                             <span class="font-bold">@roleCount.Value</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="@(roleCount.Key == RentManagement.Models.UserRole.Admin ? "bg-red-500" : roleCount.Key == RentManagement.Models.UserRole.Employee ? "bg-blue-500" : "bg-yellow-500") h-2 rounded-full" style="width: @((roleCount.Value * 100.0 / Model.TotalUsers).ToString("F1"))%"></div>
+                            <div class="@(roleCount.Key == RentManagement.Models.UserRole.Admin ? "bg-red-500" : roleCount.Key == RentManagement.Models.UserRole.Checker ? "bg-blue-500" : "bg-yellow-500") h-2 rounded-full" style="width: @((roleCount.Value * 100.0 / Model.TotalUsers).ToString("F1"))%"></div>
                         </div>
                     </div>
                 }
@@ -155,7 +155,7 @@
                                     <p class="text-sm text-gray-500">@user.Username</p>
                                 </div>
                                 <div class="text-right">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(user.Role == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : user.Role == RentManagement.Models.UserRole.Employee ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(user.Role == RentManagement.Models.UserRole.Admin ? "bg-red-100 text-red-800" : user.Role == RentManagement.Models.UserRole.Checker ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
                                         @user.Role.GetDisplayName()
                                     </span>
                                     <p class="text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd")</p>

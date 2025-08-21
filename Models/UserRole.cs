@@ -4,11 +4,11 @@ namespace RentManagement.Models
 {
     public enum UserRole
     {
-        [Display(Name = "Employee")]
-        Employee = 1,
+        [Display(Name = "Maker")]
+        Maker = 1,
 
-        [Display(Name = "Vendor")]
-        Vendor = 2,
+        [Display(Name = "Checker")]
+        Checker = 2,
 
         [Display(Name = "Admin")]
         Admin = 3
@@ -20,8 +20,8 @@ namespace RentManagement.Models
         {
             return role switch
             {
-                UserRole.Employee => "Employee",
-                UserRole.Vendor => "Vendor",
+                UserRole.Maker => "Maker",
+                UserRole.Checker => "Checker",
                 UserRole.Admin => "Admin",
                 _ => "Unknown"
             };
@@ -31,10 +31,10 @@ namespace RentManagement.Models
         {
             return currentUserRole switch
             {
-                UserRole.Admin => new List<UserRole> { UserRole.Employee, UserRole.Vendor, UserRole.Admin },
-                UserRole.Employee => new List<UserRole> { UserRole.Employee },
-                UserRole.Vendor => new List<UserRole> { UserRole.Vendor },
-                _ => new List<UserRole> { UserRole.Employee }
+                UserRole.Admin => new List<UserRole> { UserRole.Checker, UserRole.Maker, UserRole.Admin },
+                UserRole.Checker => new List<UserRole> { UserRole.Checker },
+                UserRole.Maker => new List<UserRole> { UserRole.Maker },
+                _ => new List<UserRole> { UserRole.Maker }
             };
         }
     }
@@ -42,11 +42,11 @@ namespace RentManagement.Models
     public static class Roles
     {
         public const string Admin = "Admin";
-        public const string Employee = "Employee";
-        public const string Vendor = "Vendor";
+        public const string Checker = "Checker";
+        public const string Maker = "Maker";
 
-        public const string AdminOrEmployee = Admin + "," + Employee;
-        public const string AdminOrVendor = Admin + "," + Vendor;
-        public const string All = Admin + "," + Employee + "," + Vendor;
+        public const string AdminOrEmployee = Admin + "," + Maker;
+        public const string AdminOrVendor = Admin + "," + Checker;
+        public const string All = Admin + "," + Maker + "," + Checker;
     }
 }

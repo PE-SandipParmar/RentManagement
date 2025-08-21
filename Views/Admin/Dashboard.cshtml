@@ -111,15 +111,15 @@
                     var colorClass = roleCount.Key switch
                     {
                         RentManagement.Models.UserRole.Admin => "bg-red-500",
-                        RentManagement.Models.UserRole.Employee => "bg-blue-500",
-                        RentManagement.Models.UserRole.Vendor => "bg-orange-500",
+                        RentManagement.Models.UserRole.Checker => "bg-blue-500",
+                        RentManagement.Models.UserRole.Maker => "bg-orange-500",
                         _ => "bg-gray-500"
                     };
                     var lightColorClass = roleCount.Key switch
                     {
                         RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800",
-                        RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800",
-                        RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800",
+                        RentManagement.Models.UserRole.Checker => "bg-blue-100 text-blue-800",
+                        RentManagement.Models.UserRole.Maker => "bg-orange-100 text-orange-800",
                         _ => "bg-gray-100 text-gray-800"
                     };
 
@@ -211,8 +211,8 @@
                     var roleColorClass = user.Role switch
                     {
                         RentManagement.Models.UserRole.Admin => "bg-red-100 text-red-800",
-                        RentManagement.Models.UserRole.Employee => "bg-blue-100 text-blue-800",
-                        RentManagement.Models.UserRole.Vendor => "bg-orange-100 text-orange-800",
+                        RentManagement.Models.UserRole.Checker => "bg-blue-100 text-blue-800",
+                        RentManagement.Models.UserRole.Maker => "bg-orange-100 text-orange-800",
                         _ => "bg-gray-100 text-gray-800"
                     };
 

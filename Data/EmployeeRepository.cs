@@ -95,6 +95,9 @@ namespace RentManagement.Data
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
             parameters.Add("@OtherAllowance", employee.OtherAllowance);
             parameters.Add("@GrossSalaryAfterDeductions", employee.GrossSalaryAfterDeductions);
+            parameters.Add("@ProvidentFund", employee.PF);
+            parameters.Add("@ProfessionalTax", employee.ProfessionalTax);
+            parameters.Add("@ESIC", employee.ESI);
             parameters.Add("@IsActive", employee.IsActive);
             parameters.Add("@CreatedAt", employee.CreatedAt);
             parameters.Add("@CreatedBy", employee.CreatedBy);
@@ -132,6 +135,9 @@ namespace RentManagement.Data
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
             parameters.Add("@OtherAllowance", employee.OtherAllowance);
             parameters.Add("@GrossSalaryAfterDeductions", employee.GrossSalaryAfterDeductions);
+            parameters.Add("@ProvidentFund", employee.PF);
+            parameters.Add("@ProfessionalTax", employee.ProfessionalTax);
+            parameters.Add("@ESIC", employee.ESI);
             parameters.Add("@IsActive", employee.IsActive);
             parameters.Add("@UpdatedBy", employee.UpdatedBy);
 

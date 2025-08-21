@@ -57,11 +57,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy =>
         policy.RequireRole(Roles.Admin));
 
-    options.AddPolicy("AdminOrEmployee", policy =>
-        policy.RequireRole(Roles.Admin, Roles.Employee));
+    options.AddPolicy("AdminOrChecker", policy =>
+        policy.RequireRole(Roles.Admin, Roles.Checker));
 
     options.AddPolicy("AllRoles", policy =>
-        policy.RequireRole(Roles.Admin, Roles.Employee, Roles.Vendor));
+        policy.RequireRole(Roles.Admin, Roles.Checker, Roles.Maker));
 });
 
 
