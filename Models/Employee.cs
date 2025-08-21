@@ -51,20 +51,15 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "House Rent Allowance is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "House Rent Allowance must be a positive number.")]
         public decimal? HouseRentAllowance { get; set; }
-
        
-        public decimal? TravelAllowance { get; set; }
-
-    
-        public decimal? MedicalAllowance { get; set; }
-
-       
+        public decimal? TravelAllowance { get; set; }    
+        public decimal? MedicalAllowance { get; set; }       
         public decimal? OtherAllowance { get; set; }
         public decimal? GrossSalaryAfterDeductions { get; set; }
         public decimal? PF { get; set; }
         public decimal? ProfessionalTax { get; set; }
         public decimal? ESI { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public int? CreatedBy { get; set; }

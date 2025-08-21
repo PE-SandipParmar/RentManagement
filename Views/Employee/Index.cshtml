@@ -61,10 +61,28 @@
 </style>
 
 <div class="bg-white shadow rounded-lg">
+   
     <!-- Header -->
     <div class="px-6 py-4 border-b border-gray-200">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="Index.html" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+                        <i class="ri-home-line mr-2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="ri-arrow-right-s-line text-gray-400"></i>
+                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Employees</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Employee Management</h1>
             <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
                 <i class="ri-add-line mr-2"></i>
                 Add New Employee

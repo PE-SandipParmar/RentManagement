@@ -36,7 +36,7 @@ namespace RentManagement.ViewModels
         public string? Department { get; set; }
 
         [Required(ErrorMessage = "Role is required")]
-        public UserRole Role { get; set; } = UserRole.Employee;
+        public UserRole Role { get; set; } = UserRole.Checker;
 
         public bool IsAdminRegistration { get; set; } = false;
     }

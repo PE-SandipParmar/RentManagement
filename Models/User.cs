@@ -11,7 +11,7 @@ namespace RentManagement.Models
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string Salt { get; set; } = string.Empty;
-        public UserRole Role { get; set; } = UserRole.Employee;
+        public UserRole Role { get; set; } = UserRole.Checker;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
