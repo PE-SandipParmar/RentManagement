@@ -84,6 +84,7 @@ namespace RentManagement.Controllers
         }
 
         // AJAX: Get vendor details for view/edit
+        // AJAX: Get vendor details for view/edit
         [HttpGet]
         public async Task<IActionResult> GetVendorDetails(int id)
         {
@@ -100,38 +101,34 @@ namespace RentManagement.Controllers
                     success = true,
                     data = new
                     {
-                        vendor.Id,
-                        vendor.VendorCode,
-                        vendor.VendorName,
-                        vendor.PANNumber,
-                        vendor.MobileNumber,
-                        vendor.AlternateNumber,
-                        vendor.EmailId,
-                        vendor.Address,
-                        vendor.AccountHolderName,
-                        vendor.BankName,
-                        vendor.BranchName,
-                        vendor.AccountNumber,
-                        vendor.IFSCCode,
-                        vendor.PropertyAddress,
-                        vendor.TotalRentAmount,
+                        Id = vendor.Id,
+                        VendorCode = vendor.VendorCode,
+                        VendorName = vendor.VendorName,
+                        MobileNumber = vendor.MobileNumber,
+                        AlternateNumber = vendor.AlternateNumber,
+                        EmailId = vendor.EmailId,
+                        Address = vendor.Address,
+                        AccountHolderName = vendor.AccountHolderName,
+                        BankName = vendor.BankName,
+                        BranchName = vendor.BranchName,
+                        AccountNumber = vendor.AccountNumber,
+                        PropertyAddress = vendor.PropertyAddress,
+                        TotalRentAmount = vendor.TotalRentAmount,
                         LinkedEmployees = vendor.LinkedEmployeesList,
-                        vendor.Status,
+                        Status = vendor.Status,
                         ApprovalStatus = (int)vendor.ApprovalStatus,
-                        vendor.ApprovalStatusText,
-                        vendor.MakerUserName,
-                        vendor.CheckerUserName,
+                        ApprovalStatusText = vendor.ApprovalStatusText,
+                        MakerUserName = vendor.MakerUserName,
+                        CheckerUserName = vendor.CheckerUserName,
                         MakerAction = (int)vendor.MakerAction,
                         MakerActionText = vendor.MakerAction.ToString(),
-                        vendor.ApprovalDate,
-                        vendor.RejectionReason,
-                        vendor.CreatedDate,
-                        vendor.UpdatedDate,
-                        // Add backward compatibility for different property name cases
+                        ApprovalDate = vendor.ApprovalDate,
+                        RejectionReason = vendor.RejectionReason,
+                        CreatedDate = vendor.CreatedDate,
+                        UpdatedDate = vendor.UpdatedDate,
+                        // Use the property names that JavaScript expects
                         panNumber = vendor.PANNumber,
-                        ifscCode = vendor.IFSCCode,
-                        pANNumber = vendor.PANNumber,
-                        iFSCCode = vendor.IFSCCode
+                        ifscCode = vendor.IFSCCode
                     }
                 });
             }
@@ -141,6 +138,7 @@ namespace RentManagement.Controllers
                 return Json(new { success = false, message = "An error occurred while fetching vendor details." });
             }
         }
+
 
         // AJAX: Create vendor (Maker role)
         [HttpPost]
