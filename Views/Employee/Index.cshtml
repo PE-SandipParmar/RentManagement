@@ -60,190 +60,201 @@
     }
 </style>
 
-<div class="bg-white shadow rounded-lg">
-   
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200">
-        <!-- Breadcrumb -->
-        <nav class="flex mb-6" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="Index.html" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
-                        <i class="ri-home-line mr-2"></i>
-                        Dashboard
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <i class="ri-arrow-right-s-line text-gray-400"></i>
-                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Employee Management</h1>
-            <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
-                <i class="ri-add-line mr-2"></i>
-                Add New Employee
-            </button>
-        </div>
-    </div>
+<div class="p-1">
 
-    <!-- Search and Filters -->
-    <form method="get">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex space-x-4 items-center">
-                <input type="hidden" name="page" value="1" />
-                <div class="flex-1">
-                    <input type="text" name="search" value="@ViewBag.Search"
-                           placeholder="Search by name, email or code..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="@Url.Action("Index", "Home")" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+                    <i class="ri-home-line mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="ri-arrow-right-s-line text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
                 </div>
-                <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition duration-200">
-                    Search
-                </button>
-                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                {
-                    <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md font-medium transition duration-200">
-                        Clear
-                    </a>
-                }
-            </div>
-        </div>
-        <div class="px-6 py-4 border-b border-gray-200">
-            <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm float-right" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()">
-            </select>
-            <label for="PageSize" class="text-sm text-gray-700 float-right pt-1 pr-2">Rows per page</label>
-            <div class="clear-both"></div>
-        </div>
-    </form>
+            </li>
+        </ol>
+    </nav>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Code</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Employee Management</h2>
+            <p class="text-gray-600 mt-1">
+                Manage your organization's employees and their information
+
+
+                Add Employee
+            </p>
+        </div>
+        <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
+            <i class="ri-add-line mr-2"></i>
+            Add New Employee
+        </button>
+    </div>
+</div>
+
+<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
+    <div class="flex flex-col md:flex-row gap-4">
+        <!-- Search and Filters -->
+        <form method="get" class="w-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex space-x-4 items-center">
+                    <input type="hidden" name="page" value="1" />
+                    <div class="flex-1">
+                        <input type="text" name="search" value="@ViewBag.Search"
+                               placeholder="Search by name, email or code..."
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition duration-200">
+                        Search
+                    </button>
+                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                    {
+                        <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md font-medium transition duration-200">
+                            Clear
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm float-right" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()">
+                </select>
+                <label for="PageSize" class="text-sm text-gray-700 float-right pt-1 pr-2">Rows per page</label>
+                <div class="clear-both"></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            @foreach (var employee in Model.Items)
+            {
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">@employee.Code</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">@employee.Name</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">@employee.DepartmentName</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">@employee.DesignationName</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("N2") ?? "0.00")</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">
+                            <button type="submit">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(employee.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                    <span class="w-1.5 h-1.5 @(employee.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                                    @(employee.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </button>
+                        </form>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button onclick="openDetailsDrawer(@employee.Id)" class="text-blue-600 hover:text-blue-900 p-1">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                        <button onclick="openEditDrawer(@employee.Id)" class="text-indigo-600 hover:text-indigo-900 p-1">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button onclick="confirmDelete(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-900 p-1">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach (var employee in Model.Items)
-                {
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@employee.Code</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@employee.Name</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@employee.DepartmentName</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@employee.DesignationName</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("N2") ?? "0.00")</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">
-                                <button type="submit">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(employee.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
-                                        <span class="w-1.5 h-1.5 @(employee.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
-                                        @(employee.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </button>
-                            </form>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <button onclick="openDetailsDrawer(@employee.Id)" class="text-blue-600 hover:text-blue-900 p-1">
-                                <i class="ri-eye-line"></i>
-                            </button>
-                            <button onclick="openEditDrawer(@employee.Id)" class="text-indigo-600 hover:text-indigo-900 p-1">
-                                <i class="ri-edit-line"></i>
-                            </button>
-                            <button onclick="confirmDelete(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-900 p-1">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+        </tbody>
+    </table>
+</div>
 
-    <!-- Empty State -->
-    @if (!Model.Items.Any())
-    {
-        <div class="px-6 py-12 text-center">
-            <div class="text-gray-500">
-                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                {
-                    <p>No employees found matching your search criteria.</p>
-                }
-                else
-                {
-                    <p>No employees found. <button onclick="openCreateDrawer()" class="text-blue-600 hover:underline">Create the first employee</button>.</p>
-                }
-            </div>
-        </div>
-    }
-
-    <!-- Pagination -->
-    <div class="px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-            <div class="text-sm text-gray-700">
-                Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
-                to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
-                of @Model.TotalItems results
-            </div>
-            <div class="flex space-x-1">
-                @if (Model.HasPreviousPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search })"
-                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Previous
-                    </a>
-                }
-                else
-                {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Previous</span>
-                }
-
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    if (i == Model.PageNumber)
-                    {
-                        <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
-                    }
-                    else
-                    {
-                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search })"
-                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">@i</a>
-                    }
-                }
-
-                @if (Model.HasNextPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search })"
-                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Next
-                    </a>
-                }
-                else
-                {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Next</span>
-                }
-            </div>
+<!-- Empty State -->
+@if (!Model.Items.Any())
+{
+    <div class="px-6 py-12 text-center">
+        <div class="text-gray-500">
+            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+            {
+                <p>No employees found matching your search criteria.</p>
+            }
+            else
+            {
+                <p>No employees found. <button onclick="openCreateDrawer()" class="text-blue-600 hover:underline">Create the first employee</button>.</p>
+            }
         </div>
     </div>
+}
+
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+            Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
+            to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
+            of @Model.TotalItems results
+        </div>
+        <div class="flex space-x-1">
+            @if (Model.HasPreviousPage)
+            {
+                <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search })"
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Previous
+                </a>
+            }
+            else
+            {
+                <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Previous</span>
+            }
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                if (i == Model.PageNumber)
+                {
+                    <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
+                }
+                else
+                {
+                    <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search })"
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">@i</a>
+                }
+            }
+
+            @if (Model.HasNextPage)
+            {
+                <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search })"
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Next
+                </a>
+            }
+            else
+            {
+                <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Next</span>
+            }
+        </div>
+    </div>
+</div>
 </div>
 
 <!-- Create/Edit Slide-over Drawer -->
@@ -377,11 +388,11 @@
                                         <input type="number" step="0.01" min="0" id="totalSalary" name="TotalSalary" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="totalSalaryError" class="error-message hidden"></div>
                                     </div>
-                                   @*  <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
-                                        <input type="number" step="0.01" min="0" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
-                                        <p class="text-xs text-gray-500 mt-1">Auto-calculated: (Total Salary × 20%) × 2 (max: Total Salary)</p>
-                                        <div id="hraError" class="error-message hidden"></div>
+                                    @*  <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
+                                    <input type="number" step="0.01" min="0" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                    <p class="text-xs text-gray-500 mt-1">Auto-calculated: (Total Salary × 20%) × 2 (max: Total Salary)</p>
+                                    <div id="hraError" class="error-message hidden"></div>
                                     </div> *@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
@@ -416,26 +427,26 @@
                                 </div>
 
                                 <!-- Deductions Section -->
-                               @*  <div class="pt-4 border-t border-gray-200">
-                                    <h4 class="text-md font-medium text-gray-900 mb-4">Deductions</h4>
+                                @*  <div class="pt-4 border-t border-gray-200">
+                                <h4 class="text-md font-medium text-gray-900 mb-4">Deductions</h4>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">PF (₹)</label>
-                                            <input type="number" step="0.01" min="0" id="pf" name="PF" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
-                                            <div id="pfError" class="error-message hidden"></div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Professional Tax (₹)</label>
-                                            <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
-                                            <div id="professionalTaxError" class="error-message hidden"></div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">ESI (₹)</label>
-                                            <input type="number" step="0.01" min="0" id="esi" name="ESI" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
-                                            <div id="esiError" class="error-message hidden"></div>
-                                        </div>
-                                    </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">PF (₹)</label>
+                                <input type="number" step="0.01" min="0" id="pf" name="PF" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                <div id="pfError" class="error-message hidden"></div>
+                                </div>
+                                <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Professional Tax (₹)</label>
+                                <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                <div id="professionalTaxError" class="error-message hidden"></div>
+                                </div>
+                                <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ESI (₹)</label>
+                                <input type="number" step="0.01" min="0" id="esi" name="ESI" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                <div id="esiError" class="error-message hidden"></div>
+                                </div>
+                                </div>
                                 </div> *@
                                 <!-- Replace the existing deductions section in your form with this updated version -->
                                 <!-- Deductions Section -->
@@ -620,7 +631,7 @@
         setupValidationErrorClearing();
 
         setupEnhancedDeductionValidation();
-         restrictDeductionInput();
+        restrictDeductionInput();
     });
     // Restrict input to prevent invalid characters
     function restrictDeductionInput() {
@@ -1076,87 +1087,87 @@
                     const detailsContainer = document.getElementById('employeeDetails');
 
                     detailsContainer.innerHTML = `
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Code</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Name</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Gender</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Email</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">PAN</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Department</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Designation</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Other Allowance</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">PF</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">ESI</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
-                        </div>
-                    `;
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Code</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Name</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Gender</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Email</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">PAN</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Department</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Designation</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Other Allowance</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">PF</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">ESI</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
+                            </div>
+                        `;
                 }
             })
             .catch(error => {
@@ -1467,9 +1478,9 @@
             }
         });
 
-          // Explicitly add calculated readonly fields
-    formData.set('HouseRentAllowance', document.getElementById('houseRentAllowance').value || '0');
-    formData.set('GrossSalaryAfterDeductions', document.getElementById('grossSalaryAfterDeductions').value || '0');
+        // Explicitly add calculated readonly fields
+        formData.set('HouseRentAllowance', document.getElementById('houseRentAllowance').value || '0');
+        formData.set('GrossSalaryAfterDeductions', document.getElementById('grossSalaryAfterDeductions').value || '0');
 
 
         // Add anti-forgery token
@@ -1833,11 +1844,11 @@
         const alert = document.createElement('div');
         alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
         alert.innerHTML = `
-            <div class="flex items-center">
-                <i class="ri-check-line mr-2"></i>
-                <span>${message}</span>
-            </div>
-        `;
+                <div class="flex items-center">
+                    <i class="ri-check-line mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
         document.body.appendChild(alert);
 
         // Trigger enter animation
@@ -1858,11 +1869,11 @@
         const alert = document.createElement('div');
         alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
         alert.innerHTML = `
-            <div class="flex items-center">
-                <i class="ri-error-warning-line mr-2"></i>
-                <span>${message}</span>
-            </div>
-        `;
+                <div class="flex items-center">
+                    <i class="ri-error-warning-line mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
         document.body.appendChild(alert);
 
         // Trigger enter animation
