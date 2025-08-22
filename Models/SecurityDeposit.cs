@@ -25,6 +25,8 @@ namespace RentManagement.Models
         [StringLength(20, ErrorMessage = "Approval status cannot exceed 20 characters.")]
         public string ApprovalStatus { get; set; } = "Pending";
 
+        public string? Remark { get; set; } = "";
+
         public int? CreatedBy { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;

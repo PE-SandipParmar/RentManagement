@@ -47,8 +47,14 @@ namespace RentManagement.Models
         [Range(0, double.MaxValue, ErrorMessage = "Total Salary must be a positive number.")]
         public decimal? TotalSalary { get; set; }
 
+
+        [Required(ErrorMessage = "Basic Salary is required.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Basic Salary must be a positive number.")]
+        public decimal? BasicSalary { get; set; }
+
+        
         //[HraValidation]
-        [Required(ErrorMessage = "House Rent Allowance is required.")]
+        //[Required(ErrorMessage = "House Rent Allowance is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "House Rent Allowance must be a positive number.")]
         public decimal? HouseRentAllowance { get; set; }
        

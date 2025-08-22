@@ -17,6 +17,9 @@ namespace RentManagement.Data
         Task<IEnumerable<Owner>> GetOwnersAsync();
         Task<IEnumerable<LeaseName>> GetLeaseNamesAsync();
         Task ToggleActiveStatus(int Id);
-
+        Task<decimal> GetEmployeeSalaryAsync(int employeeId);
+        Task<List<dynamic>> GetLeasesByEmployeeAsync(int employeeId);
+        Task<int> GetLeaseOwnerAsync(int leaseId);
+        Task<bool> IsDuplicateRecordAsync(int employeeId, int leaseId, int vendorId, int? excludeId = null);
     }
 }

@@ -28,6 +28,7 @@ public class SecurityDepositRepository : ISecurityDepositRepository
         parameters.Add("@LeaseId", deposit.LeaseId);
         parameters.Add("@Amount", deposit.Amount);
         parameters.Add("@ApprovalStatus", deposit.ApprovalStatus);
+        parameters.Add("@Remark", deposit.Remark);
         parameters.Add("@CreatedBy", deposit.CreatedBy);
         parameters.Add("@IsActive", deposit.IsActive);
 
@@ -87,6 +88,7 @@ public class SecurityDepositRepository : ISecurityDepositRepository
         parameters.Add("@VendorId", deposit.VendorId);
         parameters.Add("@LeaseId", deposit.LeaseId);
         parameters.Add("@Amount", deposit.Amount);
+        parameters.Add("@Remark", deposit.Remark);
         parameters.Add("@ApprovalStatus", deposit.ApprovalStatus);
         parameters.Add("@ModifiedBy", deposit.ModifiedBy);
         parameters.Add("@IsActive", deposit.IsActive);
@@ -143,4 +145,105 @@ public class SecurityDepositRepository : ISecurityDepositRepository
             commandType: CommandType.StoredProcedure
         );
     }
+
+    #region Enhanced Functionality Methods
+
+    public async Task<decimal> GetEmployeeSalaryAsync(int employeeId)
+    {
+        try
+        {
+            using var connection = CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@EmployeeId", employeeId);
+            parameters.Add("@Salary", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            await connection.ExecuteAsync(
+                "GetEmployeeSalary",
+                parameters,
+                commandType: CommandType.StoredProcedure);
+
+            return parameters.Get<decimal>("@Salary");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error getting employee salary: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<dynamic>> GetLeasesByEmployeeAsync(int employeeId)
+    {
+        try
+        {
+            using var connection = CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@EmployeeId", employeeId);
+
+            var leases = await connection.QueryAsync(
+                "GetLeasesByEmployee",
+                parameters,
+                commandType: CommandType.StoredProcedure);
+
+            return leases.ToList();
+        }
+        catch (Exception)
+        {
+            return new List<dynamic>();
+        }
+    }
+
+    public async Task<int> GetLeaseOwnerAsync(int leaseId)
+    {
+        try
+        {
+            using var connection = CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@LeaseId", leaseId);
+            parameters.Add("@OwnerId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            await connection.ExecuteAsync(
+                "GetLeaseOwner",
+                parameters,
+                commandType: CommandType.StoredProcedure);
+
+            return parameters.Get<int>("@OwnerId");
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+
+    public async Task<bool> IsDuplicateRecordAsync(int employeeId, int leaseId, int vendorId, int? excludeId = null)
+    {
+        try
+        {
+            using var connection = CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@EmployeeId", employeeId);
+            parameters.Add("@LeaseId", leaseId);
+            parameters.Add("@VendorId", vendorId);
+            parameters.Add("@ExcludeId", excludeId);
+            parameters.Add("@IsDuplicate", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+
+            await connection.ExecuteAsync(
+                "CheckDuplicateSecurityDeposit",
+                parameters,
+                commandType: CommandType.StoredProcedure);
+
+            return parameters.Get<bool>("@IsDuplicate");
+        }
+        catch (Exception)
+        {
+            return false; // In case of error, assume no duplicate
+        }
+    }
+
+    #endregion
+
+
+
 }
