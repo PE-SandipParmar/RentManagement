@@ -743,6 +743,7 @@
 
         // Modified loadVendors function to include approval status filter
         function loadVendors() {
+            debugger
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;
             const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
