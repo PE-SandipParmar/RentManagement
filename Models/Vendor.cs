@@ -28,8 +28,6 @@ namespace RentManagement.Models
         public string MobileNumber { get; set; } = string.Empty;
 
         [Display(Name = "Alternate Number")]
-        //[RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Alternate Number must be 10 digits")]
-        //[StringLength(10, MinimumLength = 10, ErrorMessage = "Alternate Number must be 10 digits")]
         public string? AlternateNumber { get; set; }
 
         [Required(ErrorMessage = "Email ID is required")]
@@ -65,8 +63,6 @@ namespace RentManagement.Models
 
         [Required(ErrorMessage = "IFSC Code is required")]
         [Display(Name = "IFSC Code")]
-        //[RegularExpression(@"^[A-Z]{4}[0-9]{7}$", ErrorMessage = "Invalid IFSC Code format")]
-       // [StringLength(11, MinimumLength = 11, ErrorMessage = "IFSC Code must be 11 characters")]
         public string IFSCCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Property Address is required")]
@@ -88,6 +84,34 @@ namespace RentManagement.Models
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
 
+        // Approval Workflow Fields
+        [Display(Name = "Approval Status")]
+        public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Pending;
+
+        [Display(Name = "Maker User ID")]
+        public string? MakerUserId { get; set; }
+
+        [Display(Name = "Maker User Name")]
+        public string? MakerUserName { get; set; }
+
+        [Display(Name = "Checker User ID")]
+        public string? CheckerUserId { get; set; }
+
+        [Display(Name = "Checker User Name")]
+        public string? CheckerUserName { get; set; }
+
+        [Display(Name = "Maker Action")]
+        public MakerAction MakerAction { get; set; } = MakerAction.Create;
+
+        [Display(Name = "Approval Date")]
+        public DateTime? ApprovalDate { get; set; }
+
+        [Display(Name = "Rejection Reason")]
+        public string? RejectionReason { get; set; }
+
+        [Display(Name = "Is Active Record")]
+        public bool IsActiveRecord { get; set; } = true;
+
         // Helper property to get linked employees as a list
         public List<string> LinkedEmployeesList
         {
@@ -103,6 +127,18 @@ namespace RentManagement.Models
             }
         }
 
+        // Helper property to check if vendor is visible in main list
+        public bool IsVisibleInMainList => ApprovalStatus == ApprovalStatus.Approved && IsActiveRecord;
+
+        // Helper property to get approval status display text
+        public string ApprovalStatusText => ApprovalStatus switch
+        {
+            ApprovalStatus.Pending => "Pending Approval",
+            ApprovalStatus.Approved => "Approved",
+            ApprovalStatus.Rejected => "Rejected",
+            _ => "Unknown"
+        };
+
         public class VendorViewModel
         {
             public Vendor Vendor { get; set; } = new Vendor();
@@ -113,12 +149,40 @@ namespace RentManagement.Models
         public class VendorListViewModel
         {
             public List<Vendor> Vendors { get; set; } = new List<Vendor>();
+            public List<Vendor> PendingApprovals { get; set; } = new List<Vendor>();
             public string SearchTerm { get; set; } = string.Empty;
             public string StatusFilter { get; set; } = string.Empty;
+            public string ApprovalStatusFilter { get; set; } = string.Empty;
             public int CurrentPage { get; set; } = 1;
             public int PageSize { get; set; } = 10;
             public int TotalRecords { get; set; }
             public int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize);
+            public UserRole CurrentUserRole { get; set; }
+            public bool ShowApprovalSection { get; set; }
         }
+    }
+
+    public enum ApprovalStatus
+    {
+        [Display(Name = "Pending")]
+        Pending = 1,
+
+        [Display(Name = "Approved")]
+        Approved = 2,
+
+        [Display(Name = "Rejected")]
+        Rejected = 3
+    }
+
+    public enum MakerAction
+    {
+        [Display(Name = "Create")]
+        Create = 1,
+
+        [Display(Name = "Update")]
+        Update = 2,
+
+        [Display(Name = "Delete")]
+        Delete = 3
     }
 }
