@@ -20,6 +20,7 @@
             height: 40px;
         }
 </style>
+
 <div class="max-w-4xl mx-auto">
     <div class="bg-white shadow rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -32,31 +33,31 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Name (Employee)</label>
-                    <select asp-for="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
+                    <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                    <select asp-for="EmployeeId" id="EmployeeSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                             asp-items="@(new SelectList(ViewBag.Employees, "Id", "Name", Model.EmployeeId))">
-                        <option value="0">Select</option>
+                        <option value="0">Select Employee</option>
                     </select>
                     <span asp-validation-for="EmployeeId" class="text-red-500 text-sm"></span>
                 </div>
                 <div>
-                    <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner's Name</label>
-                    <select asp-for="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
-                            asp-items="@(new SelectList(ViewBag.Vendors, "Id", "Name", Model.VendorId))">
-                        <option value="0">Select</option>
+                    <label asp-for="LeaseId" class="block text-sm font-medium text-gray-700 mb-1">Lease Reference</label>
+                    <select asp-for="LeaseId" id="LeaseSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.Leases, "Id", "Name", Model.LeaseId))">
+                        <option value="0">Select Lease</option>
                     </select>
-                    <span asp-validation-for="VendorId" class="text-red-500 text-sm"></span>
+                    <span asp-validation-for="LeaseId" class="text-red-500 text-sm"></span>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="LeaseId" class="block text-sm font-medium text-gray-700 mb-1">Lease Ref.</label>
-                    <select asp-for="LeaseId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
-                            asp-items="@(new SelectList(ViewBag.Leases, "Id", "Name", Model.LeaseId))">
-                        <option value="0">Select</option>
+                    <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
+                    <select asp-for="VendorId" id="VendorSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.Vendors, "Id", "Name", Model.VendorId))">
+                        <option value="0">Select Owner</option>
                     </select>
-                    <span asp-validation-for="LeaseId" class="text-red-500 text-sm"></span>
+                    <span asp-validation-for="VendorId" class="text-red-500 text-sm"></span>
                 </div>
                 <div>
                     <label asp-for="PaymentMonth" class="block text-sm font-medium text-gray-700 mb-1">Payment Month</label>
@@ -67,33 +68,32 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="BrokerageAmount" class="block font-medium text-gray-700 mb-1">Monthly Lease Amount</label>
-                    <input asp-for="BrokerageAmount" id="MonthlyLeaseAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md" type="number" step="0.01" />
+                    <label asp-for="BrokerageAmount" class="block font-medium text-gray-700 mb-1">
+                        Brokerage Amount
+                        <span class="text-xs text-gray-500">(Max: 1x Monthly Salary or Lease Brokerage Max)</span>
+                    </label>
+                    <input asp-for="BrokerageAmount" id="BrokerageAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                           type="number" step="0.01" />
+                    <div id="brokerageValidation" class="text-red-500 text-sm mt-1" style="display: none;"></div>
                     <span asp-validation-for="BrokerageAmount" class="text-red-500 text-sm"></span>
                 </div>
                 <div>
-                    <label asp-for="TDSApplicableId" class="block font-medium text-gray-700 mb-1">TDS Applicable</label>
-                    <select asp-for="TDSApplicableId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="0">Select TDS Applicable</option>
-                        @foreach (var item in ViewBag.TDSApplicable)
-                        {
-                            if (item.Id == Model.TDSApplicableId) {
-                                <option value="@item.Id" data-rate="@item.Rate">@item.Name</option>
-                            }
-                            else{
-                                <option value="@item.Id" data-rate="@item.Rate" selected>@item.Name</option>
-
-                            }
-                        }
+                    <label asp-for="TDSApplicableId" class="block font-medium text-gray-700 mb-1">
+                        TDS Applicable <span class="text-xs text-gray-500">(Optional)</span>
+                    </label>
+                    <select asp-for="TDSApplicableId" id="TDSApplicableSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="0" data-rate="0">No TDS</option>
+                        <option value="1" data-rate="2">TDS 2%</option>
+                        <option value="2" data-rate="10">TDS 10%</option>
+                        <option value="3" data-rate="20">TDS 20%</option>
                     </select>
-
                     <span asp-validation-for="TDSApplicableId" class="text-red-500 text-sm"></span>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="TDSRate" class="block font-medium text-gray-700 mb-1">TDS Rate</label>
+                    <label asp-for="TDSRate" class="block font-medium text-gray-700 mb-1">TDS Rate (%)</label>
                     <input asp-for="TDSRate" id="TDSRate" class="w-full px-3 py-2 border border-gray-300 rounded-md" readonly />
                 </div>
                 <div>
@@ -115,13 +115,12 @@
             </div>
 
             <div class="flex justify-end space-x-3">
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                    Update
-                </button>
                 <a href="@Url.Action("Index")" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                     Cancel
                 </a>
-               
+                <button type="submit" id="submitBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    Update Payment
+                </button>
             </div>
         </form>
     </div>
@@ -129,34 +128,261 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        document.getElementById("TDSApplicableId").addEventListener("change", function () {
-            let rate = this.options[this.selectedIndex].getAttribute("data-rate");
-            document.getElementById("TDSRate").value = rate || 0;
+        let employeeSalary = 0;
+        let leaseMaxBrokerage = 0;
+        let isInitialLoad = true;
+
+        $(document).ready(function () {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Initialize calculations on load with existing values
+            initializeEditForm();
+        });
+
+        function initializeEditForm() {
+            // Get initial values and validate
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+
+            if (employeeId && employeeId !== "0") {
+                getEmployeeSalary(employeeId);
+            }
+
+            if (leaseId && leaseId !== "0") {
+                getLeaseMaxBrokerage(leaseId);
+            }
+
+            // Initialize TDS calculations
+            calculateNetAmount();
+
+            // Validate current brokerage amount after loading data
+            setTimeout(() => {
+                validateBrokerageAmount();
+                isInitialLoad = false;
+            }, 500);
+        }
+
+        // Employee selection change - load related leases
+        $("#EmployeeSelect").on("change", function () {
+            let employeeId = $(this).val();
+
+            if (employeeId && employeeId !== "0") {
+                // Load leases for selected employee (but don't clear current selection on edit)
+                if (!isInitialLoad) {
+                    loadEmployeeLeases(employeeId);
+                }
+                // Get employee salary for validation
+                getEmployeeSalary(employeeId);
+            } else {
+                if (!isInitialLoad) {
+                    $("#LeaseSelect").empty().append('<option value="0">Select Lease</option>');
+                    $("#VendorSelect").empty().append('<option value="0">Select Owner</option>');
+                }
+                employeeSalary = 0;
+            }
+            validateBrokerageAmount();
+        });
+
+        // Lease selection change - auto-fill owner and get lease details
+        $("#LeaseSelect").on("change", function () {
+            let leaseId = $(this).val();
+
+            if (leaseId && leaseId !== "0") {
+                if (!isInitialLoad) {
+                    loadLeaseDetails(leaseId);
+                } else {
+                    getLeaseMaxBrokerage(leaseId);
+                }
+            } else {
+                if (!isInitialLoad) {
+                    $("#VendorSelect").empty().append('<option value="0">Select Owner</option>');
+                }
+                leaseMaxBrokerage = 0;
+            }
+            validateBrokerageAmount();
+        });
+
+        // TDS selection change
+        $("#TDSApplicableSelect").on("change", function () {
+            let rate = $(this).find(":selected").data("rate");
+            $("#TDSRate").val(rate || 0);
             calculateNetAmount();
         });
 
-        document.getElementById("MonthlyLeaseAmount").addEventListener("input", calculateNetAmount);
+        // Brokerage amount input with debounced validation
+        $("#BrokerageAmount").on("input", function () {
+            debouncedValidation();
+            calculateNetAmount();
+        });
+
+        function loadEmployeeLeases(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeLeases", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    let leaseSelect = $("#LeaseSelect");
+                    let currentLeaseId = leaseSelect.val();
+
+                    leaseSelect.empty().append('<option value="0">Select Lease</option>');
+
+                    $.each(data, function (index, lease) {
+                        leaseSelect.append('<option value="' + lease.id + '">' + lease.name + '</option>');
+                    });
+
+                    // Try to maintain current selection if it exists in the new list
+                    if (currentLeaseId && currentLeaseId !== "0") {
+                        leaseSelect.val(currentLeaseId);
+                    }
+
+                    leaseSelect.trigger('change.select2');
+                },
+                error: function () {
+                    alert('Failed to load leases for selected employee');
+                }
+            });
+        }
+
+        function getEmployeeSalary(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeSalary", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    employeeSalary = data.salary || 0;
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        function getLeaseMaxBrokerage(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "BrokeragePayment")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    leaseMaxBrokerage = data.maxBrokerageAmount || 0;
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        function loadLeaseDetails(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "BrokeragePayment")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    // Auto-fill owner
+                    let vendorSelect = $("#VendorSelect");
+                    vendorSelect.empty();
+                    vendorSelect.append('<option value="' + data.vendorId + '">' + data.vendorName + '</option>');
+                    vendorSelect.val(data.vendorId);
+                    vendorSelect.trigger('change.select2');
+
+                    // Set lease max brokerage
+                    leaseMaxBrokerage = data.maxBrokerageAmount || 0;
+
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        // Enhanced validation function using server-side endpoint
+        function validateBrokerageAmount() {
+            let brokerageAmount = parseFloat($("#BrokerageAmount").val()) || 0;
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+
+            if (!brokerageAmount || !employeeId || !leaseId || employeeId === "0" || leaseId === "0") {
+                $("#brokerageValidation").hide();
+                $("#submitBtn").prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
+                return;
+            }
+
+            // Show loading indicator
+            $("#brokerageValidation").html('<span class="text-blue-600">Validating...</span>').show();
+
+            $.ajax({
+                url: '@Url.Action("ValidateBrokerageAmount", "BrokeragePayment")',
+                type: 'GET',
+                data: {
+                    employeeId: employeeId,
+                    leaseId: leaseId,
+                    brokerageAmount: brokerageAmount,
+                    excludeId: @Model.Id // Include current payment ID for edit validation
+                        },
+                success: function (response) {
+                    let validation = $("#brokerageValidation");
+                    let submitBtn = $("#submitBtn");
+
+                    if (response.isValid) {
+                        validation.html(`
+                                    <span class="text-green-600">
+                                        <i class="ri-check-circle-line"></i> <strong>Valid:</strong>
+                                        Within limit of ₹${response.maxAllowed.toLocaleString()}
+                                    </span>
+                                `);
+                        validation.show();
+                        submitBtn.prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
+                    } else {
+                        validation.html(`
+                                    <span class="text-red-600">
+                                        <i class="ri-error-warning-line"></i> <strong>Validation Error:</strong><br>
+                                        ${response.errorMessage}
+                                    </span>
+                                `);
+                        validation.show();
+                        submitBtn.prop('disabled', true).addClass('bg-gray-400').removeClass('bg-blue-600 hover:bg-blue-700');
+                    }
+
+                    // Update local variables for future calculations
+                    employeeSalary = response.employeeSalary || 0;
+                    leaseMaxBrokerage = response.leaseMaxBrokerage || 0;
+                },
+                error: function () {
+                    $("#brokerageValidation").html(`
+                                <span class="text-orange-600">
+                                    <i class="ri-warning-line"></i> Unable to validate. Please check manually.
+                                </span>
+                            `).show();
+                    $("#submitBtn").prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
+                }
+            });
+        }
+
+        // Debounce function to avoid too many API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Use debounced validation
+        const debouncedValidation = debounce(validateBrokerageAmount, 500);
 
         function calculateNetAmount() {
-            let total = parseFloat(document.getElementById("MonthlyLeaseAmount").value) || 0;
-            let rate = parseFloat(document.getElementById("TDSRate").value) || 0;
+            let total = parseFloat($("#BrokerageAmount").val()) || 0;
+            let rate = parseFloat($("#TDSRate").val()) || 0;
             let tdsAmount = (total * rate / 100);
             let netAmount = total - tdsAmount;
 
-            document.getElementById("TDSAmount").value = tdsAmount.toFixed(2);
-            document.getElementById("NetPayableAmount").value = netAmount.toFixed(2);
+            $("#TDSAmount").val(tdsAmount.toFixed(2));
+            $("#NetPayableAmount").val(netAmount.toFixed(2));
         }
     </script>
 }
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-    $(document).ready(function () {
-        $('.searchable-dropdown').select2({
-            placeholder: "Select an option",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>

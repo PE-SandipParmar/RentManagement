@@ -27,6 +27,8 @@ public class SecurityDepositRepository : ISecurityDepositRepository
         parameters.Add("@VendorId", deposit.VendorId);
         parameters.Add("@LeaseId", deposit.LeaseId);
         parameters.Add("@Amount", deposit.Amount);
+        parameters.Add("@TdsRate", deposit.TdsRate);
+        parameters.Add("@TdsAmount", deposit.TdsAmount);
         parameters.Add("@ApprovalStatus", deposit.ApprovalStatus);
         parameters.Add("@Remark", deposit.Remark);
         parameters.Add("@CreatedBy", deposit.CreatedBy);
@@ -88,6 +90,8 @@ public class SecurityDepositRepository : ISecurityDepositRepository
         parameters.Add("@VendorId", deposit.VendorId);
         parameters.Add("@LeaseId", deposit.LeaseId);
         parameters.Add("@Amount", deposit.Amount);
+        parameters.Add("@TdsRate", deposit.TdsRate);
+        parameters.Add("@TdsAmount", deposit.TdsAmount);
         parameters.Add("@Remark", deposit.Remark);
         parameters.Add("@ApprovalStatus", deposit.ApprovalStatus);
         parameters.Add("@ModifiedBy", deposit.ModifiedBy);
@@ -101,15 +105,21 @@ public class SecurityDepositRepository : ISecurityDepositRepository
         return affectedRows > 0;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id,int ModifiedBy)
     {
         using var connection = CreateConnection();
 
-        var affectedRows = await connection.ExecuteAsync(
-            "SecurityDepositDelete",
-            new { Id = id },
-            commandType: CommandType.StoredProcedure);
+        var parameters = new DynamicParameters();
+        parameters.Add("@Id", id);
+        parameters.Add("@ModifiedBy", id);
 
+        var affectedRows = await connection.ExecuteAsync(
+           "SecurityDepositDelete",
+           parameters,
+           commandType: CommandType.StoredProcedure);
+
+
+        
         return affectedRows > 0;
     }
 
@@ -136,6 +146,7 @@ public class SecurityDepositRepository : ISecurityDepositRepository
             "LeaseNamesRead",
             commandType: CommandType.StoredProcedure);
     }
+
     public async Task ToggleActiveStatus(int Id)
     {
         using var connection = CreateConnection();
@@ -243,7 +254,4 @@ public class SecurityDepositRepository : ISecurityDepositRepository
     }
 
     #endregion
-
-
-
 }

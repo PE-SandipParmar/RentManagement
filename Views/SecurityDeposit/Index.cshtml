@@ -13,7 +13,7 @@
             </a>
         </div>
     </div>
-    
+
     <div class="px-6 py-4 border-b border-gray-200">
         <form method="get">
             <div class="flex space-x-4 items-center mb-4">
@@ -54,6 +54,9 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TDS Rate (%)</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TDS Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Amount</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -62,12 +65,43 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @foreach (var deposit in Model.Items)
                 {
+                    var netAmount = (deposit.Amount) - (deposit.TdsAmount ?? 0);
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.EmployeeName</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.VendorName</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.LeaseName</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.Amount?.ToString("C")</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.ApprovalStatus</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.Amount.ToString("C")</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if (deposit.TdsRate.HasValue && deposit.TdsRate > 0)
+                            {
+                                @deposit.TdsRate.Value.ToString("F2")
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if (deposit.TdsAmount.HasValue && deposit.TdsAmount > 0)
+                            {
+                                @deposit.TdsAmount.Value.ToString("C")
+                            }
+                            else
+                            {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            @netAmount.ToString("C")
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                @(deposit.ApprovalStatus == "Approved" ? "bg-green-100 text-green-800" :
+                                  deposit.ApprovalStatus == "Rejected" ? "bg-red-100 text-red-800" :
+                                  "bg-yellow-100 text-yellow-800")">
+                                @deposit.ApprovalStatus
+                            </span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <form method="post" asp-controller="SecurityDeposit" asp-action="ToggleStatus" asp-route-id="@deposit.Id">
                                 <button type="submit">
