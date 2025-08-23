@@ -1,8 +1,12 @@
-﻿@model PagedResult<Lease>
+﻿@model RentManagement.Models.LeaseListViewModel
 @{
     ViewData["Title"] = "Lease Management";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var isChecker = Model.CurrentUserRole == RentManagement.Models.UserRole.Checker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin;
+    var isMaker = Model.CurrentUserRole == RentManagement.Models.UserRole.Maker;
 }
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <div class="p-1">
     <!-- Breadcrumb Navigation -->
@@ -32,49 +36,142 @@
             <h2 class="text-2xl font-bold text-gray-900">Lease Management</h2>
             <p class="text-gray-600 mt-1">Manage lease agreements and rental properties</p>
         </div>
-        <a href="@Url.Action("Create")" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
-            <i class="ri-add-line mr-2"></i>
-            Add New Lease
-        </a>
+        @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
+        {
+            <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+                <i class="ri-add-line mr-2"></i>
+                Add New Lease
+            </button>
+        }
     </div>
+
+    <!-- Pending Approvals Section (Checker Only) -->
+    @if (isChecker && Model.PendingApprovals.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
+                <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
+            </div>
+            <div class="space-y-3">
+                @foreach (var lease in Model.PendingApprovals.Take(3))
+                {
+                    <div class="bg-white rounded border p-3 flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <span class="font-medium text-gray-900">@lease.RefNo</span>
+                                    <span class="text-sm text-gray-500">(@lease.EmployeeName)</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Action: <span class="font-medium">@lease.MakerActionText</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    By: <span class="font-medium">@lease.MakerUserName</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Amount: <span class="font-medium">₹@lease.MonthlyRentPayable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewLease(@lease.Id)" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                                View
+                            </button>
+                            <button onclick="approveLease(@lease.Id)" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
+                                Approve
+                            </button>
+                            <button onclick="openRejectModal(@lease.Id, '@lease.RefNo')" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     <!-- Filters/Search -->
     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
-        <form method="get" id="searchForm">
-            <div class="flex flex-col md:flex-row gap-4">
-                <!-- Search Bar -->
-                <div class="flex-1">
-                    <div class="relative">
-                        <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" name="search" value="@ViewBag.Search" id="searchInput"
-                               placeholder="Search by name, email or code..."
-                               class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                    </div>
-                </div>
-                <!-- Page Size Selection -->
+        <div class="flex flex-col md:flex-row gap-4">
+            <!-- Search Bar -->
+            <div class="flex-1">
                 <div class="relative">
-                    <select name="PageSize" asp-for="PageSize" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent" 
-                            asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="document.getElementById('searchForm').submit()">
+                    <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search leases..."
+                           value="@Model.SearchTerm"
+                           class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+            </div>
+            <!-- Status Filter -->
+            <div class="relative">
+                 <select id="statusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Status</option>
+                    @if (Model.StatusFilter == "Active")
+                    {
+                        <option value="Active" selected>Active</option>
+                    }
+                    else
+                    {
+                        <option value="Active">Active</option>
+                    }
+                    @if (Model.StatusFilter == "Inactive")
+                    {
+                        <option value="Inactive" selected>Inactive</option>
+                    }
+                    else
+                    {
+                        <option value="Inactive">Inactive</option>
+                    }
+                </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
+            <!-- Approval Status Filter (Checker Only) -->
+            @if (isChecker)
+            {
+                <div class="relative">
+                    <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                        @if (Model.ApprovalStatusFilter == "Approved" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                        {
+                            <option value="Approved" selected>Approved</option>
+                        }
+                        else
+                        {
+                            <option value="Approved">Approved</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Pending")
+                        {
+                            <option value="Pending" selected>Pending</option>
+                        }
+                        else
+                        {
+                            <option value="Pending">Pending</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Rejected")
+                        {
+                            <option value="Rejected" selected>Rejected</option>
+                        }
+                        else
+                        {
+                            <option value="Rejected">Rejected</option>
+                        }
                     </select>
                     <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                 </div>
-                <!-- Search and Clear Buttons -->
-                <div class="flex gap-2">
-                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center">
-                        <i class="ri-search-line mr-2"></i>
-                        Search
-                    </button>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                    {
-                        <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
-                            <i class="ri-close-line mr-2"></i>
-                            Clear
-                        </a>
-                    }
-                </div>
+            }
+            <!-- Page Size Selection -->
+            <div class="relative">
+               
+                    <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
-            <input type="hidden" name="page" value="1" />
-        </form>
+            <button onclick="searchLeases()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">Search</button>
+        </div>
     </div>
 
     <!-- Data Table -->
@@ -86,95 +183,89 @@
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <input type="checkbox" id="selectAll">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lease Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ref No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Rent</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        @if (isChecker)
+                        {
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker</th>
+                        }
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var lease in Model.Items)
+                <tbody id="leaseTableBody" class="bg-white divide-y divide-gray-200">
+                    @foreach (var lease in Model.Leases)
                     {
-                        <tr class="hover:bg-gray-50 table-row">
+                        <tr class="table-row">
                             <td class="px-4 py-4 text-center">
                                 <input type="checkbox" class="lease-checkbox">
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@lease.RefNo</div>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@lease.RefNo</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.LeaseTypeName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.EmployeeName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.VendorName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@lease.MonthlyRentPayable</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if (lease.FromDate.HasValue && lease.EndDate.HasValue)
+                                {
+                                    <div>@lease.FromDate.Value.ToString("MMM yyyy") - @lease.EndDate.Value.ToString("MMM yyyy")</div>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">N/A</span>
+                                }
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">@lease.EmployeeName</div>
+                                <span class="status-badge @(lease.Status == "Active" ? "status-active" : lease.Status == "Expired" ? "status-expired" : "status-terminated")">
+                                    @lease.Status
+                                </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">@lease.VendorName</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.TotalLeaseAmount).ToString("C") ?? "N/A")</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.MonthlyRentPayable).ToString("C") ?? "N/A")</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <form method="post" asp-controller="SecurityDeposit" asp-action="ToggleStatus" asp-route-id="@lease.Id">
-                                    <button type="submit" class="hover:opacity-80 transition-opacity">
-                                        @{
-                                            string statusText = lease.Status;
-                                            string bgColor = "";
-                                            string textColor = "";
-                                            string dotColor = "";
-
-                                            switch (statusText)
-                                            {
-                                                case "Active":
-                                                    bgColor = "bg-green-100";
-                                                    textColor = "text-green-800";
-                                                    dotColor = "bg-green-400";
-                                                    break;
-                                                case "Expired":
-                                                    bgColor = "bg-gray-100";
-                                                    textColor = "text-gray-800";
-                                                    dotColor = "bg-gray-400";
-                                                    break;
-                                                case "Upcoming":
-                                                    bgColor = "bg-yellow-100";
-                                                    textColor = "text-yellow-800";
-                                                    dotColor = "bg-yellow-400";
-                                                    break;
-                                                case "Terminated":
-                                                    bgColor = "bg-red-100";
-                                                    textColor = "text-red-800";
-                                                    dotColor = "bg-red-400";
-                                                    break;
-                                                default:
-                                                    bgColor = "bg-blue-100";
-                                                    textColor = "text-blue-800";
-                                                    dotColor = "bg-blue-400";
-                                                    break;
-                                            }
-                                        }
-
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @bgColor @textColor">
-                                            <span class="w-1.5 h-1.5 @dotColor rounded-full mr-1.5"></span>
-                                            @statusText
-                                        </span>
-                                    </button>
-                                </form>
-                            </td>
+                            @if (isChecker)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                    {
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.MakerUserName</td>
+                            }
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex gap-2 justify-center">
-                                    <a href="@Url.Action("Details", new { id = lease.Id })" class="text-primary hover:text-primary/80" title="View Details">
+                                    <button onclick="viewDetails(@lease.Id)" class="text-primary hover:text-primary/80" title="View">
                                         <i class="ri-eye-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Edit", new { id = lease.Id })" class="text-green-600 hover:text-green-800" title="Edit">
-                                        <i class="ri-edit-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Delete", new { id = lease.Id })" class="text-red-600 hover:text-red-700" title="Delete" 
-                                       onclick="return confirm('Are you sure you want to delete this lease?')">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </a>
+                                    </button>
+                                    @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending && isChecker)
+                                    {
+                                        <button onclick="approveLease(@lease.Id)" class="text-green-600 hover:text-green-800" title="Approve">
+                                            <i class="ri-check-line"></i>
+                                        </button>
+                                        <button onclick="openRejectModal(@lease.Id, '@lease.RefNo')" class="text-red-600 hover:text-red-700" title="Reject">
+                                            <i class="ri-close-line"></i>
+                                        </button>
+                                    }
+                                    @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved && (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin))
+                                    {
+                                        <button onclick="openEditDrawer(@lease.Id)" class="text-green-600 hover:text-green-800" title="Edit">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button onclick="confirmDeleteLease(@lease.Id, '@lease.RefNo')" class="text-red-600 hover:text-red-700" title="Delete">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -183,151 +274,1502 @@
             </table>
         </div>
 
-        <!-- Empty State -->
-        @if (!Model.Items.Any())
-        {
-            <div class="px-6 py-12 text-center">
-                <div class="text-gray-500">
-                    <i class="ri-file-list-line text-4xl text-gray-300 mb-4"></i>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                    {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
-                        <p class="text-sm">No leases found matching your search criteria.</p>
-                    }
-                    else
-                    {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
-                        <p class="text-sm mb-4">Get started by creating your first lease agreement.</p>
-                        <a href="@Url.Action("Create")" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
-                            <i class="ri-add-line mr-2"></i>
-                            Create First Lease
-                        </a>
-                    }
+        <!-- Pagination -->
+        <div id="pagination" class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="flex items-center text-sm text-gray-700">
+                <span id="paginationInfo">Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalRecords) of @Model.TotalRecords results</span>
+            </div>
+            <div class="flex items-center space-x-2" id="paginationButtons">
+                <!-- Pagination buttons will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Lease Modal -->
+<div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-50" onclick="closeRejectModal()"></div>
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 relative">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Reject Lease</h3>
                 </div>
             </div>
-        }
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-3">Are you sure you want to reject lease <strong id="rejectLeaseRef"></strong>?</p>
+                <textarea id="rejectionReason" placeholder="Please provide a reason for rejection..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows="3" required></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                    Cancel
+                </button>
+                <button type="button" onclick="rejectLease()" class="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg">
+                    Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Pagination -->
-        <div class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-            <div class="flex items-center text-sm text-gray-700">
-                <span>
-                    Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
-                    to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
-                    of @Model.TotalItems results
-                </span>
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-50" onclick="closeDeleteModal()"></div>
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 relative">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Delete Lease</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-500">Are you sure you want to delete lease <strong id="deleteLeaseRef"></strong>? This action cannot be undone.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                    Cancel
+                </button>
+                <button type="button" onclick="deleteLease()" class="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Drawer for Create/Edit -->
+<div id="leaseDrawer" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeDrawer()"></div>
+
+    <!-- Drawer Panel -->
+    <div class="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" id="drawerPanel">
+        <div class="h-full flex flex-col">
+            <!-- Drawer Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 id="drawerTitle" class="text-xl font-bold text-gray-900">Create New Lease</h2>
+                <button onclick="closeDrawer()" class="text-gray-400 hover:text-gray-500">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
             </div>
 
-            <div class="flex items-center space-x-2">
-                @if (Model.HasPreviousPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        <i class="ri-arrow-left-s-line mr-1"></i>
-                        Previous
-                    </a>
-                }
-                else
-                {
-                    <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
-                        <i class="ri-arrow-left-s-line mr-1"></i>
-                        Previous
-                    </span>
-                }
+            <!-- Drawer Body with Form -->
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <!-- Validation Summary Alert -->
+                <div id="drawerAlert" class="hidden mb-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i id="drawerAlertIcon" class="ri-error-warning-line text-red-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 id="drawerAlertTitle" class="text-sm font-medium text-red-800">
+                                There were errors with your submission
+                            </h3>
+                            <div id="drawerAlertMessage" class="mt-2 text-sm text-red-700">
+                                <ul id="validationErrorList" class="list-disc list-inside space-y-1">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button type="button" onclick="clearDrawerAlert()" class="inline-flex text-gray-400 hover:text-gray-500">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    if (i == Model.PageNumber)
-                    {
-                        <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-md">
-                            @i
-                        </span>
-                    }
-                    else
-                    {
-                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                           class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                            @i
-                        </a>
-                    }
-                }
+                <form id="leaseForm" class="space-y-6">
+                    <input type="hidden" id="leaseId" name="Id" value="0" />
 
-                @if (Model.HasNextPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        Next
-                        <i class="ri-arrow-right-s-line ml-1"></i>
-                    </a>
-                }
-                else
-                {
-                    <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
-                        Next
-                        <i class="ri-arrow-right-s-line ml-1"></i>
-                    </span>
-                }
+                    <!-- Perquisite Type Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Perquisite Type:</label>
+                            <div class="space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="PerquisiteType" value="Government" class="mr-2">
+                                    <span>Government</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="PerquisiteType" value="Non-Government" checked class="mr-2">
+                                    <span>Non-Government</span>
+                                </label>
+                            </div>
+                            <span class="text-red-600 text-sm" data-validation="PerquisiteType"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable</label>
+                            <select name="PerquisiteApplicablePercentId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PerquisitePercents)
+                                {
+                                    <option value="@item.Id">@item.Description</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PerquisiteApplicablePercentId"></span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Rent Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent Payable <span class="text-red-500">*</span></label>
+                            <input type="number" name="MonthlyRentPayable" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
+                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                        </div>
+                    </div>
+
+                    <!-- Lease Information Section -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Lease Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Type <span class="text-red-500">*</span></label>
+                            <select name="LeaseTypeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.LeaseTypes)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="LeaseTypeId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Ref No. <span class="text-red-500">*</span></label>
+                            <input type="text" name="RefNo" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RefNo"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Ref Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="RefDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RefDate"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease From Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="FromDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="FromDate"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease End Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="EndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="EndDate"></span>
+                        </div>
+                    </div>
+
+                    <!-- Owner & Employee Details -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Owner & Employee Details</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name (Employee) <span class="text-red-500">*</span></label>
+                            <select name="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.EmployeeNames)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="EmployeeId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Owner's Name <span class="text-red-500">*</span></label>
+                            <select name="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.Owners)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="VendorId"></span>
+                        </div>
+                    </div>
+
+                    <!-- Rent Recovery Section -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Rent Recovery</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Recovery Element</label>
+                            <select name="RentRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.RentRecoveryElements)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="RentRecoveryElementId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Recovery Element</label>
+                            <select name="LicenseFeeRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.LicenseFeeRecoveryElements)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="LicenseFeeRecoveryElementId"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount <span class="text-red-500">*</span></label>
+                            <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="LicenseFeeAmount"></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Payment Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500">*</span></label>
+                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PaymentTerms)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PaymentTermId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before <span class="text-red-500">*</span></label>
+                            <select name="PayableOnOrBeforeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PayableOnOrBeforeOptions)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PayableOnOrBeforeId"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit <span class="text-red-500">*</span></label>
+                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RentDeposit"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount <span class="text-red-500">*</span></label>
+                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="BrokerageAmount"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty <span class="text-red-500">*</span></label>
+                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="StampDuty"></span>
+                        </div>
+                    </div>
+
+                    <!-- Miscellaneous -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Miscellaneous</h3>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Narration <span class="text-red-500">*</span></label>
+                        <textarea name="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
+                        <span class="text-red-600 text-sm" data-validation="Narration"></span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="closeDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button onclick="saveLease()" id="saveButton" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <span id="saveButtonText">Create Lease</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Slideover -->
+<div id="detailsSlideover" class="fixed inset-0 z-40 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeDetailsSlideover()"></div>
+
+    <!-- Slideover Panel -->
+    <div class="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" id="detailsPanel">
+        <div class="h-full flex flex-col">
+            <!-- Slideover Header with Gradient -->
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Lease Details</h2>
+                        <p class="text-indigo-100 text-sm mt-1">Complete information about this lease</p>
+                    </div>
+                    <button onclick="closeDetailsSlideover()" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Slideover Body -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Loading State -->
+                <div id="detailsLoading" class="hidden p-6">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="ri-loader-4-line text-4xl text-gray-400 animate-spin"></i>
+                            <p class="mt-2 text-sm text-gray-500">Loading lease details...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Content -->
+                <div id="detailsContent" class="p-6">
+                    <!-- Details will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Slideover Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <span id="detailsLeaseRef" class="font-medium text-gray-700"></span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="editFromDetails()" id="editFromDetailsBtn" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                            <i class="ri-edit-line mr-2"></i>
+                            Edit Lease
+                        </button>
+                        <button onclick="closeDetailsSlideover()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
+        // Global variables
+        let currentPage = @Model.CurrentPage;
+        let pageSize = @Model.PageSize;
+        let currentLeaseId = null;
+        let deleteLeaseId = 0;
+        let currentUserRole = '@Model.CurrentUserRole';
+        let isChecker = @(isChecker ? "true" : "false");
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
+            initializeSelect2();
         });
 
-        // Event listeners
+        function initializeSelect2() {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#leaseDrawer')
+            });
+        }
+
         function initializeEventListeners() {
             // Search functionality
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
-                    e.preventDefault();
-                    document.getElementById('searchForm').submit();
+                    searchLeases();
                 }
             });
 
             // Select all checkbox
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    const checkboxes = document.querySelectorAll('.lease-checkbox');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                    });
-                });
-            }
-
-            // Individual checkboxes
-            const leaseCheckboxes = document.querySelectorAll('.lease-checkbox');
-            leaseCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const allChecked = Array.from(leaseCheckboxes).every(cb => cb.checked);
-                    const noneChecked = Array.from(leaseCheckboxes).every(cb => !cb.checked);
-                    
-                    if (selectAllCheckbox) {
-                        if (allChecked) {
-                            selectAllCheckbox.checked = true;
-                            selectAllCheckbox.indeterminate = false;
-                        } else if (noneChecked) {
-                            selectAllCheckbox.checked = false;
-                            selectAllCheckbox.indeterminate = false;
-                        } else {
-                            selectAllCheckbox.checked = false;
-                            selectAllCheckbox.indeterminate = true;
-                        }
-                    }
+            document.getElementById('selectAll').addEventListener('change', function () {
+                const checkboxes = document.querySelectorAll('.lease-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
                 });
             });
         }
 
+        // Approval workflow functions
+        function showAllPendingApprovals() {
+            document.getElementById('approvalStatusFilter').value = 'Pending';
+            searchLeases();
+        }
+
+        function approveLease(id) {
+            if (!confirm('Are you sure you want to approve this lease?')) {
+                return;
+            }
+
+            fetch('@Url.Action("ApproveLease")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: `id=${id}`
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        refreshTableAfterUpdate();
+                    } else {
+                        showAlert('error', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while approving the lease.');
+                });
+        }
+
+        function openRejectModal(id, refNo) {
+            currentLeaseId = id;
+            document.getElementById('rejectLeaseRef').textContent = refNo;
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            currentLeaseId = null;
+        }
+
+        function rejectLease() {
+            if (!currentLeaseId) return;
+
+            const rejectionReason = document.getElementById('rejectionReason').value.trim();
+            if (!rejectionReason) {
+                showAlert('error', 'Please provide a reason for rejection.');
+                return;
+            }
+
+            const data = {
+                id: currentLeaseId,
+                rejectionReason: rejectionReason
+            };
+
+            fetch('@Url.Action("RejectLease")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeRejectModal();
+                        refreshTableAfterUpdate();
+                    } else {
+                        showAlert('error', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while rejecting the lease.');
+                });
+        }
+
+        // Force refresh the table and handle approval workflow
+        function refreshTableAfterUpdate() {
+            // Reset to first page to ensure we see the changes
+            currentPage = 1;
+
+            // Reload the leases
+            loadLeases();
+
+            // If checker, also refresh the pending approvals section
+            if (isChecker) {
+                setTimeout(() => {
+                    location.reload(); // This will refresh the pending approvals section
+                }, 1000);
+            }
+        }
+
+        // Drawer functions
+        function openCreateDrawer() {
+            currentLeaseId = 0;
+            document.getElementById('drawerTitle').textContent = 'Create New Lease';
+            document.getElementById('saveButtonText').textContent = 'Create Lease';
+            document.getElementById('leaseForm').reset();
+            clearValidationErrors();
+            clearDrawerAlert();
+            $('.searchable-dropdown').val(null).trigger('change');
+            openDrawer();
+        }
+
+        function openEditDrawer(id) {
+            currentLeaseId = id;
+            document.getElementById('drawerTitle').textContent = 'Edit Lease';
+            document.getElementById('saveButtonText').textContent = 'Update Lease';
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            // Show loading state in drawer
+            showDrawerAlert('warning', 'Loading...', 'Please wait while we load the lease details.');
+
+            // Load lease data
+            fetch(`@Url.Action("GetLeaseDetails")?id=${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Lease details response:', result); // Debug log
+                    if (result.success) {
+                        clearDrawerAlert();
+                        populateForm(result.data);
+                        openDrawer();
+                    } else {
+                        showDrawerAlert('error', 'Failed to load lease', result.message || 'Unable to load lease details. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                });
+        }
+
+        function openDrawer() {
+            const drawer = document.getElementById('leaseDrawer');
+            const panel = document.getElementById('drawerPanel');
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+                // Focus on first input
+                const firstInput = document.querySelector('#leaseForm input[type="text"], #leaseForm input[type="number"], #leaseForm select');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const panel = document.getElementById('drawerPanel');
+            panel.classList.add('translate-x-full');
+
+            setTimeout(() => {
+                document.getElementById('leaseDrawer').classList.add('hidden');
+                clearValidationErrors();
+                clearDrawerAlert();
+                document.getElementById('leaseForm').reset();
+                $('.searchable-dropdown').val(null).trigger('change');
+            }, 300);
+        }
+
+        function populateForm(data) {
+            console.log('Populating form with data:', data); // Debug log
+            
+            // Set hidden ID - handle both Id and id
+            document.getElementById('leaseId').value = data.id || data.Id || 0;
+
+            // Set radio button - handle both PerquisiteType and perquisiteType
+            const perquisiteType = data.perquisiteType || data.PerquisiteType || 'Non-Government';
+            const perquisiteRadio = document.querySelector(`input[name="PerquisiteType"][value="${perquisiteType}"]`);
+            if (perquisiteRadio) perquisiteRadio.checked = true;
+
+            // Map of form fields to possible data property names (camelCase and PascalCase)
+            const fieldMappings = {
+                'RefNo': ['refNo', 'RefNo'],
+                'MonthlyRentPayable': ['monthlyRentPayable', 'MonthlyRentPayable'],
+                'AdditionalRentRecovery': ['additionalRentRecovery', 'AdditionalRentRecovery'],
+                'RentDeposit': ['rentDeposit', 'RentDeposit'],
+                'BrokerageAmount': ['brokerageAmount', 'BrokerageAmount'],
+                'StampDuty': ['stampDuty', 'StampDuty'],
+                'LicenseFeeAmount': ['licenseFeeAmount', 'LicenseFeeAmount'],
+                'Narration': ['narration', 'Narration']
+            };
+
+            // Set form fields with fallback for camelCase/PascalCase
+            Object.keys(fieldMappings).forEach(fieldName => {
+                const element = document.querySelector(`[name="${fieldName}"]`);
+                if (element) {
+                    let value = null;
+                    for (const prop of fieldMappings[fieldName]) {
+                        if (data[prop] !== undefined) {
+                            value = data[prop];
+                            break;
+                        }
+                    }
+                    element.value = value || '';
+                    console.log(`Setting ${fieldName} to:`, value); // Debug log
+                }
+            });
+
+            // Set date fields with both camelCase and PascalCase support
+            const dateFieldMappings = {
+                'RefDate': ['refDate', 'RefDate'],
+                'FromDate': ['fromDate', 'FromDate'],
+                'EndDate': ['endDate', 'EndDate']
+            };
+
+            Object.keys(dateFieldMappings).forEach(fieldName => {
+                const element = document.querySelector(`[name="${fieldName}"]`);
+                if (element) {
+                    let value = null;
+                    for (const prop of dateFieldMappings[fieldName]) {
+                        if (data[prop]) {
+                            value = data[prop];
+                            break;
+                        }
+                    }
+                    if (value) {
+                        element.value = value.split('T')[0];
+                        console.log(`Setting date ${fieldName} to:`, value.split('T')[0]); // Debug log
+                    }
+                }
+            });
+
+            // Set select fields with Select2 - handle both camelCase and PascalCase
+            const selectFieldMappings = {
+                'LeaseTypeId': ['leaseTypeId', 'LeaseTypeId'],
+                'EmployeeId': ['employeeId', 'EmployeeId'],
+                'PerquisiteApplicablePercentId': ['perquisiteApplicablePercentId', 'PerquisiteApplicablePercentId'],
+                'VendorId': ['vendorId', 'VendorId'],
+                'RentRecoveryElementId': ['rentRecoveryElementId', 'RentRecoveryElementId'],
+                'LicenseFeeRecoveryElementId': ['licenseFeeRecoveryElementId', 'LicenseFeeRecoveryElementId'],
+                'PaymentTermId': ['paymentTermId', 'PaymentTermId'],
+                'PayableOnOrBeforeId': ['payableOnOrBeforeId', 'PayableOnOrBeforeId']
+            };
+
+            Object.keys(selectFieldMappings).forEach(fieldName => {
+                let value = null;
+                for (const prop of selectFieldMappings[fieldName]) {
+                    if (data[prop] !== undefined && data[prop] !== null) {
+                        value = data[prop];
+                        break;
+                    }
+                }
+                if (value) {
+                    console.log(`Setting select ${fieldName} to:`, value); // Debug log
+                    $(`select[name="${fieldName}"]`).val(value).trigger('change');
+                }
+            });
+        }
+
+        function saveLease() {
+            clearDrawerAlert();
+            clearValidationErrors();
+
+            if (!validateForm()) {
+                document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('leaseForm'));
+            const data = {};
+
+            formData.forEach((value, key) => {
+                if (key.endsWith('Id') && value) {
+                    data[key] = parseInt(value) || 0;
+                } else if (['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit',
+                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(key)) {
+                    data[key] = parseFloat(value) || 0;
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            data.Id = parseInt(document.getElementById('leaseId').value) || 0;
+
+            const url = data.Id === 0 ? '@Url.Action("CreateAjax")' : '@Url.Action("UpdateAjax")';
+
+            // Disable save button
+            const saveButton = document.getElementById('saveButton');
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Saving...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeDrawer();
+                        loadLeases();
+                    } else {
+                        if (result.errors) {
+                            displayValidationErrors(result.errors);
+                        } else {
+                            showDrawerAlert('error', 'Failed to save lease', result.message || 'An error occurred while saving the lease. Please check your input and try again.');
+                        }
+                        document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                    document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                })
+                .finally(() => {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = `<span id="saveButtonText">${data.Id === 0 ? 'Create' : 'Update'} Lease</span>`;
+                });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            let errors = [];
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            // Required field validation
+            const requiredFields = [
+                { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
+                { name: 'RefNo', message: 'Lease Reference Number is required', displayName: 'Lease Reference Number' },
+                { name: 'EmployeeId', message: 'Employee Name is required', displayName: 'Employee Name' },
+                { name: 'RefDate', message: 'Reference Date is required', displayName: 'Reference Date' },
+                { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
+                { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
+                { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+                { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
+                { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
+                { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
+                { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
+                { name: 'Narration', message: 'Narration is required', displayName: 'Narration' }
+            ];
+
+            requiredFields.forEach(field => {
+                const element = document.querySelector(`[name="${field.name}"]`);
+                const value = element.value;
+
+                if (!value || value === '0' || value === '') {
+                    const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = field.message;
+                        element.classList.add('border-red-500');
+                    }
+                    errors.push(field.displayName + ' is required');
+                    isValid = false;
+                }
+            });
+
+            // Date validation
+            const fromDate = new Date(document.querySelector('[name="FromDate"]').value);
+            const endDate = new Date(document.querySelector('[name="EndDate"]').value);
+
+            if (fromDate && endDate && fromDate > endDate) {
+                const errorSpan = document.querySelector('[data-validation="EndDate"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'End Date must be after From Date';
+                    document.querySelector('[name="EndDate"]').classList.add('border-red-500');
+                }
+                errors.push('End Date must be after From Date');
+                isValid = false;
+            }
+
+            // Narration length validation
+            const narration = document.querySelector('[name="Narration"]').value;
+            if (narration && narration.length > 200) {
+                const errorSpan = document.querySelector('[data-validation="Narration"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'Narration cannot be longer than 200 characters';
+                    document.querySelector('[name="Narration"]').classList.add('border-red-500');
+                }
+                errors.push('Narration cannot be longer than 200 characters');
+                isValid = false;
+            }
+
+            // Show validation summary if there are errors
+            if (!isValid && errors.length > 0) {
+                showDrawerAlert('error', 'Please correct the following errors:', errors);
+            }
+
+            return isValid;
+        }
+
+        function displayValidationErrors(errors) {
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            let errorMessages = [];
+
+            for (const [field, message] of Object.entries(errors)) {
+                const errorSpan = document.querySelector(`[data-validation="${field}"]`);
+                if (errorSpan) {
+                    errorSpan.textContent = message;
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.classList.add('border-red-500');
+                        input.classList.add('focus:ring-red-500');
+                    }
+                }
+                errorMessages.push(message);
+            }
+
+            // Show validation summary
+            if (errorMessages.length > 0) {
+                showDrawerAlert('error', 'Please correct the following errors:', errorMessages);
+            }
+        }
+
+        function clearValidationErrors() {
+            document.querySelectorAll('[data-validation]').forEach(span => {
+                span.textContent = '';
+            });
+            document.querySelectorAll('.border-red-500').forEach(element => {
+                element.classList.remove('border-red-500');
+                element.classList.remove('focus:ring-red-500');
+            });
+        }
+
+        function showDrawerAlert(type, title, messages) {
+            const alertDiv = document.getElementById('drawerAlert');
+            const alertIcon = document.getElementById('drawerAlertIcon');
+            const alertTitle = document.getElementById('drawerAlertTitle');
+            const alertMessage = document.getElementById('drawerAlertMessage');
+            const errorList = document.getElementById('validationErrorList');
+
+            // Set styles based on type
+            if (type === 'error') {
+                alertDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
+                alertIcon.className = 'ri-error-warning-line text-red-400 text-xl';
+                alertTitle.className = 'text-sm font-medium text-red-800';
+                alertMessage.className = 'mt-2 text-sm text-red-700';
+            } else if (type === 'warning') {
+                alertDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4';
+                alertIcon.className = 'ri-alert-line text-yellow-400 text-xl';
+                alertTitle.className = 'text-sm font-medium text-yellow-800';
+                alertMessage.className = 'mt-2 text-sm text-yellow-700';
+            }
+
+            // Set title
+            alertTitle.textContent = title;
+
+            // Set messages
+            errorList.innerHTML = '';
+            if (typeof messages === 'string') {
+                errorList.innerHTML = `<li>${messages}</li>`;
+            } else if (Array.isArray(messages)) {
+                messages.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    errorList.appendChild(li);
+                });
+            }
+
+            // Show alert
+            alertDiv.classList.remove('hidden');
+        }
+
+        function clearDrawerAlert() {
+            document.getElementById('drawerAlert').classList.add('hidden');
+            document.getElementById('validationErrorList').innerHTML = '';
+        }
+
+        // Delete functions
+        function confirmDeleteLease(id, refNo) {
+            deleteLeaseId = id;
+            document.getElementById('deleteLeaseRef').textContent = refNo;
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            deleteLeaseId = 0;
+        }
+
+        function deleteLease() {
+            if (!deleteLeaseId) return;
+
+            fetch(`@Url.Action("DeleteAjax")?id=${deleteLeaseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        refreshTableAfterUpdate();
+                    } else {
+                        showAlert('error', result.message || 'Failed to delete lease');
+                    }
+                    closeDeleteModal();
+                })
+                .catch(error => {
+                    showAlert('error', 'An error occurred while deleting the lease');
+                    closeDeleteModal();
+                });
+        }
+
+        // View details functions
+        function viewDetails(id) {
+            currentLeaseId = id;
+            showDetailsLoading(true);
+            openDetailsSlideover();
+
+            fetch(`@Url.Action("GetLeaseDetails")?id=${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('View details response:', result); // Debug log
+                    if (result.success) {
+                        displayDetails(result.data);
+                        showDetailsLoading(false);
+                    } else {
+                        showAlert('error', result.message || 'Failed to load lease details');
+                        closeDetailsSlideover();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading details:', error);
+                    showAlert('error', 'An error occurred while loading lease details');
+                    closeDetailsSlideover();
+                });
+        }
+
+        function viewLease(id) {
+            viewDetails(id);
+        }
+
+        function openDetailsSlideover() {
+            const slideover = document.getElementById('detailsSlideover');
+            const panel = document.getElementById('detailsPanel');
+            slideover.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeDetailsSlideover() {
+            const panel = document.getElementById('detailsPanel');
+            panel.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.getElementById('detailsSlideover').classList.add('hidden');
+                currentLeaseId = 0;
+            }, 300);
+        }
+
+        function showDetailsLoading(show) {
+            const loadingDiv = document.getElementById('detailsLoading');
+            const contentDiv = document.getElementById('detailsContent');
+
+            if (show) {
+                loadingDiv.classList.remove('hidden');
+                contentDiv.classList.add('hidden');
+            } else {
+                loadingDiv.classList.add('hidden');
+                contentDiv.classList.remove('hidden');
+            }
+        }
+
+        function editFromDetails() {
+            const leaseId = document.getElementById('editFromDetailsBtn').getAttribute('data-lease-id');
+            if (leaseId && leaseId !== 'null' && leaseId !== 'undefined') {
+                closeDetailsSlideover();
+                setTimeout(() => {
+                    openEditDrawer(parseInt(leaseId));
+                }, 350);
+            } else {
+                showAlert('error', 'Unable to edit lease. Invalid lease ID.');
+            }
+        }
+
+        function displayDetails(data) {
+            const content = document.getElementById('detailsContent');
+
+            // Store the lease ID for edit functionality - handle both id and Id
+            const leaseId = data.id || data.Id;
+            if (leaseId) {
+                document.getElementById('editFromDetailsBtn').setAttribute('data-lease-id', leaseId);
+                currentLeaseId = leaseId;
+            }
+
+            // Helper function to get property value with fallback
+            function getValue(obj, ...props) {
+                for (const prop of props) {
+                    if (obj[prop] !== undefined && obj[prop] !== null) {
+                        return obj[prop];
+                    }
+                }
+                return null;
+            }
+
+            // Update footer with lease reference
+            const refNo = getValue(data, 'refNo', 'RefNo');
+            document.getElementById('detailsLeaseRef').textContent = `Lease #${refNo || 'N/A'}`;
+
+            // Calculate lease duration
+            let leaseDuration = 'N/A';
+            const fromDate = getValue(data, 'fromDate', 'FromDate');
+            const endDate = getValue(data, 'endDate', 'EndDate');
+            if (fromDate && endDate) {
+                const start = new Date(fromDate);
+                const end = new Date(endDate);
+                const months = ((end.getFullYear() - start.getFullYear()) * 12) + (end.getMonth() - start.getMonth()) + 1;
+                leaseDuration = `${months} month${months !== 1 ? 's' : ''}`;
+            }
+
+            // Status badge HTML
+            let statusBadge = '';
+            const statusText = getValue(data, 'status', 'Status') || 'Unknown';
+            switch (statusText) {
+                case 'Active':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Active</span>';
+                    break;
+                case 'Expired':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"><span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Expired</span>';
+                    break;
+                case 'Terminated':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"><span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>Terminated</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>' + statusText + '</span>';
+            }
+
+            content.innerHTML = `
+                <!-- Status and Key Info -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-900">Lease Status</h3>
+                        ${statusBadge}
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Duration:</span>
+                            <span class="ml-2 font-medium text-gray-900">${leaseDuration}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Monthly Rent:</span>
+                            <span class="ml-2 font-medium text-gray-900">${formatCurrency(getValue(data, 'monthlyRentPayable', 'MonthlyRentPayable'))}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lease Information Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Lease Information</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Lease Type</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'leaseTypeName', 'LeaseTypeName') || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Reference Number</dt>
+                            <dd class="text-sm text-gray-900 font-mono">${refNo || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Reference Date</dt>
+                            <dd class="text-sm text-gray-900">${formatDate(getValue(data, 'refDate', 'RefDate'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Perquisite Type</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'perquisiteType', 'PerquisiteType') || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Perquisite %</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'perquisiteApplicablePercent', 'PerquisiteApplicablePercent') || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Parties Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Parties</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Employee/Tenant</dt>
+                            <dd class="text-sm text-gray-900 font-medium">${getValue(data, 'employeeName', 'EmployeeName') || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Owner/Vendor</dt>
+                            <dd class="text-sm text-gray-900 font-medium">${getValue(data, 'vendorName', 'VendorName') || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Lease Period Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Lease Period</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Start Date</dt>
+                            <dd class="text-sm text-gray-900">${formatDate(fromDate)}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">End Date</dt>
+                            <dd class="text-sm text-gray-900">${formatDate(endDate)}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Financial Details Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Financial Details</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Monthly Rent</dt>
+                            <dd class="text-sm text-gray-900 font-semibold">${formatCurrency(getValue(data, 'monthlyRentPayable', 'MonthlyRentPayable'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Rent Deposit</dt>
+                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'rentDeposit', 'RentDeposit'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Additional Rent Recovery</dt>
+                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'additionalRentRecovery', 'AdditionalRentRecovery'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">License Fee Amount</dt>
+                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'licenseFeeAmount', 'LicenseFeeAmount'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Brokerage Amount</dt>
+                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'brokerageAmount', 'BrokerageAmount'))}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Stamp Duty</dt>
+                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'stampDuty', 'StampDuty'))}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Recovery Elements Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recovery Elements</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Rent Recovery Element</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'rentRecoveryElementName', 'RentRecoveryElementName') || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">License Fee Recovery Element</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'licenseFeeRecoveryElementName', 'LicenseFeeRecoveryElementName') || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Payment Terms Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Payment Terms</h3>
+                    <dl class="grid grid-cols-1 gap-4">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Payment Term</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'paymentTermName', 'PaymentTermName') || 'N/A'}</dd>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <dt class="text-sm font-medium text-gray-500">Payable On or Before</dt>
+                            <dd class="text-sm text-gray-900">${getValue(data, 'payableOnOrBeforeName', 'PayableOnOrBeforeName') || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Narration Section -->
+                ${getValue(data, 'narration', 'Narration') ? `
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Narration</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 whitespace-pre-wrap">${getValue(data, 'narration', 'Narration')}</p>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Metadata Section -->
+                <div class="pt-4 border-t border-gray-200">
+                    <dl class="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <dt class="text-gray-500">Created:</dt>
+                            <dd class="text-gray-700">${formatDateTime(getValue(data, 'createdAt', 'CreatedAt'))}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500">Last Modified:</dt>
+                            <dd class="text-gray-700">${formatDateTime(getValue(data, 'modifiedAt', 'ModifiedAt'))}</dd>
+                        </div>
+                    </dl>
+                </div>
+            `;
+        }
+
         // Utility functions
+        function searchLeases() {
+            currentPage = 1;
+            loadLeases();
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            loadLeases();
+        }
+
+        function loadLeases() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
+
+            const params = new URLSearchParams({
+                searchTerm: searchTerm,
+                statusFilter: statusFilter,
+                approvalStatusFilter: approvalStatusFilter,
+                page: currentPage,
+                pageSize: pageSize
+            });
+
+            // Show loading indicator
+            const tbody = document.getElementById('leaseTableBody');
+            const colspan = isChecker ? 11 : 9;
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading leases...</td></tr>`;
+
+            fetch(`@Url.Action("GetLeases")?${params}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        updateTable(result.data);
+                        updatePagination(result.pagination);
+                        
+                        // Clear any existing loading indicators
+                        const loadingRows = tbody.querySelectorAll('tr td[colspan]');
+                        loadingRows.forEach(row => row.parentElement.remove());
+                    } else {
+                        showAlert('error', result.message || 'Failed to load leases');
+                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load leases</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading leases:', error);
+                    showAlert('error', 'An error occurred while loading leases: ' + error.message);
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading leases</td></tr>`;
+                });
+        }
+
+        function updateTable(leases) {
+            const tbody = document.getElementById('leaseTableBody');
+            tbody.innerHTML = '';
+
+            if (!leases || leases.length === 0) {
+                const colspan = isChecker ? 11 : 9;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No leases found</td></tr>`;
+                return;
+            }
+
+            leases.forEach(lease => {
+                let approvalStatusCell = '';
+                let makerCell = '';
+                let actionButtons = '';
+
+                if (isChecker) {
+                    // Approval status column
+                    let statusClass = '';
+                    let statusText = '';
+
+                    switch (lease.approvalStatus) {
+                        case 1:
+                            statusClass = 'status-pending';
+                            statusText = 'Pending';
+                            break;
+                        case 2:
+                            statusClass = 'status-approved';
+                            statusText = 'Approved';
+                            break;
+                        case 3:
+                            statusClass = 'status-rejected';
+                            statusText = 'Rejected';
+                            break;
+                        default:
+                            statusClass = 'status-pending';
+                            statusText = 'Unknown';
+                    }
+
+                    approvalStatusCell = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>`;
+
+                    makerCell = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.makerUserName || '-'}</td>`;
+
+                    // Action buttons for checkers
+                    if (lease.approvalStatus === 1) { // Pending
+                        actionButtons = `
+                            <button onclick="viewDetails(${lease.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="approveLease(${lease.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
+                                <i class="ri-check-line"></i>
+                            </button>
+                            <button onclick="openRejectModal(${lease.id}, '${lease.refNo}')" class="text-red-600 hover:text-red-700" title="Reject">
+                                <i class="ri-close-line"></i>
+                            </button>`;
+                    } else {
+                        actionButtons = `
+                            <button onclick="viewDetails(${lease.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
+
+                        // Add edit/delete for approved leases
+                        if (lease.approvalStatus === 2) {
+                            actionButtons += `
+                                <button onclick="openEditDrawer(${lease.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button onclick="confirmDeleteLease(${lease.id}, '${lease.refNo}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>`;
+                        }
+                    }
+                } else {
+                    // Action buttons for makers (only for approved leases)
+                    if (lease.approvalStatus === 2) {
+                        actionButtons = `
+                            <button onclick="viewDetails(${lease.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="openEditDrawer(${lease.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDeleteLease(${lease.id}, '${lease.refNo}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>`;
+                    } else {
+                        actionButtons = `
+                            <button onclick="viewDetails(${lease.id})" class="text-primary hover:text-primary/80" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
+                    }
+                }
+
+                // Format period
+                let period = '';
+                if (lease.fromDate && lease.endDate) {
+                    const fromDate = new Date(lease.fromDate);
+                    const endDate = new Date(lease.endDate);
+                    period = `${fromDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+                } else {
+                    period = 'N/A';
+                }
+
+                const row = `
+                    <tr class="table-row hover:bg-gray-50">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" class="lease-checkbox">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${lease.refNo || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.leaseTypeName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.employeeName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.vendorName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${lease.monthlyRentPayable || '0'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${period}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${getStatusClass(lease.status)}">
+                                ${lease.status || 'Unknown'}
+                            </span>
+                        </td>
+                        ${approvalStatusCell}
+                        ${makerCell}
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex gap-1 justify-center">
+                                ${actionButtons}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Active':
+                    return 'status-active';
+                case 'Expired':
+                    return 'status-expired';
+                case 'Terminated':
+                    return 'status-terminated';
+                default:
+                    return 'status-active';
+            }
+        }
+
+        function updatePagination(pagination) {
+            const info = document.getElementById('paginationInfo');
+            const buttons = document.getElementById('paginationButtons');
+            
+            const startRecord = (pagination.currentPage - 1) * pagination.pageSize + 1;
+            const endRecord = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords);
+            
+            info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.totalRecords} results`;
+            
+            let buttonsHtml = '';
+            
+            // Previous button
+            if (pagination.currentPage > 1) {
+                buttonsHtml += `<button onclick="goToPage(${pagination.currentPage - 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Previous</button>`;
+            } else {
+                buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Previous</span>`;
+            }
+            
+            // Page numbers
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                if (i === pagination.currentPage) {
+                    buttonsHtml += `<span class="rounded px-3 py-1 text-sm bg-primary text-white">${i}</span>`;
+                } else {
+                    buttonsHtml += `<button onclick="goToPage(${i})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">${i}</button>`;
+                }
+            }
+            
+            // Next button
+            if (pagination.currentPage < pagination.totalPages) {
+                buttonsHtml += `<button onclick="goToPage(${pagination.currentPage + 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Next</button>`;
+            } else {
+                buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Next</span>`;
+            }
+            
+            buttons.innerHTML = buttonsHtml;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadLeases();
+        }
+
         function showAlert(type, message) {
             const container = document.getElementById('alertContainer');
-            const alertClass = type === 'success' 
-                ? 'bg-green-100 border-green-400 text-green-700' 
-                : 'bg-red-100 border-red-400 text-red-700';
+            const alertClass = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
             
             container.innerHTML = `
                 <div class="${alertClass} px-4 py-3 rounded border flex items-center" role="alert">
@@ -351,116 +1793,255 @@
             }, 5000);
         }
 
-        // Show success message if available
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <text>
-            setTimeout(() => {
-                showAlert('success', '@TempData["SuccessMessage"]');
-            }, 100);
-            </text>
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
         }
 
-        // Show error message if available
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <text>
-            setTimeout(() => {
-                showAlert('error', '@TempData["ErrorMessage"]');
-            }, 100);
-            </text>
+        function formatDateTime(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatCurrency(amount) {
+            if (!amount && amount !== 0) return 'N/A';
+            return new Intl.NumberFormat('en-IN', { 
+                style: 'currency', 
+                currency: 'INR',
+                maximumFractionDigits: 2
+            }).format(amount);
         }
     </script>
-}
 
-<style>
-    .table-row:hover {
-        background-color: #f9fafb;
-    }
+    <style>
+        .select2-container--default .select2-selection--single {
+            height: 42px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 6px 12px;
+        }
 
-    /* Custom primary color - adjust as needed */
-    :root {
-        --primary-color: #3b82f6;
-        --primary-color-hover: #2563eb;
-    }
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                color: #374151;
+                line-height: 28px;
+            }
 
-    .bg-primary {
-        background-color: var(--primary-color);
-    }
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 40px;
+            }
 
-    .text-primary {
-        color: var(--primary-color);
-    }
+        :root {
+            --primary-color: #3b82f6;
+            --primary-color-hover: #2563eb;
+        }
 
-    .border-primary {
-        border-color: var(--primary-color);
-    }
+        .bg-primary {
+            background-color: var(--primary-color);
+        }
 
-    .bg-primary\/90 {
-        background-color: var(--primary-color-hover);
-    }
+        .text-primary {
+            color: var(--primary-color);
+        }
 
-    .hover\:bg-primary\/90:hover {
-        background-color: var(--primary-color-hover);
-    }
+        .hover\:bg-primary\/90:hover {
+            background-color: var(--primary-color-hover);
+        }
 
-    .text-primary\/80 {
-        color: rgba(59, 130, 246, 0.8);
-    }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-    .hover\:text-primary\/80:hover {
-        color: rgba(59, 130, 246, 0.8);
-    }
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
 
-    /* Alert animations */
-    #alertContainer .border {
-        transition: all 0.3s ease-out;
-    }
+        .status-expired {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
 
-    /* Checkbox indeterminate state styling */
-    input[type="checkbox"]:indeterminate {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 8h8'/%3e%3c/svg%3e");
-    }
+        .status-terminated {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
 
-    /* Status badge improvements */
-    .status-badge {
-        transition: all 0.2s ease;
-    }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
 
-    /* Hover effects for action buttons */
-    .table-row a, .table-row button {
-        transition: all 0.2s ease;
-        padding: 0.25rem;
-        border-radius: 0.25rem;
-    }
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
 
-    .table-row a:hover, .table-row button:hover {
-        background-color: rgba(0, 0, 0, 0.05);
-        transform: scale(1.05);
-    }
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
 
-    /* Loading states */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
+        .error-input {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 1px #ef4444;
+        }
 
-    /* Responsive improvements */
-  /*   media (max-width: 768px) {
-        .table-responsive {
+        .error-text {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+       /*  keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        } */
+
+        /* Alert animations */
+        .alert-enter {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease-out;
+        }
+
+        .alert-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Validation error styles */
+        input.border-red-500,
+        select.border-red-500,
+        textarea.border-red-500 {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2;
+        }
+
+            input.border-red-500:focus,
+            select.border-red-500:focus,
+            textarea.border-red-500:focus {
+                border-color: #dc2626 !important;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            }
+
+        [data-validation] {
+            display: block;
+            margin-top: 0.25rem;
             font-size: 0.875rem;
+            color: #dc2626;
+            min-height: 1.25rem;
         }
-        
-        .px-6 {
-            padding-left: 1rem;
-            padding-right: 1rem;
+
+        /* Drawer alert animations */
+        #drawerAlert {
+            animation: slideDown 0.3s ease-out;
         }
-        
-        .py-4 {
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
+
+       /*  keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        } */
+
+        /* Slideover transitions */
+        #detailsPanel, #drawerPanel {
+            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-    } */
-</style>
+
+        /* Custom scrollbar for slideovers */
+        #detailsPanel .overflow-y-auto::-webkit-scrollbar,
+        #drawerPanel .overflow-y-auto::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #detailsPanel .overflow-y-auto::-webkit-scrollbar-track,
+        #drawerPanel .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f3f4f6;
+        }
+
+        #detailsPanel .overflow-y-auto::-webkit-scrollbar-thumb,
+        #drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 3px;
+        }
+
+            #detailsPanel .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+            #drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+            }
+
+        /* Status badge animations */
+        .status-badge {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+      /*   keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        } */
+
+        /* Smooth scroll for drawer and slideover */
+        #drawerPanel .overflow-y-auto,
+        #detailsPanel .overflow-y-auto {
+            scroll-behavior: smooth;
+        }
+
+        /* Details content styling */
+        #detailsContent dl dt {
+            font-weight: 500;
+        }
+
+        #detailsContent dl dd {
+            text-align: right;
+        }
+
+        /* Hover effects for interactive elements */
+        #detailsSlideover button:hover,
+        #leaseDrawer button:hover {
+            transform: translateY(-1px);
+            transition: transform 0.2s ease;
+        }
+
+        /* Error state for Select2 */
+        .select2-container--default .select2-selection--single.border-red-500 {
+            border-color: #ef4444 !important;
+        }
+    </style>
+}

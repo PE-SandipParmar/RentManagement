@@ -1,0 +1,265 @@
+﻿@model PagedResult<Lease>
+
+<!-- Data Table -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input type="checkbox" id="selectAll">
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lease Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Status</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var lease in Model.Items)
+                {
+                    <tr class="hover:bg-gray-50 table-row">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" class="lease-checkbox">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@lease.RefNo</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@lease.EmployeeName</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">@lease.VendorName</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.TotalLeaseAmount).ToString("C") ?? "N/A")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.MonthlyRentPayable).ToString("C") ?? "N/A")</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @{
+                                string statusText = lease.Status;
+                                string bgColor = "";
+                                string textColor = "";
+                                string dotColor = "";
+
+                                switch (statusText)
+                                {
+                                    case "Active":
+                                        bgColor = "bg-green-100";
+                                        textColor = "text-green-800";
+                                        dotColor = "bg-green-400";
+                                        break;
+                                    case "Expired":
+                                        bgColor = "bg-gray-100";
+                                        textColor = "text-gray-800";
+                                        dotColor = "bg-gray-400";
+                                        break;
+                                    case "Upcoming":
+                                        bgColor = "bg-yellow-100";
+                                        textColor = "text-yellow-800";
+                                        dotColor = "bg-yellow-400";
+                                        break;
+                                    case "Terminated":
+                                        bgColor = "bg-red-100";
+                                        textColor = "text-red-800";
+                                        dotColor = "bg-red-400";
+                                        break;
+                                    default:
+                                        bgColor = "bg-blue-100";
+                                        textColor = "text-blue-800";
+                                        dotColor = "bg-blue-400";
+                                        break;
+                                }
+                            }
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @bgColor @textColor">
+                                <span class="w-1.5 h-1.5 @dotColor rounded-full mr-1.5"></span>
+                                @statusText
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex gap-2 justify-center">
+                                <button onclick="viewDetails(@lease.Id)" class="text-primary hover:text-primary/80" title="View Details">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                <button onclick="openEditDrawer(@lease.Id)" class="text-green-600 hover:text-green-800" title="Edit">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button onclick="openDeleteModal(@lease.Id)" class="text-red-600 hover:text-red-700" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Empty State -->
+    @if (!Model.Items.Any())
+    {
+        <div class="px-6 py-12 text-center">
+            <div class="text-gray-500">
+                <i class="ri-file-list-line text-4xl text-gray-300 mb-4"></i>
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                {
+                    <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
+                    <p class="text-sm">No leases found matching your search criteria.</p>
+                }
+                else
+                {
+                    <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
+                    <p class="text-sm mb-4">Get started by creating your first lease agreement.</p>
+                    <button onclick="openCreateDrawer()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
+                        <i class="ri-add-line mr-2"></i>
+                        Create First Lease
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Pagination -->
+    <div class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+        <div class="flex items-center text-sm text-gray-700">
+            <span>
+                Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
+                to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
+                of @Model.TotalItems results
+            </span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            @if (Model.HasPreviousPage)
+            {
+                <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
+                   class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    <i class="ri-arrow-left-s-line mr-1"></i>
+                    Previous
+                </a>
+            }
+            else
+            {
+                <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                    <i class="ri-arrow-left-s-line mr-1"></i>
+                    Previous
+                </span>
+            }
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                // Show first page, last page, current page, and 2 pages before and after current
+                if (i == 1 || i == Model.TotalPages ||
+                (i >= Model.PageNumber - 2 && i <= Model.PageNumber + 2))
+                {
+                    if (i == Model.PageNumber)
+                    {
+                        <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-md">
+                            @i
+                        </span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
+                           class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                            @i
+                        </a>
+                    }
+                }
+                else if (i == Model.PageNumber - 3 || i == Model.PageNumber + 3)
+                {
+                    <span class="relative inline-flex items-center px-2 text-gray-500">...</span>
+                }
+            }
+
+            @if (Model.HasNextPage)
+            {
+                <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
+                   class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    Next
+                    <i class="ri-arrow-right-s-line ml-1"></i>
+                </a>
+            }
+            else
+            {
+                <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                    Next
+                    <i class="ri-arrow-right-s-line ml-1"></i>
+                </span>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    // Re-initialize checkboxes after table refresh
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeCheckboxes();
+    });
+
+    function initializeCheckboxes() {
+        // Select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function () {
+                const checkboxes = document.querySelectorAll('.lease-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        }
+
+        // Individual checkboxes
+        const leaseCheckboxes = document.querySelectorAll('.lease-checkbox');
+        leaseCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const allChecked = Array.from(leaseCheckboxes).every(cb => cb.checked);
+                const noneChecked = Array.from(leaseCheckboxes).every(cb => !cb.checked);
+
+                if (selectAllCheckbox) {
+                    if (allChecked) {
+                        selectAllCheckbox.checked = true;
+                        selectAllCheckbox.indeterminate = false;
+                    } else if (noneChecked) {
+                        selectAllCheckbox.checked = false;
+                        selectAllCheckbox.indeterminate = false;
+                    } else {
+                        selectAllCheckbox.checked = false;
+                        selectAllCheckbox.indeterminate = true;
+                    }
+                }
+            });
+        });
+    }
+
+    initializeCheckboxes();
+</script>
+
+<style>
+    .table-row:hover {
+        background-color: #f9fafb;
+    }
+
+    .table-row a, .table-row button {
+        transition: all 0.2s ease;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+    }
+
+        .table-row a:hover, .table-row button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            transform: scale(1.05);
+        }
+
+    /* Checkbox indeterminate state styling */
+    input[type="checkbox"]:indeterminate {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 8h8'/%3e%3c/svg%3e");
+    }
+</style>

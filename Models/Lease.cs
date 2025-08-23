@@ -7,15 +7,15 @@ namespace RentManagement.Models
     {
         public int Id { get; set; }
 
-        public string PerquisiteType { get; set; } = "Non-Government"; 
+        public string PerquisiteType { get; set; } = "Non-Government";
 
-        public string Status { get; set; } = string.Empty; 
+        public string Status { get; set; } = string.Empty;
 
         [Range(1, int.MaxValue, ErrorMessage = "Lease Type is required.")]
         public int LeaseTypeId { get; set; }
 
         [Required(ErrorMessage = "Lease Reference Number is required.")]
-        public string RefNo { get; set; } = string.Empty; 
+        public string RefNo { get; set; } = string.Empty;
 
         [Range(1, int.MaxValue, ErrorMessage = "Lease Name is required.")]
         public int EmployeeId { get; set; }
@@ -25,7 +25,7 @@ namespace RentManagement.Models
         public DateTime? RefDate { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "% of Perquisite Applicable is required.")]
-        public int PerquisiteApplicablePercentId { get; set; } 
+        public int PerquisiteApplicablePercentId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Owner Name is required.")]
         public int VendorId { get; set; }
@@ -77,13 +77,42 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Narration is required.")]
         [StringLength(200, ErrorMessage = "Narration cannot be longer than 200 characters.")]
         public string Narration { get; set; } = string.Empty;
+
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
         public int? CreatedBy { get; set; }
         public int? ModifiedBy { get; set; }
 
-        
+        // Approval Workflow Fields
+        [Display(Name = "Approval Status")]
+        public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Pending;
+
+        [Display(Name = "Maker User ID")]
+        public string? MakerUserId { get; set; }
+
+        [Display(Name = "Maker User Name")]
+        public string? MakerUserName { get; set; }
+
+        [Display(Name = "Checker User ID")]
+        public string? CheckerUserId { get; set; }
+
+        [Display(Name = "Checker User Name")]
+        public string? CheckerUserName { get; set; }
+
+        [Display(Name = "Maker Action")]
+        public MakerAction MakerAction { get; set; } = MakerAction.Create;
+
+        [Display(Name = "Approval Date")]
+        public DateTime? ApprovalDate { get; set; }
+
+        [Display(Name = "Rejection Reason")]
+        public string? RejectionReason { get; set; }
+
+        [Display(Name = "Is Active Record")]
+        public bool IsActiveRecord { get; set; } = true;
+
+        // Navigation properties
         public string? LeaseTypeName { get; set; }
         public string? PerquisiteApplicablePercent { get; set; }
         public string? EmployeeName { get; set; }
@@ -94,6 +123,38 @@ namespace RentManagement.Models
         public string? PayableOnOrBeforeName { get; set; }
         public string? TotalLeaseAmount { get; set; }
 
-        
+        // Helper properties
+        public bool IsVisibleInMainList => ApprovalStatus == ApprovalStatus.Approved && IsActiveRecord;
+
+        public string ApprovalStatusText => ApprovalStatus switch
+        {
+            ApprovalStatus.Pending => "Pending Approval",
+            ApprovalStatus.Approved => "Approved",
+            ApprovalStatus.Rejected => "Rejected",
+            _ => "Unknown"
+        };
+
+        public string MakerActionText => MakerAction switch
+        {
+            MakerAction.Create => "Create",
+            MakerAction.Update => "Update",
+            MakerAction.Delete => "Delete",
+            _ => "Unknown"
+        };
+    }
+
+    public class LeaseListViewModel
+    {
+        public List<Lease> Leases { get; set; } = new List<Lease>();
+        public List<Lease> PendingApprovals { get; set; } = new List<Lease>();
+        public string SearchTerm { get; set; } = string.Empty;
+        public string StatusFilter { get; set; } = string.Empty;
+        public string ApprovalStatusFilter { get; set; } = string.Empty;
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public int TotalRecords { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize);
+        public UserRole CurrentUserRole { get; set; }
+        public bool ShowApprovalSection { get; set; }
     }
 }
