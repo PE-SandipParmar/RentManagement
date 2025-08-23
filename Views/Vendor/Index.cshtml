@@ -19,7 +19,7 @@
             <li>
                 <div class="flex items-center">
                     <i class="ri-arrow-right-s-line text-gray-400"></i>
-                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Owner Management</span>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Vendor Management</span>
                 </div>
             </li>
         </ol>
@@ -31,14 +31,60 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Owner Management</h2>
-            <p class="text-gray-600 mt-1">Manage your organization's Owners and their information</p>
+            <h2 class="text-2xl font-bold text-gray-900">Vendor Management</h2>
+            <p class="text-gray-600 mt-1">Manage your organization's vendors and their information</p>
         </div>
-        <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
-            <i class="ri-add-line mr-2"></i>
-            Add Owner
-        </button>
+        @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
+        {
+            <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+                <i class="ri-add-line mr-2"></i>
+                Add Vendor
+            </button>
+        }
     </div>
+
+    <!-- Pending Approvals Section (Checker Only) -->
+    @if (isChecker && Model.PendingApprovals.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
+                <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
+            </div>
+            <div class="space-y-3">
+                @foreach (var vendor in Model.PendingApprovals.Take(3))
+                {
+                    <div class="bg-white rounded border p-3 flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <span class="font-medium text-gray-900">@vendor.VendorName</span>
+                                    <span class="text-sm text-gray-500">(@vendor.VendorCode)</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Action: <span class="font-medium">@vendor.MakerAction.ToString()</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    By: <span class="font-medium">@vendor.MakerUserName</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewVendor(@vendor.Id)" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                                View
+                            </button>
+                            <button onclick="approveVendor(@vendor.Id)" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
+                                Approve
+                            </button>
+                            <button onclick="openRejectModal(@vendor.Id, '@vendor.VendorName')" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
+                                Reject
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     <!-- Filters/Search -->
     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
@@ -47,7 +93,8 @@
             <div class="flex-1">
                 <div class="relative">
                     <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search owners..."
+                    <input type="text" id="searchInput" placeholder="Search vendors..."
+                           value="@Model.SearchTerm"
                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
             </div>
@@ -132,8 +179,8 @@
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <input type="checkbox" id="selectAll">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IFSC Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Name</th>
@@ -263,7 +310,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Add New Owner</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Add New Vendor</h2>
                 <button onclick="closeCreateDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -274,15 +321,15 @@
                 <form id="createVendorForm" class="p-6 space-y-6">
                     <!-- Vendor Details Section -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -303,7 +350,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email ID <span class="text-red-500">*</span></label>
-                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Owner@example.com" />
+                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="vendor@example.com" />
                                 <div class="error-text hidden" data-field="emailId"></div>
                             </div>
                             <div class="md:col-span-2">
@@ -392,7 +439,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitCreateForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Save Owner
+                    Save Vendor
                 </button>
             </div>
         </div>
@@ -407,7 +454,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Edit Owner</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Edit Vendor</h2>
                 <button onclick="closeEditDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -419,15 +466,15 @@
                     <input type="hidden" name="vendorId" />
                     <!-- Same form structure as create, with error divs -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -448,7 +495,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email ID <span class="text-red-500">*</span></label>
-                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Owner@example.com" />
+                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="vendor@example.com" />
                                 <div class="error-text hidden" data-field="emailId"></div>
                             </div>
                             <div class="md:col-span-2">
@@ -537,7 +584,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitEditForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Update Owner
+                    Update Vendor
                 </button>
             </div>
         </div>
@@ -550,7 +597,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Owner Details</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Vendor Details</h2>
                 <button onclick="closeViewDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -576,7 +623,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -604,7 +651,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -621,11 +668,11 @@
         </div>
     </div>
 </div>
- 
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
-     <script>
+    <script>
         // Global variables
         let currentPage = @Model.CurrentPage;
         let pageSize = @Model.PageSize;
@@ -850,87 +897,87 @@
                     }
 
                     approvalStatusCell = `
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="status-badge ${statusClass}">${statusText}</span>
-                                </td>`;
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge ${statusClass}">${statusText}</span>
+                                        </td>`;
 
                     makerCell = `
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.makerUserName || '-'}</td>`;
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.makerUserName || '-'}</td>`;
 
                     // Action buttons for checkers
                     if (vendor.approvalStatus === 1) { // Pending
                         actionButtons = `
-                                    <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                                        <i class="ri-eye-line"></i>
-                                    </button>
-                                    <button onclick="approveVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
-                                        <i class="ri-check-line"></i>
-                                    </button>
-                                    <button onclick="openRejectModal(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Reject">
-                                        <i class="ri-close-line"></i>
-                                    </button>`;
+                                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                            <button onclick="approveVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
+                                                <i class="ri-check-line"></i>
+                                            </button>
+                                            <button onclick="openRejectModal(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Reject">
+                                                <i class="ri-close-line"></i>
+                                            </button>`;
                     } else {
                         actionButtons = `
-                                    <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                                        <i class="ri-eye-line"></i>
-                                    </button>`;
+                                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                                <i class="ri-eye-line"></i>
+                                            </button>`;
 
                         // Add edit/delete for approved vendors
                         if (vendor.approvalStatus === 2) {
                             actionButtons += `
-                                        <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>`;
+                                                <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                                    <i class="ri-edit-line"></i>
+                                                </button>
+                                                <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>`;
                         }
                     }
                 } else {
                     // Action buttons for makers (only for approved vendors)
                     if (vendor.approvalStatus === 2) {
                         actionButtons = `
-                                    <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                                        <i class="ri-eye-line"></i>
-                                    </button>
-                                    <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
-                                        <i class="ri-edit-line"></i>
-                                    </button>
-                                    <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>`;
+                                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                            <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </button>
+                                            <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>`;
                     } else {
                         actionButtons = `
-                                    <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
-                                        <i class="ri-eye-line"></i>
-                                    </button>`;
+                                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
+                                                <i class="ri-eye-line"></i>
+                                            </button>`;
                     }
                 }
 
                 const row = `
-                            <tr class="table-row hover:bg-gray-50">
-                                <td class="px-4 py-4 text-center">
-                                    <input type="checkbox" class="vendor-checkbox">
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${vendor.vendorCode || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode || vendor.iFSCCode || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName || ''}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="status-badge ${vendor.status === 'Active' ? 'status-active' : 'status-inactive'}">
-                                        ${vendor.status || 'Unknown'}
-                                    </span>
-                                </td>
-                                ${approvalStatusCell}
-                                ${makerCell}
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="flex gap-1 justify-center">
-                                        ${actionButtons}
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                                    <tr class="table-row hover:bg-gray-50">
+                                        <td class="px-4 py-4 text-center">
+                                            <input type="checkbox" class="vendor-checkbox">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${vendor.vendorCode || ''}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName || ''}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber || ''}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode || vendor.iFSCCode || ''}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName || ''}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge ${vendor.status === 'Active' ? 'status-active' : 'status-inactive'}">
+                                                ${vendor.status || 'Unknown'}
+                                            </span>
+                                        </td>
+                                        ${approvalStatusCell}
+                                        ${makerCell}
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <div class="flex gap-1 justify-center">
+                                                ${actionButtons}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
                 tbody.innerHTML += row;
             });
 
@@ -940,32 +987,32 @@
         // Add CSS for approval status badges
         const style = document.createElement('style');
         style.textContent = `
-                    .status-pending {
-                        background-color: #fef3c7;
-                        color: #92400e;
-                    }
-                    .status-approved {
-                        background-color: #d1fae5;
-                        color: #065f46;
-                    }
-                    .status-rejected {
-                        background-color: #fee2e2;
-                        color: #991b1b;
-                    }
-                `;
+                            .status-pending {
+                                background-color: #fef3c7;
+                                color: #92400e;
+                            }
+                            .status-approved {
+                                background-color: #d1fae5;
+                                color: #065f46;
+                            }
+                            .status-rejected {
+                                background-color: #fee2e2;
+                                color: #991b1b;
+                            }
+                        `;
         document.head.appendChild(style);
 
         // Event listeners
         function initializeEventListeners() {
             // Search functionality
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     searchVendors();
                 }
             });
 
             // Select all checkbox
-            document.getElementById('selectAll').addEventListener('change', function() {
+            document.getElementById('selectAll').addEventListener('change', function () {
                 const checkboxes = document.querySelectorAll('.vendor-checkbox');
                 checkboxes.forEach(checkbox => {
                     checkbox.checked = this.checked;
@@ -977,22 +1024,22 @@
         function initializeValidation() {
             // PAN Number validation
             document.querySelectorAll('input[name="panNumber"]').forEach(input => {
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                     clearFieldError(this);
                 });
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     validatePANNumber(this);
                 });
             });
 
             // Mobile number validation
             document.querySelectorAll('input[name="mobileNumber"], input[name="alternateNumber"]').forEach(input => {
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     this.value = this.value.replace(/[^0-9]/g, '');
                     clearFieldError(this);
                 });
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     if (this.name === 'mobileNumber' || (this.name === 'alternateNumber' && this.value.length > 0)) {
                         validateMobileNumber(this);
                     }
@@ -1001,18 +1048,18 @@
 
             // IFSC Code validation
             document.querySelectorAll('input[name="ifscCode"]').forEach(input => {
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                     clearFieldError(this);
                 });
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     validateIFSCCode(this);
                 });
             });
 
             // Account Number validation
             document.querySelectorAll('input[name="accountNumber"]').forEach(input => {
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     this.value = this.value.replace(/[^A-Z0-9]/gi, '');
                     clearFieldError(this);
                 });
@@ -1020,20 +1067,20 @@
 
             // Email validation
             document.querySelectorAll('input[name="emailId"]').forEach(input => {
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     validateEmail(this);
                 });
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     clearFieldError(this);
                 });
             });
 
             // Required field validation
             document.querySelectorAll('input[required], textarea[required]').forEach(input => {
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     validateRequired(this);
                 });
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     clearFieldError(this);
                 });
             });
@@ -1166,7 +1213,7 @@
 
         function displayServerErrors(errors, formId) {
             clearAllErrors(formId);
-            
+
             if (Array.isArray(errors)) {
                 errors.forEach(error => {
                     // Try to map error to specific field
@@ -1189,10 +1236,10 @@
                     } else if (error.includes('Email')) {
                         const input = form.querySelector('input[name="emailId"]');
                         if (input) showFieldError(input, error);
-                    } else if (error.includes('Owner Code')) {
+                    } else if (error.includes('Vendor Code')) {
                         const input = form.querySelector('input[name="vendorCode"]');
                         if (input) showFieldError(input, error);
-                    } else if (error.includes('Owner Name')) {
+                    } else if (error.includes('Vendor Name')) {
                         const input = form.querySelector('input[name="vendorName"]');
                         if (input) showFieldError(input, error);
                     } else if (error.includes('Address') && !error.includes('Property')) {
@@ -1290,7 +1337,7 @@
 
             const form = document.getElementById('createVendorForm');
             const formData = new FormData(form);
-            
+
             // Get selected employees
             const selectedEmployees = Array.from(form.querySelectorAll('input[name="linkedEmployees"]:checked'))
                 .map(cb => cb.value);
@@ -1322,24 +1369,24 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('success', result.message);
-                    closeCreateDrawer();
-                    loadVendors();
-                } else {
-                    if (result.errors && result.errors.length > 0) {
-                        displayServerErrors(result.errors, 'createVendorForm');
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeCreateDrawer();
+                        loadVendors();
                     } else {
-                        showAlert('error', result.message);
+                        if (result.errors && result.errors.length > 0) {
+                            displayServerErrors(result.errors, 'createVendorForm');
+                        } else {
+                            showAlert('error', result.message);
+                        }
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('error', 'An error occurred while creating the vendor.');
-            });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while creating the vendor.');
+                });
         }
 
         function editVendor(id) {
@@ -1349,7 +1396,7 @@
                     if (result.success) {
                         const vendor = result.data;
                         const form = document.getElementById('editVendorForm');
-                        
+
                         // Populate form fields
                         form.querySelector('input[name="vendorId"]').value = vendor.id;
                         form.querySelector('input[name="vendorCode"]').value = vendor.vendorCode;
@@ -1392,7 +1439,7 @@
 
             const form = document.getElementById('editVendorForm');
             const formData = new FormData(form);
-            
+
             // Get selected employees
             const selectedEmployees = Array.from(form.querySelectorAll('input[name="linkedEmployees"]:checked'))
                 .map(cb => cb.value);
@@ -1425,24 +1472,24 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('success', result.message);
-                    closeEditDrawer();
-                    loadVendors();
-                } else {
-                    if (result.errors && result.errors.length > 0) {
-                        displayServerErrors(result.errors, 'editVendorForm');
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeEditDrawer();
+                        loadVendors();
                     } else {
-                        showAlert('error', result.message);
+                        if (result.errors && result.errors.length > 0) {
+                            displayServerErrors(result.errors, 'editVendorForm');
+                        } else {
+                            showAlert('error', result.message);
+                        }
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                    showAlert('error', 'An error occurred while updating the Owner.');
-            });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while updating the vendor.');
+                });
         }
 
         function viewVendor(id) {
@@ -1452,95 +1499,95 @@
                     if (result.success) {
                         debugger
                         const vendor = result.data;
-                        const linkedEmployees = vendor.LinkedEmployees && vendor.LinkedEmployees.length > 0 
-                            ? vendor.LinkedEmployees.join(', ') 
+                        const linkedEmployees = vendor.LinkedEmployees && vendor.LinkedEmployees.length > 0
+                            ? vendor.LinkedEmployees.join(', ')
                             : 'None';
-                        
-                        document.getElementById('viewVendorDetails').innerHTML = `
-                            <div class="space-y-6">
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                                    <label class="block text-sm font-medium text-gray-700">Owner Code</label>
-                                            <p class="text-sm text-gray-900">${vendor.vendorCode}</p>
-                                        </div>
-                                        <div>
-                                                    <label class="block text-sm font-medium text-gray-700">Owner Name</label>
-                                            <p class="text-sm text-gray-900">${vendor.vendorName}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">PAN Number</label>
-                                            <p class="text-sm text-gray-900">${vendor.pANNumber}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Mobile Number</label>
-                                            <p class="text-sm text-gray-900">${vendor.mobileNumber}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Alternate Number</label>
-                                            <p class="text-sm text-gray-900">${vendor.alternateNumber || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Email ID</label>
-                                            <p class="text-sm text-gray-900">${vendor.emailId}</p>
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700">Address</label>
-                                            <p class="text-sm text-gray-900">${vendor.address}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Bank Details</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Account Holder Name</label>
-                                            <p class="text-sm text-gray-900">${vendor.accountHolderName}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Bank Name</label>
-                                            <p class="text-sm text-gray-900">${vendor.bankName}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Branch Name</label>
-                                            <p class="text-sm text-gray-900">${vendor.branchName}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Account Number</label>
-                                            <p class="text-sm text-gray-900">${vendor.accountNumber}</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">IFSC Code</label>
-                                                    <p class="text-sm text-gray-900">${vendor.ifscCode}</p>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Property Details</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700">Property Address</label>
-                                            <p class="text-sm text-gray-900">${vendor.propertyAddress}</p>
+                        document.getElementById('viewVendorDetails').innerHTML = `
+                                    <div class="space-y-6">
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Vendor Code</label>
+                                                    <p class="text-sm text-gray-900">${vendor.vendorCode}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Vendor Name</label>
+                                                    <p class="text-sm text-gray-900">${vendor.vendorName}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">PAN Number</label>
+                                                    <p class="text-sm text-gray-900">${vendor.pANNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                                                    <p class="text-sm text-gray-900">${vendor.mobileNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Alternate Number</label>
+                                                    <p class="text-sm text-gray-900">${vendor.alternateNumber || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Email ID</label>
+                                                    <p class="text-sm text-gray-900">${vendor.emailId}</p>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                                                    <p class="text-sm text-gray-900">${vendor.address}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Total Rent Amount</label>
-                                            <p class="text-sm text-gray-900">₹${vendor.totalRentAmount}</p>
+
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Bank Details</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Account Holder Name</label>
+                                                    <p class="text-sm text-gray-900">${vendor.accountHolderName}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+                                                    <p class="text-sm text-gray-900">${vendor.bankName}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Branch Name</label>
+                                                    <p class="text-sm text-gray-900">${vendor.branchName}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Account Number</label>
+                                                    <p class="text-sm text-gray-900">${vendor.accountNumber}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">IFSC Code</label>
+                                                            <p class="text-sm text-gray-900">${vendor.ifscCode}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Status</label>
-                                            <span class="status-badge ${vendor.Status === 'Active' ? 'status-active' : 'status-inactive'}">${vendor.Status}</span>
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700">Linked Employees</label>
-                                            <p class="text-sm text-gray-900">${linkedEmployees}</p>
+
+                                        <div class="bg-gray-50 p-4 rounded-lg">
+                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Property Details</h3>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700">Property Address</label>
+                                                    <p class="text-sm text-gray-900">${vendor.propertyAddress}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Total Rent Amount</label>
+                                                    <p class="text-sm text-gray-900">₹${vendor.totalRentAmount}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                                                    <span class="status-badge ${vendor.Status === 'Active' ? 'status-active' : 'status-inactive'}">${vendor.Status}</span>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <label class="block text-sm font-medium text-gray-700">Linked Employees</label>
+                                                    <p class="text-sm text-gray-900">${linkedEmployees}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        `;
+                                `;
                         openViewDrawer();
                     } else {
                         showAlert('error', result.message);
@@ -1548,7 +1595,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading owner details.');
+                    showAlert('error', 'An error occurred while loading vendor details.');
                 });
         }
 
@@ -1569,20 +1616,20 @@
                 },
                 body: `id=${currentVendorId}`
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('success', result.message);
-                    closeDeleteModal();
-                    loadVendors();
-                } else {
-                    showAlert('error', result.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                    showAlert('error', 'An error occurred while deleting the owner.');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeDeleteModal();
+                        loadVendors();
+                    } else {
+                        showAlert('error', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while deleting the vendor.');
+                });
         }
 
         // Utility functions
@@ -1600,7 +1647,7 @@
         function loadVendors() {
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;
-            
+
             const params = new URLSearchParams({
                 searchTerm: searchTerm,
                 statusFilter: statusFilter,
@@ -1620,7 +1667,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading owners.');
+                    showAlert('error', 'An error occurred while loading vendors.');
                 });
         }
 
@@ -1630,35 +1677,35 @@
 
             vendors.forEach(vendor => {
                 const row = `
-                    <tr class="table-row">
-                        <td class="px-4 py-4 text-center">
-                            <input type="checkbox" class="vendor-checkbox">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorCode}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="status-badge ${vendor.Status === 'Active' ? 'status-active' : 'status-inactive'}">
-                                ${vendor.status}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <div class="flex gap-2 justify-center">
-                                <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
-                                    <i class="ri-eye-line"></i>
-                                </button>
-                                <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800" title="Edit">
-                                    <i class="ri-edit-line"></i>
-                                </button>
-                                <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.VendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
-                                    <i class="ri-delete-bin-line"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                            <tr class="table-row">
+                                <td class="px-4 py-4 text-center">
+                                    <input type="checkbox" class="vendor-checkbox">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorCode}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge ${vendor.Status === 'Active' ? 'status-active' : 'status-inactive'}">
+                                        ${vendor.status}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex gap-2 justify-center">
+                                        <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                        <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800" title="Edit">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.VendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
                 tbody.innerHTML += row;
             });
         }
@@ -1666,21 +1713,21 @@
         function updatePagination(pagination) {
             const info = document.getElementById('paginationInfo');
             const buttons = document.getElementById('paginationButtons');
-            
+
             const startRecord = (pagination.currentPage - 1) * pagination.pageSize + 1;
             const endRecord = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords);
-            
+
             info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.totalRecords} results`;
-            
+
             let buttonsHtml = '';
-            
+
             // Previous button
             if (pagination.CurrentPage > 1) {
                 buttonsHtml += `<button onclick="goToPage(${pagination.CurrentPage - 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Previous</button>`;
             } else {
                 buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Previous</span>`;
             }
-            
+
             // Page numbers
             for (let i = 1; i <= pagination.TotalPages; i++) {
                 if (i === pagination.CurrentPage) {
@@ -1689,14 +1736,14 @@
                     buttonsHtml += `<button onclick="goToPage(${i})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">${i}</button>`;
                 }
             }
-            
+
             // Next button
             if (pagination.CurrentPage < pagination.TotalPages) {
                 buttonsHtml += `<button onclick="goToPage(${pagination.CurrentPage + 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Next</button>`;
             } else {
                 buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Next</span>`;
             }
-            
+
             buttons.innerHTML = buttonsHtml;
         }
 
@@ -1708,13 +1755,13 @@
         function showAlert(type, message) {
             const container = document.getElementById('alertContainer');
             const alertClass = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
-            
+
             container.innerHTML = `
-                <div class="${alertClass} px-4 py-3 rounded border" role="alert">
-                    <span class="block sm:inline">${message}</span>
-                </div>
-            `;
-            
+                        <div class="${alertClass} px-4 py-3 rounded border" role="alert">
+                            <span class="block sm:inline">${message}</span>
+                        </div>
+                    `;
+
             setTimeout(() => {
                 container.innerHTML = '';
             }, 5000);
