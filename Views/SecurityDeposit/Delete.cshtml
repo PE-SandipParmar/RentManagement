@@ -22,7 +22,7 @@
                     <dd>@Model.EmployeeName</dd>
                 </div>
                 <div>
-                    <dt class="font-semibold">Vendor Name</dt>
+                    <dt class="font-semibold">Owner Name</dt>
                     <dd>@Model.VendorName</dd>
                 </div>
                 <div>
@@ -37,15 +37,15 @@
                     <dt class="font-semibold">Approval Status</dt>
                     <dd>@Model.ApprovalStatus</dd>
                 </div>
-                <div>
+               @*  <div>
                     <dt class="font-semibold">Created By</dt>
                     <dd>@Model.CreatedBy</dd>
-                </div>
+                </div> *@
                 <div>
                     <dt class="font-semibold">Created Date</dt>
                     <dd>@Model.CreatedDate.ToString("dd/MM/yyyy")</dd>
                 </div>
-                <div>
+                @* <div>
                     <dt class="font-semibold">Modified By</dt>
                     <dd>@Model.ModifiedBy</dd>
                 </div>
@@ -56,7 +56,7 @@
                 <div>
                     <dt class="font-semibold">Is Active</dt>
                     <dd>@(Model.IsActive ? "Yes" : "No")</dd>
-                </div>
+                </div> *@
             </dl>
 
             <form asp-action="DeleteConfirmed" method="post" class="mt-6 flex items-center">

@@ -34,7 +34,7 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Monthly Rent Payable is required.")]
         public decimal? MonthlyRentPayable { get; set; }
 
-        [Required(ErrorMessage = "Lease From Date is required.")]
+        [Required(ErrorMessage = "Lease Start Date is required.")]
         [DataType(DataType.Date)]
         public DateTime? FromDate { get; set; }
 
@@ -74,8 +74,8 @@ namespace RentManagement.Models
         [Range(1, int.MaxValue, ErrorMessage = "Payable On or Before is required.")]
         public int PayableOnOrBeforeId { get; set; }
 
-        [Required(ErrorMessage = "Narration is required.")]
-        [StringLength(200, ErrorMessage = "Narration cannot be longer than 200 characters.")]
+        [Required(ErrorMessage = "Remarks is required.")]
+        [StringLength(200, ErrorMessage = "Remarks cannot be longer than 200 characters.")]
         public string Narration { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;

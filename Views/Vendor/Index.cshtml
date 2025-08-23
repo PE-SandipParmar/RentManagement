@@ -1,6 +1,6 @@
 ﻿@model RentManagement.Models.Vendor.VendorListViewModel
 @{
-    ViewData["Title"] = "Vendor Management";
+    ViewData["Title"] = "Owner Management";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var employees = ViewBag.Employees as List<RentManagement.Models.Employee> ?? new List<RentManagement.Models.Employee>();
     var isChecker = Model.CurrentUserRole == RentManagement.Models.UserRole.Checker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin;
@@ -19,7 +19,7 @@
             <li>
                 <div class="flex items-center">
                     <i class="ri-arrow-right-s-line text-gray-400"></i>
-                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Vendor Management</span>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Owner Management</span>
                 </div>
             </li>
         </ol>
@@ -31,60 +31,14 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Vendor Management</h2>
-            <p class="text-gray-600 mt-1">Manage your organization's vendors and their information</p>
+            <h2 class="text-2xl font-bold text-gray-900">Owner Management</h2>
+            <p class="text-gray-600 mt-1">Manage your organization's Owners and their information</p>
         </div>
-        @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
-        {
-            <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
-                <i class="ri-add-line mr-2"></i>
-                Add Vendor
-            </button>
-        }
+        <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+            <i class="ri-add-line mr-2"></i>
+            Add Owner
+        </button>
     </div>
-
-    <!-- Pending Approvals Section (Checker Only) -->
-    @if (isChecker && Model.PendingApprovals.Any())
-    {
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
-                <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
-            </div>
-            <div class="space-y-3">
-                @foreach (var vendor in Model.PendingApprovals.Take(3))
-                {
-                    <div class="bg-white rounded border p-3 flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4">
-                                <div>
-                                    <span class="font-medium text-gray-900">@vendor.VendorName</span>
-                                    <span class="text-sm text-gray-500">(@vendor.VendorCode)</span>
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    Action: <span class="font-medium">@vendor.MakerAction.ToString()</span>
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    By: <span class="font-medium">@vendor.MakerUserName</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="viewVendor(@vendor.Id)" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
-                                View
-                            </button>
-                            <button onclick="approveVendor(@vendor.Id)" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
-                                Approve
-                            </button>
-                            <button onclick="openRejectModal(@vendor.Id, '@vendor.VendorName')" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
-                                Reject
-                            </button>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    }
 
     <!-- Filters/Search -->
     <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
@@ -93,8 +47,7 @@
             <div class="flex-1">
                 <div class="relative">
                     <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search vendors..."
-                           value="@Model.SearchTerm"
+                    <input type="text" id="searchInput" placeholder="Search owners..."
                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
             </div>
@@ -179,8 +132,8 @@
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <input type="checkbox" id="selectAll">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IFSC Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Name</th>
@@ -310,7 +263,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Add New Vendor</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Add New Owner</h2>
                 <button onclick="closeCreateDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -321,15 +274,15 @@
                 <form id="createVendorForm" class="p-6 space-y-6">
                     <!-- Vendor Details Section -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -350,7 +303,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email ID <span class="text-red-500">*</span></label>
-                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="vendor@example.com" />
+                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Owner@example.com" />
                                 <div class="error-text hidden" data-field="emailId"></div>
                             </div>
                             <div class="md:col-span-2">
@@ -439,7 +392,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitCreateForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Save Vendor
+                    Save Owner
                 </button>
             </div>
         </div>
@@ -454,7 +407,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Edit Vendor</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Edit Owner</h2>
                 <button onclick="closeEditDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -466,15 +419,15 @@
                     <input type="hidden" name="vendorId" />
                     <!-- Same form structure as create, with error divs -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -495,7 +448,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email ID <span class="text-red-500">*</span></label>
-                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="vendor@example.com" />
+                                <input type="email" name="emailId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Owner@example.com" />
                                 <div class="error-text hidden" data-field="emailId"></div>
                             </div>
                             <div class="md:col-span-2">
@@ -584,7 +537,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitEditForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Update Vendor
+                    Update Owner
                 </button>
             </div>
         </div>
@@ -597,7 +550,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Vendor Details</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Owner Details</h2>
                 <button onclick="closeViewDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -623,7 +576,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -651,7 +604,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -1236,10 +1189,10 @@
                     } else if (error.includes('Email')) {
                         const input = form.querySelector('input[name="emailId"]');
                         if (input) showFieldError(input, error);
-                    } else if (error.includes('Vendor Code')) {
+                    } else if (error.includes('Owner Code')) {
                         const input = form.querySelector('input[name="vendorCode"]');
                         if (input) showFieldError(input, error);
-                    } else if (error.includes('Vendor Name')) {
+                    } else if (error.includes('Owner Name')) {
                         const input = form.querySelector('input[name="vendorName"]');
                         if (input) showFieldError(input, error);
                     } else if (error.includes('Address') && !error.includes('Property')) {
@@ -1488,7 +1441,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('error', 'An error occurred while updating the vendor.');
+                    showAlert('error', 'An error occurred while updating the Owner.');
             });
         }
 
@@ -1506,14 +1459,14 @@
                         document.getElementById('viewVendorDetails').innerHTML = `
                             <div class="space-y-6">
                                 <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700">Vendor Code</label>
+                                                    <label class="block text-sm font-medium text-gray-700">Owner Code</label>
                                             <p class="text-sm text-gray-900">${vendor.vendorCode}</p>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700">Vendor Name</label>
+                                                    <label class="block text-sm font-medium text-gray-700">Owner Name</label>
                                             <p class="text-sm text-gray-900">${vendor.vendorName}</p>
                                         </div>
                                         <div>
@@ -1595,7 +1548,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading vendor details.');
+                    showAlert('error', 'An error occurred while loading owner details.');
                 });
         }
 
@@ -1628,7 +1581,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('error', 'An error occurred while deleting the vendor.');
+                    showAlert('error', 'An error occurred while deleting the owner.');
             });
         }
 
@@ -1667,7 +1620,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading vendors.');
+                    showAlert('error', 'An error occurred while loading owners.');
                 });
         }
 

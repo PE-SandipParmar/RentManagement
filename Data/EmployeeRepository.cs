@@ -90,6 +90,7 @@ namespace RentManagement.Data
             parameters.Add("@DateOfJoining", employee.DateOfJoining);
             parameters.Add("@EligibleForLease", employee.EligibleForLease);
             parameters.Add("@TotalSalary", employee.TotalSalary);
+            parameters.Add("@BasicSalary", employee.BasicSalary);
             parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
             parameters.Add("@TravelAllowance", employee.TravelAllowance);
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
@@ -130,6 +131,7 @@ namespace RentManagement.Data
             parameters.Add("@DateOfJoining", employee.DateOfJoining);
             parameters.Add("@EligibleForLease", employee.EligibleForLease);
             parameters.Add("@TotalSalary", employee.TotalSalary);
+            parameters.Add("@BasicSalary", employee.BasicSalary);
             parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
             parameters.Add("@TravelAllowance", employee.TravelAllowance);
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
