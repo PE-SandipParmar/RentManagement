@@ -586,10 +586,10 @@
                     </div>
 
                     <!-- Miscellaneous -->
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Miscellaneous</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Remarks</h3>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Narration <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Remarks <span class="text-red-500">*</span></label>
                         <textarea name="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
                         <span class="text-red-600 text-sm" data-validation="Narration"></span>
                     </div>
@@ -1058,7 +1058,7 @@
                 { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
                 { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
                 { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
-                { name: 'Narration', message: 'Narration is required', displayName: 'Narration' }
+                { name: 'Narration', message: 'Remarks is required', displayName: 'Narration' }
             ];
 
             requiredFields.forEach(field => {
@@ -1095,10 +1095,10 @@
             if (narration && narration.length > 200) {
                 const errorSpan = document.querySelector('[data-validation="Narration"]');
                 if (errorSpan) {
-                    errorSpan.textContent = 'Narration cannot be longer than 200 characters';
+                    errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
                     document.querySelector('[name="Narration"]').classList.add('border-red-500');
                 }
-                errors.push('Narration cannot be longer than 200 characters');
+                errors.push('Remarks cannot be longer than 200 characters');
                 isValid = false;
             }
 
@@ -1497,7 +1497,7 @@
                 <!-- Narration Section -->
                 ${getValue(data, 'narration', 'Narration') ? `
                 <div class="mb-6">
-                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Narration</h3>
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Remarks</h3>
                     <div class="bg-gray-50 rounded-lg p-4">
                         <p class="text-sm text-gray-700 whitespace-pre-wrap">${getValue(data, 'narration', 'Narration')}</p>
                     </div>

@@ -331,38 +331,47 @@ namespace RentManagement.Data
             using var connection = CreateConnection();
 
             var parameters = new DynamicParameters();
-            parameters.Add("@Code", employee.Code);
-            parameters.Add("@Name", employee.Name);
-            parameters.Add("@DateOfBirth", employee.DateOfBirth);
-            parameters.Add("@Gender", employee.Gender);
-            parameters.Add("@Email", employee.Email);
-            parameters.Add("@Aadhar", employee.Aadhar);
-            parameters.Add("@Pan", employee.Pan);
-            parameters.Add("@DepartmentId", employee.DepartmentId);
-            parameters.Add("@DesignationId", employee.DesignationId);
-            parameters.Add("@DateOfJoining", employee.DateOfJoining);
-            parameters.Add("@EligibleForLease", employee.EligibleForLease);
-            parameters.Add("@TotalSalary", employee.TotalSalary);
-            parameters.Add("@BasicSalary", employee.BasicSalary);
-            parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
-            parameters.Add("@TravelAllowance", employee.TravelAllowance);
-            parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
-            parameters.Add("@OtherAllowance", employee.OtherAllowance);
-            parameters.Add("@GrossSalaryAfterDeductions", employee.GrossSalaryAfterDeductions);
-            parameters.Add("@ProvidentFund", employee.PF);
-            parameters.Add("@ProfessionalTax", employee.ProfessionalTax);
-            parameters.Add("@ESIC", employee.ESI);
-            parameters.Add("@IsActive", employee.IsActive);
-            parameters.Add("@MakerUserId", makerUserId);
-            parameters.Add("@MakerUserName", makerUserName);
-            parameters.Add("@MakerAction", (int)makerAction);
-            parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            try
+            {
+                parameters.Add("@Code", employee.Code);
+                parameters.Add("@Name", employee.Name);
+                parameters.Add("@DateOfBirth", employee.DateOfBirth);
+                parameters.Add("@Gender", employee.Gender);
+                parameters.Add("@Email", employee.Email);
+                parameters.Add("@Aadhar", employee.Aadhar);
+                parameters.Add("@Pan", employee.Pan);
+                parameters.Add("@DepartmentId", employee.DepartmentId);
+                parameters.Add("@DesignationId", employee.DesignationId);
+                parameters.Add("@DateOfJoining", employee.DateOfJoining);
+                parameters.Add("@EligibleForLease", employee.EligibleForLease);
+                parameters.Add("@TotalSalary", employee.TotalSalary);
+                parameters.Add("@BasicSalary", employee.BasicSalary);
+                parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
+                parameters.Add("@TravelAllowance", employee.TravelAllowance);
+                parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
+                parameters.Add("@OtherAllowance", employee.OtherAllowance);
+                parameters.Add("@GrossSalaryAfterDeductions", employee.GrossSalaryAfterDeductions);
+                parameters.Add("@ProvidentFund", employee.PF);
+                parameters.Add("@ProfessionalTax", employee.ProfessionalTax);
+                parameters.Add("@ESIC", employee.ESI);
+                parameters.Add("@IsActive", employee.IsActive);
+                parameters.Add("@MakerUserId", makerUserId);
+                parameters.Add("@MakerUserName", makerUserName);
+                parameters.Add("@MakerAction", (int)makerAction);
+                parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            await connection.ExecuteAsync(
-                "AddEmployeeForApproval",
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
+                await connection.ExecuteAsync(
+                    "AddEmployeeForApproval",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
 
             return parameters.Get<int>("@Id");
         }

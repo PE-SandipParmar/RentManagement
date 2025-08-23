@@ -187,15 +187,7 @@
 
                     @if (User.IsInRole("Admin") || User.IsInRole("Employee"))
                     {
-                        <a asp-controller="Employee" asp-action="Index"
-                           class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                           data-nav="employee-management">
-                            <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                                <i class="ri-user-line"></i>
-                            </div>
-                            <span class="sidebar-text">Employee Management</span>
-                        </a>
-
+                     
                        @*  <a asp-controller="Employee" asp-action="Create"
                            class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                            data-nav="add-employee">
@@ -205,6 +197,14 @@
                             <span class="sidebar-text">Add Employee</span>
                         </a>
  *@                    }
+                    <a asp-controller="Employee" asp-action="Index"
+                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
+                       data-nav="employee-management">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="ri-user-line"></i>
+                        </div>
+                        <span class="sidebar-text">Employee Management</span>
+                    </a>
 
                     <a asp-controller="Vendor" asp-action="Index"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
