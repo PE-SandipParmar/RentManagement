@@ -66,6 +66,31 @@ namespace RentManagement.Controllers
                 ModelState.AddModelError("Amount", "Amount must be greater than 0");
             }
 
+            // Validate TDS Rate
+            if (deposit.TdsRate.HasValue)
+            {
+                if (deposit.TdsRate < 0 || deposit.TdsRate > 100)
+                {
+                    ModelState.AddModelError("TdsRate", "TDS Rate must be between 0 and 100%");
+                }
+            }
+
+            // Auto-calculate TDS Amount if TDS Rate is provided
+            if (deposit.Amount > 0 && deposit.TdsRate.HasValue && deposit.TdsRate > 0)
+            {
+                deposit.TdsAmount = (deposit.Amount * deposit.TdsRate.Value) / 100;
+            }
+            else
+            {
+                deposit.TdsAmount = 0;
+            }
+
+            // Validate TDS Amount doesn't exceed Deposit Amount
+            if (deposit.TdsAmount.HasValue && deposit.TdsAmount > deposit.Amount)
+            {
+                ModelState.AddModelError("TdsAmount", "TDS Amount cannot exceed Deposit Amount");
+            }
+
             if (ModelState.IsValid)
             {
                 var newId = await _securityDepositRepository.CreateAsync(deposit);
@@ -118,6 +143,31 @@ namespace RentManagement.Controllers
                 ModelState.AddModelError("Amount", "Amount must be greater than 0");
             }
 
+            // Validate TDS Rate
+            if (deposit.TdsRate.HasValue)
+            {
+                if (deposit.TdsRate < 0 || deposit.TdsRate > 100)
+                {
+                    ModelState.AddModelError("TdsRate", "TDS Rate must be between 0 and 100%");
+                }
+            }
+
+            // Auto-calculate TDS Amount if TDS Rate is provided
+            if (deposit.Amount > 0 && deposit.TdsRate.HasValue && deposit.TdsRate > 0)
+            {
+                deposit.TdsAmount = (deposit.Amount * deposit.TdsRate.Value) / 100;
+            }
+            else
+            {
+                deposit.TdsAmount = 0;
+            }
+
+            // Validate TDS Amount doesn't exceed Deposit Amount
+            if (deposit.TdsAmount.HasValue && deposit.TdsAmount > deposit.Amount)
+            {
+                ModelState.AddModelError("TdsAmount", "TDS Amount cannot exceed Deposit Amount");
+            }
+
             if (ModelState.IsValid)
             {
                 var success = await _securityDepositRepository.UpdateAsync(deposit);
@@ -149,7 +199,7 @@ namespace RentManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var success = await _securityDepositRepository.DeleteAsync(id);
+            var success = await _securityDepositRepository.DeleteAsync(id,0);
             if (success)
             {
                 TempData["SuccessMessage"] = "Security deposit deleted successfully!";
@@ -357,6 +407,58 @@ namespace RentManagement.Controllers
                 {
                     isValid = false,
                     message = "Error validating amount: " + ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Calculate TDS Amount based on Deposit Amount and TDS Rate
+        /// </summary>
+        [HttpGet]
+        public JsonResult CalculateTds(decimal amount, decimal tdsRate)
+        {
+            try
+            {
+                if (amount <= 0 || tdsRate <= 0)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        tdsAmount = 0,
+                        netAmount = amount
+                    });
+                }
+
+                if (tdsRate > 100)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "TDS Rate cannot exceed 100%",
+                        tdsAmount = 0,
+                        netAmount = amount
+                    });
+                }
+
+                var tdsAmount = (amount * tdsRate) / 100;
+                var netAmount = amount - tdsAmount;
+
+                return Json(new
+                {
+                    success = true,
+                    tdsAmount = Math.Round(tdsAmount, 2),
+                    netAmount = Math.Round(netAmount, 2),
+                    message = $"TDS: ₹{tdsAmount:N2}, Net Amount: ₹{netAmount:N2}"
+                });
+            }
+            catch (System.Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Error calculating TDS: " + ex.Message,
+                    tdsAmount = 0,
+                    netAmount = amount
                 });
             }
         }
