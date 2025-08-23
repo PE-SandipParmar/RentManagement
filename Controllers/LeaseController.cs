@@ -1,329 +1,533 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using RentManagement.Data;
 using RentManagement.Models;
-using System.Threading.Tasks;
-using System.Text.Json;
-using System.Linq;
-using System.Collections.Generic;
-using System;
+using System.Security.Claims;
 
 namespace RentManagement.Controllers
 {
+    [Authorize]
     public class LeaseController : Controller
     {
         private readonly ILeaseRepository _leaseRepository;
+        private readonly ILogger<LeaseController> _logger;
 
-        public LeaseController(ILeaseRepository leaseRepository)
+        public LeaseController(ILeaseRepository leaseRepository, ILogger<LeaseController> logger)
         {
             _leaseRepository = leaseRepository;
+            _logger = logger;
         }
 
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string search = "")
-        {
-            var leases = await _leaseRepository.GetLeasesAsync(page, pageSize, search);
-            ViewBag.Search = search;
-            ViewBag.PageSize = pageSize;
-
-            // Load dropdowns for the drawer forms
-            await LoadDropdowns();
-
-            return View(leases);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetLeaseDetails(int id)
-        {
-            var lease = await _leaseRepository.GetLeaseByIdAsync(id);
-            if (lease == null)
-                return Json(new { success = false, message = "Lease not found" });
-
-            return Json(new { success = true, data = lease });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateAjax([FromBody] Lease lease)
+        // GET: Lease
+        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
         {
             try
             {
-                // Clear model state to avoid issues with JSON binding
-                ModelState.Clear();
+                var userRole = GetCurrentUserRole();
 
-                // Manual validation for required fields
-                var validationErrors = new Dictionary<string, string>();
-
-                // Check for duplicate RefNo
-                if (await _leaseRepository.LeaseNoExistsAsync(lease.RefNo))
+                var viewModel = new LeaseListViewModel
                 {
-                    validationErrors.Add("RefNo", "This Lease Reference Number already exists. Please use a different one.");
-                }
+                    SearchTerm = searchTerm,
+                    StatusFilter = statusFilter,
+                    ApprovalStatusFilter = approvalStatusFilter,
+                    CurrentPage = page,
+                    PageSize = pageSize,
+                    CurrentUserRole = userRole,
+                    ShowApprovalSection = userRole == UserRole.Checker || userRole == UserRole.Admin
+                };
 
-                // Validate required fields
-                if (lease.LeaseTypeId <= 0)
-                    validationErrors.Add("LeaseTypeId", "Lease Type is required");
+                // Load dropdown data
+                await LoadViewBagData();
 
-                if (string.IsNullOrWhiteSpace(lease.RefNo))
-                    validationErrors.Add("RefNo", "Lease Reference Number is required");
-
-                if (lease.EmployeeId <= 0)
-                    validationErrors.Add("EmployeeId", "Employee Name is required");
-
-                if (!lease.RefDate.HasValue)
-                    validationErrors.Add("RefDate", "Reference Date is required");
-
-                if (lease.PerquisiteApplicablePercentId <= 0)
-                    validationErrors.Add("PerquisiteApplicablePercentId", "% of Perquisite Applicable is required");
-
-                if (lease.VendorId <= 0)
-                    validationErrors.Add("VendorId", "Owner Name is required");
-
-                if (!lease.MonthlyRentPayable.HasValue || lease.MonthlyRentPayable <= 0)
-                    validationErrors.Add("MonthlyRentPayable", "Monthly Rent Payable must be greater than 0");
-
-                if (!lease.FromDate.HasValue)
-                    validationErrors.Add("FromDate", "From Date is required");
-
-                if (!lease.EndDate.HasValue)
-                    validationErrors.Add("EndDate", "End Date is required");
-
-                if (lease.FromDate.HasValue && lease.EndDate.HasValue && lease.FromDate > lease.EndDate)
-                    validationErrors.Add("EndDate", "End Date must be after From Date");
-
-                if (lease.PaymentTermId <= 0)
-                    validationErrors.Add("PaymentTermId", "Payment Term is required");
-
-                if (lease.PayableOnOrBeforeId <= 0)
-                    validationErrors.Add("PayableOnOrBeforeId", "Payable On or Before is required");
-
-                if (string.IsNullOrWhiteSpace(lease.Narration))
-                    validationErrors.Add("Narration", "Narration is required");
-                else if (lease.Narration.Length > 200)
-                    validationErrors.Add("Narration", "Narration cannot be longer than 200 characters");
-
-                // Additional numeric field validations
-                if (lease.RentDeposit.HasValue && lease.RentDeposit < 0)
-                    validationErrors.Add("RentDeposit", "Rent Deposit cannot be negative");
-
-                if (lease.AdditionalRentRecovery.HasValue && lease.AdditionalRentRecovery < 0)
-                    validationErrors.Add("AdditionalRentRecovery", "Additional Rent Recovery cannot be negative");
-
-                if (lease.BrokerageAmount.HasValue && lease.BrokerageAmount < 0)
-                    validationErrors.Add("BrokerageAmount", "Brokerage Amount cannot be negative");
-
-                if (lease.StampDuty.HasValue && lease.StampDuty < 0)
-                    validationErrors.Add("StampDuty", "Stamp Duty cannot be negative");
-
-                if (lease.LicenseFeeAmount.HasValue && lease.LicenseFeeAmount < 0)
-                    validationErrors.Add("LicenseFeeAmount", "License Fee Amount cannot be negative");
-
-                if (validationErrors.Any())
+                // Load different data based on user role and filter
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
-                    return Json(new
+                    // Checkers and Admins see approved leases by default
+                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
                     {
-                        success = false,
-                        errors = validationErrors,
-                        message = "Please correct the validation errors and try again."
-                    });
+                        viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetRejectedLeasesAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetRejectedLeaseCountAsync(searchTerm);
+                    }
+
+                    // Also load pending approvals for the approval section
+                    viewModel.PendingApprovals = (await _leaseRepository.GetPendingApprovalsAsync("", 1, 5)).ToList();
+                }
+                else
+                {
+                    // Makers see only approved leases (they can't approve their own changes)
+                    viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                    viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
                 }
 
-                var leaseId = await _leaseRepository.CreateLeaseAsync(lease);
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching leases");
+                TempData["ErrorMessage"] = "An error occurred while loading leases.";
+                return View(new LeaseListViewModel());
+            }
+        }
 
-                // Get the created lease with all details
-                var createdLease = await _leaseRepository.GetLeaseByIdAsync(leaseId);
+        // AJAX: Get lease details for view/edit
+        [HttpGet]
+        public async Task<IActionResult> GetLeaseDetails(int id)
+        {
+            try
+            {
+                var lease = await _leaseRepository.GetLeaseByIdAsync(id);
+                if (lease == null)
+                {
+                    return Json(new { success = false, message = "Lease not found." });
+                }
 
                 return Json(new
                 {
                     success = true,
-                    message = "Lease created successfully!",
-                    data = createdLease
+                    data = new
+                    {
+                        Id = lease.Id,
+                        PerquisiteType = lease.PerquisiteType,
+                        Status = lease.Status,
+                        LeaseTypeId = lease.LeaseTypeId,
+                        RefNo = lease.RefNo,
+                        EmployeeId = lease.EmployeeId,
+                        RefDate = lease.RefDate?.ToString("yyyy-MM-dd"),
+                        PerquisiteApplicablePercentId = lease.PerquisiteApplicablePercentId,
+                        VendorId = lease.VendorId,
+                        MonthlyRentPayable = lease.MonthlyRentPayable,
+                        FromDate = lease.FromDate?.ToString("yyyy-MM-dd"),
+                        EndDate = lease.EndDate?.ToString("yyyy-MM-dd"),
+                        RentRecoveryElementId = lease.RentRecoveryElementId,
+                        RentDeposit = lease.RentDeposit,
+                        AdditionalRentRecovery = lease.AdditionalRentRecovery,
+                        BrokerageAmount = lease.BrokerageAmount,
+                        LicenseFeeRecoveryElementId = lease.LicenseFeeRecoveryElementId,
+                        StampDuty = lease.StampDuty,
+                        LicenseFeeAmount = lease.LicenseFeeAmount,
+                        PaymentTermId = lease.PaymentTermId,
+                        PayableOnOrBeforeId = lease.PayableOnOrBeforeId,
+                        Narration = lease.Narration,
+                        ApprovalStatus = (int)lease.ApprovalStatus,
+                        ApprovalStatusText = lease.ApprovalStatusText,
+                        MakerUserName = lease.MakerUserName,
+                        CheckerUserName = lease.CheckerUserName,
+                        MakerAction = (int)lease.MakerAction,
+                        MakerActionText = lease.MakerActionText,
+                        ApprovalDate = lease.ApprovalDate,
+                        RejectionReason = lease.RejectionReason,
+                        CreatedAt = lease.CreatedAt,
+                        ModifiedAt = lease.ModifiedAt,
+                        // Navigation properties
+                        LeaseTypeName = lease.LeaseTypeName,
+                        EmployeeName = lease.EmployeeName,
+                        VendorName = lease.VendorName,
+                        PerquisiteApplicablePercent = lease.PerquisiteApplicablePercent,
+                        RentRecoveryElementName = lease.RentRecoveryElementName,
+                        LicenseFeeRecoveryElementName = lease.LicenseFeeRecoveryElementName,
+                        PaymentTermName = lease.PaymentTermName,
+                        PayableOnOrBeforeName = lease.PayableOnOrBeforeName,
+                        TotalLeaseAmount = lease.TotalLeaseAmount
+                    }
                 });
             }
             catch (Exception ex)
             {
-                // Log the exception here
-                return Json(new
-                {
-                    success = false,
-                    message = "An unexpected error occurred while creating the lease. Please try again or contact support if the problem persists.",
-                    errors = new Dictionary<string, string> { { "General", ex.Message } }
-                });
+                _logger.LogError(ex, "Error occurred while fetching lease details for ID: {Id}", id);
+                return Json(new { success = false, message = "An error occurred while fetching lease details." });
             }
         }
 
+        // AJAX: Create lease (Maker role)
         [HttpPost]
-        public async Task<IActionResult> UpdateAjax([FromBody] Lease lease)
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> CreateAjax([FromBody] LeaseCreateRequest request)
         {
             try
             {
-                // Check if lease exists
-                var existingLease = await _leaseRepository.GetLeaseByIdAsync(lease.Id);
-                if (existingLease == null)
-                    return Json(new
-                    {
-                        success = false,
-                        message = "Lease not found. It may have been deleted by another user."
-                    });
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
 
-                // Clear model state to avoid issues with JSON binding
-                ModelState.Clear();
-
-                // Manual validation for required fields
-                var validationErrors = new Dictionary<string, string>();
-
-                // Check for duplicate RefNo
-                if (await _leaseRepository.LeaseNoExistsAsync(lease.RefNo, lease.Id))
+                // Check for duplicate lease reference number
+                var existingLease = await _leaseRepository.GetLeaseByRefNoAsync(request.RefNo);
+                if (existingLease != null)
                 {
-                    validationErrors.Add("RefNo", "This Lease Reference Number already exists. Please use a different one.");
+                    return Json(new { success = false, message = "Lease reference number already exists. Please use a different reference number." });
                 }
 
-                // Validate required fields
-                if (lease.LeaseTypeId <= 0)
-                    validationErrors.Add("LeaseTypeId", "Lease Type is required");
-
-                if (string.IsNullOrWhiteSpace(lease.RefNo))
-                    validationErrors.Add("RefNo", "Lease Reference Number is required");
-
-                if (lease.EmployeeId <= 0)
-                    validationErrors.Add("EmployeeId", "Employee Name is required");
-
-                if (!lease.RefDate.HasValue)
-                    validationErrors.Add("RefDate", "Reference Date is required");
-
-                if (lease.PerquisiteApplicablePercentId <= 0)
-                    validationErrors.Add("PerquisiteApplicablePercentId", "% of Perquisite Applicable is required");
-
-                if (lease.VendorId <= 0)
-                    validationErrors.Add("VendorId", "Owner Name is required");
-
-                if (!lease.MonthlyRentPayable.HasValue || lease.MonthlyRentPayable <= 0)
-                    validationErrors.Add("MonthlyRentPayable", "Monthly Rent Payable must be greater than 0");
-
-                if (!lease.FromDate.HasValue)
-                    validationErrors.Add("FromDate", "From Date is required");
-
-                if (!lease.EndDate.HasValue)
-                    validationErrors.Add("EndDate", "End Date is required");
-
-                if (lease.FromDate.HasValue && lease.EndDate.HasValue && lease.FromDate > lease.EndDate)
-                    validationErrors.Add("EndDate", "End Date must be after From Date");
-
-                if (lease.PaymentTermId <= 0)
-                    validationErrors.Add("PaymentTermId", "Payment Term is required");
-
-                if (lease.PayableOnOrBeforeId <= 0)
-                    validationErrors.Add("PayableOnOrBeforeId", "Payable On or Before is required");
-
-                if (string.IsNullOrWhiteSpace(lease.Narration))
-                    validationErrors.Add("Narration", "Narration is required");
-                else if (lease.Narration.Length > 200)
-                    validationErrors.Add("Narration", "Narration cannot be longer than 200 characters");
-
-                // Additional numeric field validations
-                if (lease.RentDeposit.HasValue && lease.RentDeposit < 0)
-                    validationErrors.Add("RentDeposit", "Rent Deposit cannot be negative");
-
-                if (lease.AdditionalRentRecovery.HasValue && lease.AdditionalRentRecovery < 0)
-                    validationErrors.Add("AdditionalRentRecovery", "Additional Rent Recovery cannot be negative");
-
-                if (lease.BrokerageAmount.HasValue && lease.BrokerageAmount < 0)
-                    validationErrors.Add("BrokerageAmount", "Brokerage Amount cannot be negative");
-
-                if (lease.StampDuty.HasValue && lease.StampDuty < 0)
-                    validationErrors.Add("StampDuty", "Stamp Duty cannot be negative");
-
-                if (lease.LicenseFeeAmount.HasValue && lease.LicenseFeeAmount < 0)
-                    validationErrors.Add("LicenseFeeAmount", "License Fee Amount cannot be negative");
-
-                if (validationErrors.Any())
+                var lease = new Lease
                 {
-                    return Json(new
-                    {
-                        success = false,
-                        errors = validationErrors,
-                        message = "Please correct the validation errors and try again."
-                    });
+                    PerquisiteType = request.PerquisiteType,
+                    Status = request.Status ?? "Active",
+                    LeaseTypeId = request.LeaseTypeId,
+                    RefNo = request.RefNo,
+                    EmployeeId = request.EmployeeId,
+                    RefDate = request.RefDate,
+                    PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId,
+                    VendorId = request.VendorId,
+                    MonthlyRentPayable = request.MonthlyRentPayable,
+                    FromDate = request.FromDate,
+                    EndDate = request.EndDate,
+                    RentRecoveryElementId = request.RentRecoveryElementId,
+                    RentDeposit = request.RentDeposit,
+                    AdditionalRentRecovery = request.AdditionalRentRecovery,
+                    BrokerageAmount = request.BrokerageAmount,
+                    LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId,
+                    StampDuty = request.StampDuty,
+                    LicenseFeeAmount = request.LicenseFeeAmount,
+                    PaymentTermId = request.PaymentTermId,
+                    PayableOnOrBeforeId = request.PayableOnOrBeforeId,
+                    Narration = request.Narration,
+                    IsActive = true,
+                    CreatedBy = int.TryParse(userId, out int createdById) ? createdById : null
+                };
+
+                // Validate model
+                if (!TryValidateModel(lease))
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return Json(new { success = false, message = "Validation failed.", errors = errors });
                 }
 
-                var success = await _leaseRepository.UpdateLeaseAsync(lease);
-                if (success)
-                {
-                    // Get the updated lease with all details
-                    var updatedLease = await _leaseRepository.GetLeaseByIdAsync(lease.Id);
+                int leaseId;
+                string message;
 
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Lease updated successfully!",
-                        data = updatedLease
-                    });
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly create approved leases
+                    lease.ApprovalStatus = ApprovalStatus.Approved;
+                    lease.MakerUserId = userId;
+                    lease.MakerUserName = userName;
+                    lease.CheckerUserId = userId;
+                    lease.CheckerUserName = userName;
+                    lease.MakerAction = MakerAction.Create;
+                    lease.ApprovalDate = DateTime.Now;
+                    leaseId = await _leaseRepository.CreateLeaseAsync(lease);
+                    message = "Lease created successfully.";
+                }
+                else
+                {
+                    // Maker role - create lease for approval
+                    leaseId = await _leaseRepository.AddLeaseForApprovalAsync(lease, userId, userName, MakerAction.Create);
+                    message = "Lease created successfully and sent for approval.";
                 }
 
-                return Json(new
+                if (leaseId > 0)
                 {
-                    success = false,
-                    message = "Failed to update lease. The lease may have been modified by another user. Please refresh and try again."
-                });
+                    return Json(new { success = true, message = message });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to create lease." });
+                }
             }
             catch (Exception ex)
             {
-                // Log the exception here
-                return Json(new
-                {
-                    success = false,
-                    message = "An unexpected error occurred while updating the lease. Please try again or contact support if the problem persists.",
-                    errors = new Dictionary<string, string> { { "General", ex.Message } }
-                });
+                _logger.LogError(ex, "Error occurred while creating lease");
+                return Json(new { success = false, message = "An error occurred while creating the lease." });
             }
         }
 
+        // AJAX: Update lease (Maker role)
         [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> UpdateAjax([FromBody] LeaseUpdateRequest request)
+        {
+            try
+            {
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
+
+                var lease = await _leaseRepository.GetLeaseByIdAsync(request.Id);
+                if (lease == null)
+                {
+                    return Json(new { success = false, message = "Lease not found." });
+                }
+
+                // Check if lease has pending changes
+                if (await _leaseRepository.HasPendingChangesAsync(request.Id))
+                {
+                    return Json(new { success = false, message = "This lease has pending approval changes. Please wait for approval before making new changes." });
+                }
+
+                // Check for duplicate lease reference number (excluding current lease)
+                var existingLease = await _leaseRepository.GetLeaseByRefNoAsync(request.RefNo);
+                if (existingLease != null && existingLease.Id != request.Id)
+                {
+                    return Json(new { success = false, message = "Lease reference number already exists. Please use a different reference number." });
+                }
+
+                // Update lease properties
+                lease.PerquisiteType = request.PerquisiteType;
+                lease.Status = request.Status ?? "Active";
+                lease.LeaseTypeId = request.LeaseTypeId;
+                lease.RefNo = request.RefNo;
+                lease.EmployeeId = request.EmployeeId;
+                lease.RefDate = request.RefDate;
+                lease.PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId;
+                lease.VendorId = request.VendorId;
+                lease.MonthlyRentPayable = request.MonthlyRentPayable;
+                lease.FromDate = request.FromDate;
+                lease.EndDate = request.EndDate;
+                lease.RentRecoveryElementId = request.RentRecoveryElementId;
+                lease.RentDeposit = request.RentDeposit;
+                lease.AdditionalRentRecovery = request.AdditionalRentRecovery;
+                lease.BrokerageAmount = request.BrokerageAmount;
+                lease.LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId;
+                lease.StampDuty = request.StampDuty;
+                lease.LicenseFeeAmount = request.LicenseFeeAmount;
+                lease.PaymentTermId = request.PaymentTermId;
+                lease.PayableOnOrBeforeId = request.PayableOnOrBeforeId;
+                lease.Narration = request.Narration;
+                lease.ModifiedBy = int.TryParse(userId, out int modifiedById) ? modifiedById : null;
+
+                // Validate model
+                if (!TryValidateModel(lease))
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return Json(new { success = false, message = "Validation failed.", errors = errors });
+                }
+
+                bool success;
+                string message;
+
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly update approved leases
+                    lease.CheckerUserId = userId;
+                    lease.CheckerUserName = userName;
+                    lease.ApprovalDate = DateTime.Now;
+                    success = await _leaseRepository.UpdateLeaseAsync(lease);
+                    message = "Lease updated successfully.";
+                }
+                else
+                {
+                    // Maker role - update lease for approval
+                    success = await _leaseRepository.UpdateLeaseForApprovalAsync(lease, userId, userName);
+                    message = "Lease updated successfully and sent for approval.";
+                }
+
+                if (success)
+                {
+                    return Json(new { success = true, message = message });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to update lease." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating lease with ID: {Id}", request.Id);
+                return Json(new { success = false, message = "An error occurred while updating the lease." });
+            }
+        }
+
+        // AJAX: Delete lease (Maker role)
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
         public async Task<IActionResult> DeleteAjax(int id)
         {
             try
             {
-                var success = await _leaseRepository.DeleteLeaseAsync(id);
-                if (success)
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
+
+                // Check if lease has pending changes
+                if (await _leaseRepository.HasPendingChangesAsync(id))
                 {
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Lease deleted successfully!"
-                    });
+                    return Json(new { success = false, message = "This lease has pending approval changes. Please wait for approval before making new changes." });
                 }
 
-                return Json(new { success = false, message = "Failed to delete lease." });
+                bool success;
+                string message;
+
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly delete leases
+                    success = await _leaseRepository.DeleteLeaseAsync(id);
+                    message = "Lease deleted successfully.";
+                }
+                else
+                {
+                    // Maker role - mark lease for deletion approval
+                    success = await _leaseRepository.DeleteLeaseForApprovalAsync(id, userId, userName);
+                    message = "Lease deletion request sent for approval.";
+                }
+
+                if (success)
+                {
+                    return Json(new { success = true, message = message });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to delete lease." });
+                }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error occurred while deleting lease with ID: {Id}", id);
                 return Json(new { success = false, message = "An error occurred while deleting the lease." });
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetDropdownData()
+        // AJAX: Approve lease (Checker role)
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrVendor)]
+        public async Task<IActionResult> ApproveLease(int id)
         {
-            var data = new
+            try
             {
-                leaseTypes = await _leaseRepository.GetLeaseTypesAsync(),
-                employeeNames = await _leaseRepository.GetEmployeeNamesAsync(),
-                owners = await _leaseRepository.GetOwnersAsync(),
-                rentRecoveryElements = await _leaseRepository.GetRentRecoveryElementsAsync(),
-                licenseFeeRecoveryElements = await _leaseRepository.GetLicenseFeeRecoveryElementsAsync(),
-                paymentTerms = await _leaseRepository.GetPaymentTermsAsync(),
-                payableOnOrBeforeOptions = await _leaseRepository.GetPayableOnOrBeforeOptionsAsync(),
-                perquisitePercents = await _leaseRepository.GetPerquisiteApplicablePercentsAsync()
-            };
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
 
-            return Json(data);
+                var success = await _leaseRepository.ApproveLeaseAsync(id, userId, userName);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Lease approved successfully." });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to approve lease." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while approving lease with ID: {Id}", id);
+                return Json(new { success = false, message = "An error occurred while approving the lease." });
+            }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetTableData(int page = 1, int pageSize = 10, string search = "")
+        // AJAX: Reject lease (Checker role)
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrVendor)]
+        public async Task<IActionResult> RejectLease([FromBody] LeaseRejectionRequest request)
         {
-            var leases = await _leaseRepository.GetLeasesAsync(page, pageSize, search);
-            return PartialView("_LeaseTablePartial", leases);
+            try
+            {
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
+
+                if (string.IsNullOrEmpty(request.RejectionReason))
+                {
+                    return Json(new { success = false, message = "Rejection reason is required." });
+                }
+
+                var success = await _leaseRepository.RejectLeaseAsync(request.Id, userId, userName, request.RejectionReason);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Lease rejected successfully." });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to reject lease." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while rejecting lease with ID: {Id}", request.Id);
+                return Json(new { success = false, message = "An error occurred while rejecting the lease." });
+            }
         }
 
-        private async Task LoadDropdowns()
+        // AJAX: Get leases with pagination (for refresh after operations)
+        [HttpGet]
+        public async Task<IActionResult> GetLeases(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var userRole = GetCurrentUserRole();
+                IEnumerable<Lease> leases;
+                int totalCount;
+
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+                {
+                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+                    {
+                        leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        leases = await _leaseRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize);
+                        totalCount = await _leaseRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        leases = await _leaseRepository.GetRejectedLeasesAsync(searchTerm, page, pageSize);
+                        totalCount = await _leaseRepository.GetRejectedLeaseCountAsync(searchTerm);
+                    }
+                    else
+                    {
+                        leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                    }
+                }
+                else
+                {
+                    leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
+                    totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                }
+
+                var result = new
+                {
+                    success = true,
+                    data = leases.Select(l => new
+                    {
+                        l.Id,
+                        l.RefNo,
+                        l.LeaseTypeName,
+                        l.EmployeeName,
+                        l.VendorName,
+                        l.MonthlyRentPayable,
+                        FromDate = l.FromDate?.ToString("yyyy-MM-dd"),
+                        EndDate = l.EndDate?.ToString("yyyy-MM-dd"),
+                        l.Status,
+                        ApprovalStatus = (int)l.ApprovalStatus,
+                        ApprovalStatusText = l.ApprovalStatusText,
+                        l.MakerUserName,
+                        l.CheckerUserName,
+                        MakerAction = (int)l.MakerAction,
+                        MakerActionText = l.MakerActionText,
+                        l.ApprovalDate,
+                        l.RejectionReason,
+                        l.CreatedAt,
+                        l.ModifiedAt,
+                        l.TotalLeaseAmount
+                    }).ToList(),
+                    pagination = new
+                    {
+                        CurrentPage = page,
+                        PageSize = pageSize,
+                        TotalRecords = totalCount,
+                        TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                    }
+                };
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching leases");
+                return Json(new { success = false, message = "An error occurred while loading leases." });
+            }
+        }
+
+        // Helper methods
+        private async Task LoadViewBagData()
         {
             ViewBag.LeaseTypes = await _leaseRepository.GetLeaseTypesAsync();
             ViewBag.EmployeeNames = await _leaseRepository.GetEmployeeNamesAsync();
@@ -334,5 +538,64 @@ namespace RentManagement.Controllers
             ViewBag.PayableOnOrBeforeOptions = await _leaseRepository.GetPayableOnOrBeforeOptionsAsync();
             ViewBag.PerquisitePercents = await _leaseRepository.GetPerquisiteApplicablePercentsAsync();
         }
+
+        private UserRole GetCurrentUserRole()
+        {
+            var roleClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            return roleClaim switch
+            {
+                Roles.Admin => UserRole.Admin,
+                Roles.Checker => UserRole.Checker,
+                Roles.Maker => UserRole.Maker,
+                _ => UserRole.Maker
+            };
+        }
+
+        private string GetCurrentUserId()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
+        }
+
+        private string GetCurrentUserName()
+        {
+            return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "Unknown User";
+        }
+    }
+
+    // Request models for AJAX operations
+    public class LeaseCreateRequest
+    {
+        public string PerquisiteType { get; set; } = "Non-Government";
+        public string? Status { get; set; }
+        public int LeaseTypeId { get; set; }
+        public string RefNo { get; set; } = string.Empty;
+        public int EmployeeId { get; set; }
+        public DateTime? RefDate { get; set; }
+        public int PerquisiteApplicablePercentId { get; set; }
+        public int VendorId { get; set; }
+        public decimal? MonthlyRentPayable { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public int? RentRecoveryElementId { get; set; }
+        public decimal? RentDeposit { get; set; }
+        public decimal? AdditionalRentRecovery { get; set; }
+        public decimal? BrokerageAmount { get; set; }
+        public int? LicenseFeeRecoveryElementId { get; set; }
+        public decimal? StampDuty { get; set; }
+        public decimal? LicenseFeeAmount { get; set; }
+        public int PaymentTermId { get; set; }
+        public int PayableOnOrBeforeId { get; set; }
+        public string Narration { get; set; } = string.Empty;
+    }
+
+    public class LeaseUpdateRequest : LeaseCreateRequest
+    {
+        public int Id { get; set; }
+    }
+
+    public class LeaseRejectionRequest
+    {
+        public int Id { get; set; }
+        public string RejectionReason { get; set; } = string.Empty;
     }
 }
