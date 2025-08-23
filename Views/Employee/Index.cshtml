@@ -1,6 +1,8 @@
-﻿@model PagedResult<Employee>
+﻿@model RentManagement.Models.EmployeeListViewModel
 @{
-    ViewData["Title"] = "Employees";
+    ViewData["Title"] = "Employee Management";
+    var isChecker = Model.CurrentUserRole == RentManagement.Models.UserRole.Checker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin;
+    var isMaker = Model.CurrentUserRole == RentManagement.Models.UserRole.Maker;
 }
 
 @Html.AntiForgeryToken()
@@ -16,16 +18,15 @@
         padding: 6px 12px;
     }
 
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #374151;
-            line-height: 28px;
-        }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #374151;
+        line-height: 28px;
+    }
 
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 40px;
-        }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+    }
 
-    /* Toast notification animations */
     .toast-enter {
         transform: translateX(100%);
         opacity: 0;
@@ -58,196 +59,345 @@
         font-size: 0.875rem;
         margin-top: 0.25rem;
     }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .table-row:hover {
+        background-color: #f9fafb;
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
 </style>
 
-<div class="bg-white shadow rounded-lg">
+<div class="p-1">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="@Url.Action("Index", "Home")" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+                    <i class="ri-home-line mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="ri-arrow-right-s-line text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
 
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200">
-        <!-- Breadcrumb -->
-        <nav class="flex mb-6" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="Index.html" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
-                        <i class="ri-home-line mr-2"></i>
-                        Dashboard
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <i class="ri-arrow-right-s-line text-gray-400"></i>
-                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Employee Management</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">Employee Management</h1>
-            <button onclick="openCreateDrawer()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
-                <i class="ri-add-line mr-2"></i>
-                Add New Employee
-            </button>
+    <!-- Success/Error Messages -->
+    <div id="alertContainer" class="mb-4"></div>
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Employee Management</h2>
+            <p class="text-gray-600 mt-1">Manage your organization's employees and their information</p>
         </div>
+        <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+            <i class="ri-add-line mr-2"></i>
+            Add New Employee
+        </button>
     </div>
 
-<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
-    <div class="flex flex-col md:flex-row gap-4">
-        <!-- Search and Filters -->
-        <form method="get" class="w-full">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex space-x-4 items-center">
-                    <input type="hidden" name="page" value="1" />
-                    <div class="flex-1">
-                        <input type="text" name="search" value="@ViewBag.Search"
-                               placeholder="Search by name, email or code..."
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    <!-- Pending Approvals Section (Checker Only) -->
+    @if (isChecker && Model.PendingApprovals.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
+                <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
+            </div>
+            <div class="space-y-3">
+                @foreach (var employee in Model.PendingApprovals.Take(3))
+                {
+                    <div class="bg-white rounded border p-3 flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <span class="font-medium text-gray-900">@employee.Code</span>
+                                    <span class="text-sm text-gray-500">(@employee.Name)</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Action: <span class="font-medium">@employee.MakerAction</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    By: <span class="font-medium">@employee.MakerUserName</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Amount: <span class="font-medium">₹@employee.Email</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewEmployee(@employee.Id)" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                                View
+                            </button>
+                            <button onclick="approveEmployee(@employee.Id)" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
+                                Approve
+                            </button>
+                            <button onclick="openRejectModal(@employee.Id, '@employee.Name')" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
+                                Reject
+                            </button>
+                        </div>
                     </div>
-                    <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition duration-200">
-                        Search
-                    </button>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                    {
-                        <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md font-medium transition duration-200">
-                            Clear
-                        </a>
-                    }
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Filters/Search -->
+    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <!-- Search Bar -->
+            <div class="flex-1">
+                <div class="relative">
+                    <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search employees..."
+                           value="@Model.SearchTerm"
+                           class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
             </div>
-            <div class="px-6 py-4 border-b border-gray-200">
-                <select asp-for="PageSize" class="border border-gray-300 rounded px-2 py-1 text-sm float-right" asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="this.form.submit()">
+            <!-- Status Filter -->
+            <div class="relative">
+                <select id="statusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Status</option>
+                    @if (Model.StatusFilter == "Active")
+                    {
+                        <option value="Active" selected>Active</option>
+                    }
+                    else
+                    {
+                        <option value="Active">Active</option>
+                    }
+                    @if (Model.StatusFilter == "Inactive")
+                    {
+                        <option value="Inactive" selected>Inactive</option>
+                    }
+                    else
+                    {
+                        <option value="Inactive">Inactive</option>
+                    }
                 </select>
-                <label for="PageSize" class="text-sm text-gray-700 float-right pt-1 pr-2">Rows per page</label>
-                <div class="clear-both"></div>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
-        </form>
-    </div>
-</div>
-
-<!-- Table -->
-<div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Code</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            @foreach (var employee in Model.Items)
+            <!-- Approval Status Filter (Checker Only) -->
+            @if (isChecker)
             {
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">@employee.Code</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">@employee.Name</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">@employee.DepartmentName</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">@employee.DesignationName</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("N2") ?? "0.00")</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">
-                            <button type="submit">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(employee.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
-                                    <span class="w-1.5 h-1.5 @(employee.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
+                <div class="relative">
+                      <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                        @if (Model.ApprovalStatusFilter == "Approved" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                        {
+                            <option value="Approved" selected>Approved</option>
+                        }
+                        else
+                        {
+                            <option value="Approved">Approved</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Pending")
+                        {
+                            <option value="Pending" selected>Pending</option>
+                        }
+                        else
+                        {
+                            <option value="Pending">Pending</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Rejected")
+                        {
+                            <option value="Rejected" selected>Rejected</option>
+                        }
+                        else
+                        {
+                            <option value="Rejected">Rejected</option>
+                        }
+                    </select>
+                    <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+            }
+            <button onclick="searchEmployees()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">Search</button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="flex justify-end items-center mb-2">
+        <div class="flex items-center">
+            <label for="pageSize" class="mr-2 text-sm text-gray-700">Rows per page:</label>
+            <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        @if (isChecker)
+                        {
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker</th>
+                        }
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTableBody" class="bg-white divide-y divide-gray-200">
+                    @foreach (var employee in Model.Employees)
+                    {
+                        <tr class="table-row">
+                            <td class="px-4 py-4 text-center">
+                                <input type="checkbox" class="employee-checkbox">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.Code</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.Name</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.DepartmentName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.DesignationName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("N2") ?? "0.00")</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge @(employee.IsActive ? "status-active" : "status-inactive")">
                                     @(employee.IsActive ? "Active" : "Inactive")
                                 </span>
-                            </button>
-                        </form>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button onclick="openDetailsDrawer(@employee.Id)" class="text-blue-600 hover:text-blue-900 p-1">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button onclick="openEditDrawer(@employee.Id)" class="text-indigo-600 hover:text-indigo-900 p-1">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button onclick="confirmDelete(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-900 p-1">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<!-- Empty State -->
-@if (!Model.Items.Any())
-{
-    <div class="px-6 py-12 text-center">
-        <div class="text-gray-500">
-            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-            {
-                <p>No employees found matching your search criteria.</p>
-            }
-            else
-            {
-                <p>No employees found. <button onclick="openCreateDrawer()" class="text-blue-600 hover:underline">Create the first employee</button>.</p>
-            }
+                            </td>
+                            @if (isChecker)
+                            {
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                    {
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.MakerUserName</td>
+                            }
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex gap-2 justify-center">
+                                    <button onclick="(@employee.Id)" class="text-primary hover:text-primary/80" title="View">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                    @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending && isChecker)
+                                    {
+                                        <button onclick="approveEmployee(@employee.Id)" class="text-green-600 hover:text-green-800" title="Approve">
+                                            <i class="ri-check-line"></i>
+                                        </button>
+                                        <button onclick="openRejectModal(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-700" title="Reject">
+                                            <i class="ri-close-line"></i>
+                                        </button>
+                                    }
+                                    @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved && (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin))
+                                    {
+                                        <button onclick="openEditDrawer(@employee.Id)" class="text-green-600 hover:text-green-800" title="Edit">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button onclick="confirmDeleteEmployee(@employee.Id, '@employee.Name')" class="text-red-600 hover:text-red-700" title="Delete">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
-}
 
-<!-- Pagination -->
-<div class="px-6 py-4 border-t border-gray-200">
-    <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-700">
-            Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
-            to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
-            of @Model.TotalItems results
-        </div>
-        <div class="flex space-x-1">
-            @if (Model.HasPreviousPage)
-            {
-                <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search })"
-                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    Previous
-                </a>
-            }
-            else
-            {
-                <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Previous</span>
-            }
-
-            @for (int i = 1; i <= Model.TotalPages; i++)
-            {
-                if (i == Model.PageNumber)
-                {
-                    <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-md">@i</span>
-                }
-                else
-                {
-                    <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search })"
-                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">@i</a>
-                }
-            }
-
-            @if (Model.HasNextPage)
-            {
-                <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search })"
-                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                    Next
-                </a>
-            }
-            else
-            {
-                <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">Next</span>
-            }
+        <!-- Pagination -->
+        <div id="pagination" class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div class="flex items-center text-sm text-gray-700">
+                <span id="paginationInfo">Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalRecords) of @Model.TotalRecords results</span>
+            </div>
+            <div class="flex items-center space-x-2" id="paginationButtons">
+                <!-- Pagination buttons will be generated by JavaScript -->
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Reject Employee Modal -->
+<div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-50" onclick="closeRejectModal()"></div>
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 relative">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Reject Employee</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-3">Are you sure you want to reject <strong id="rejectEmployeeName"></strong>?</p>
+                <textarea id="rejectionReason" placeholder="Please provide a reason for rejection..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows="3" required></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                    Cancel
+                </button>
+                <button type="button" onclick="rejectEmployee()" class="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg">
+                    Reject
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Create/Edit Slide-over Drawer -->
@@ -554,9 +704,14 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+    // Global variables
     let currentMode = 'create';
     let currentEmployeeId = null;
     let deleteEmployeeId = null;
+    let currentUserRole = '@Model.CurrentUserRole';
+    let isChecker = @(isChecker ? "true" : "false");
+    let currentPage = @Model.CurrentPage;
+    let pageSize = @Model.PageSize;
 
     $(document).ready(function () {
         // Initialize Select2 dropdowns
@@ -572,7 +727,383 @@
         setupSalaryCalculation();
         setupDateValidations();
         setupValidationErrorClearing();
+        initializeEventListeners();
+        initializePagination();
     });
+
+    // Approval workflow functions
+    function approveEmployee(id) {
+        if (!confirm('Are you sure you want to approve this employee?')) {
+            return;
+        }
+
+        fetch('@Url.Action("ApproveEmployee")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: `id=${id}`
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('success', result.message);
+                refreshTableAfterUpdate();
+            } else {
+                showAlert('error', result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred while approving the employee.');
+        });
+    }
+
+    function openRejectModal(id, name) {
+        currentEmployeeId = id;
+        document.getElementById('rejectEmployeeName').textContent = name;
+        document.getElementById('rejectionReason').value = '';
+        document.getElementById('rejectModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        currentEmployeeId = null;
+    }
+
+    function rejectEmployee() {
+        if (!currentEmployeeId) return;
+
+        const rejectionReason = document.getElementById('rejectionReason').value.trim();
+        if (!rejectionReason) {
+            showAlert('error', 'Please provide a reason for rejection.');
+            return;
+        }
+
+        const data = {
+            id: currentEmployeeId,
+            rejectionReason: rejectionReason
+        };
+
+        fetch('@Url.Action("RejectEmployee")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('success', result.message);
+                closeRejectModal();
+                refreshTableAfterUpdate();
+            } else {
+                showAlert('error', result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'An error occurred while rejecting the employee.');
+        });
+    }
+
+    function refreshTableAfterUpdate() {
+        // Reset to first page to ensure we see the changes
+        currentPage = 1;
+        loadEmployees();
+
+        // If checker, also refresh the pending approvals section
+        if (isChecker) {
+            setTimeout(() => {
+                location.reload(); // This will refresh the pending approvals section
+            }, 1000);
+        }
+    }
+
+    function searchEmployees() {
+        currentPage = 1;
+        loadEmployees();
+    }
+
+    function changePageSize() {
+        pageSize = parseInt(document.getElementById('pageSize').value);
+        currentPage = 1;
+        loadEmployees();
+    }
+
+    function loadEmployees() {
+        const searchTerm = document.getElementById('searchInput').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
+
+        console.log('Loading employees with filters:', {
+            searchTerm,
+            statusFilter,
+            approvalStatusFilter,
+            currentPage,
+            pageSize,
+            isChecker
+        });
+
+        const params = new URLSearchParams({
+            searchTerm: searchTerm,
+            statusFilter: statusFilter,
+            approvalStatusFilter: approvalStatusFilter,
+            page: currentPage,
+            pageSize: pageSize
+        });
+
+        // Show loading indicator
+        const tbody = document.getElementById('employeeTableBody');
+        const colspan = isChecker ? 10 : 8;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading employees...</td></tr>`;
+
+        fetch(`@Url.Action("GetEmployees")?${params}`)
+            .then(response => {
+                console.log('GetEmployees response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('GetEmployees server response:', result);
+
+                if (result.success) {
+                    console.log('Received employee data:', result.data);
+                    updateTable(result.data);
+                    updatePagination(result.pagination);
+
+                    // Clear any existing loading indicators
+                    const loadingRows = tbody.querySelectorAll('tr td[colspan]');
+                    loadingRows.forEach(row => row.parentElement.remove());
+
+                    console.log('Table updated successfully with', result.data.length, 'employees');
+
+                    // Verify the table content
+                    const tableRows = tbody.querySelectorAll('tr');
+                    console.log('Table now has', tableRows.length, 'rows');
+                } else {
+                    console.error('GetEmployees failed:', result);
+                    showAlert('error', result.message || 'Failed to load employees');
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load employees</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employees:', error);
+                showAlert('error', 'An error occurred while loading employees: ' + error.message);
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading employees</td></tr>`;
+            });
+    }
+
+    function updateTable(employees) {
+        const tbody = document.getElementById('employeeTableBody');
+        tbody.innerHTML = '';
+
+        console.log('Updating table with employees:', employees);
+
+        if (!employees || employees.length === 0) {
+            const colspan = isChecker ? 10 : 8; // Adjust colspan based on role
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No employees found</td></tr>`;
+            return;
+        }
+
+        employees.forEach(employee => {
+            let approvalStatusCell = '';
+            let makerCell = '';
+            let actionButtons = '';
+
+            if (isChecker) {
+                // Approval status column
+                let statusClass = '';
+                let statusText = '';
+
+                switch (employee.approvalStatus) {
+                    case 1:
+                        statusClass = 'status-pending';
+                        statusText = 'Pending';
+                        break;
+                    case 2:
+                        statusClass = 'status-approved';
+                        statusText = 'Approved';
+                        break;
+                    case 3:
+                        statusClass = 'status-rejected';
+                        statusText = 'Rejected';
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = 'Unknown';
+                }
+
+                approvalStatusCell = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>`;
+
+                makerCell = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.makerUserName || '-'}</td>`;
+
+                // Action buttons for checkers
+                if (employee.approvalStatus === 1) { // Pending
+                    actionButtons = `
+                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                        <button onclick="approveEmployee(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
+                            <i class="ri-check-line"></i>
+                        </button>
+                        <button onclick="openRejectModal(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Reject">
+                            <i class="ri-close-line"></i>
+                        </button>`;
+                } else {
+                    actionButtons = `
+                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                            <i class="ri-eye-line"></i>
+                        </button>`;
+
+                    // Add edit/delete for approved employees
+                    if (employee.approvalStatus === 2) {
+                        actionButtons += `
+                            <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>`;
+                    }
+                }
+            } else {
+                // Action buttons for makers (only for approved employees)
+                if (employee.approvalStatus === 2) {
+                    actionButtons = `
+                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                        <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>`;
+                } else {
+                    actionButtons = `
+                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80" title="View">
+                            <i class="ri-eye-line"></i>
+                        </button>`;
+                }
+            }
+
+            const row = `
+                <tr class="table-row hover:bg-gray-50">
+                    <td class="px-4 py-4 text-center">
+                        <input type="checkbox" class="employee-checkbox">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.code || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.name || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.departmentName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.designationName || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${(employee.totalSalary || 0).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${employee.isActive ? 'status-active' : 'status-inactive'}">
+                            ${employee.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    ${approvalStatusCell}
+                    ${makerCell}
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex gap-1 justify-center">
+                            ${actionButtons}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+
+        console.log('Table updated successfully with', employees.length, 'rows');
+    }
+
+    function initializeEventListeners() {
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchEmployees();
+            }
+        });
+
+        // Select all checkbox
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+
+    function initializePagination() {
+        generatePaginationButtons();
+    }
+
+    function updatePagination(pagination) {
+        const info = document.getElementById('paginationInfo');
+        const buttons = document.getElementById('paginationButtons');
+        
+        const startRecord = (pagination.currentPage - 1) * pagination.pageSize + 1;
+        const endRecord = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords);
+        
+        info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.totalRecords} results`;
+        
+        let buttonsHtml = '';
+        
+        // Previous button
+        if (pagination.currentPage > 1) {
+            buttonsHtml += `<button onclick="goToPage(${pagination.currentPage - 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Previous</button>`;
+        } else {
+            buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Previous</span>`;
+        }
+        
+        // Page numbers
+        for (let i = 1; i <= pagination.totalPages; i++) {
+            if (i === pagination.currentPage) {
+                buttonsHtml += `<span class="rounded px-3 py-1 text-sm bg-primary text-white">${i}</span>`;
+            } else {
+                buttonsHtml += `<button onclick="goToPage(${i})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">${i}</button>`;
+            }
+        }
+        
+        // Next button
+        if (pagination.currentPage < pagination.totalPages) {
+            buttonsHtml += `<button onclick="goToPage(${pagination.currentPage + 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Next</button>`;
+        } else {
+            buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Next</span>`;
+        }
+        
+        buttons.innerHTML = buttonsHtml;
+    }
+
+    function generatePaginationButtons() {
+        // Initial pagination setup
+        updatePagination({
+            currentPage: currentPage,
+            pageSize: pageSize,
+            totalRecords: @Model.TotalRecords,
+            totalPages: @Model.TotalPages
+        });
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadEmployees();
+    }
+
+    // Rest of the functions (setupFormValidations, setupSalaryCalculation, etc.) remain the same as before...
+    // [Previous JavaScript functions for form validation, CRUD operations, etc.]
 
     function setupFormValidations() {
         // Name validation - only alphabetic characters and spaces
@@ -867,7 +1398,7 @@
         loadEmployeeData(employeeId);
     }
 
-    function openDetailsDrawer(employeeId) {
+    function viewEmployee(employeeId) {
         const drawer = document.getElementById('detailsDrawer');
         drawer.classList.remove('hidden');
         setTimeout(() => {
@@ -893,7 +1424,7 @@
         }, 300);
     }
 
-    function confirmDelete(employeeId, employeeName) {
+    function confirmDeleteEmployee(employeeId, employeeName) {
         deleteEmployeeId = employeeId;
         document.getElementById('deleteEmployeeName').textContent = employeeName;
         document.getElementById('deleteModal').classList.remove('hidden');
@@ -996,91 +1527,91 @@
                     const detailsContainer = document.getElementById('employeeDetails');
 
                     detailsContainer.innerHTML = `
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Code</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Name</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Gender</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Email</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">PAN</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Department</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Designation</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Basic Salary</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.basicSalary) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Other Allowance</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">PF</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">ESI</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
-                            </div>
-                        `;
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Code</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Name</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gender</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Email</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">PAN</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Department</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Designation</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Basic Salary</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.basicSalary) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Other Allowance</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">PF</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">ESI</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
+                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
+                        </div>
+                    `;
                 }
             })
             .catch(error => {
@@ -1090,7 +1621,7 @@
 
     function saveEmployee() {
         if (!validateForm()) {
-            showErrorMessage('Please correct all validation errors before saving.');
+            showAlert('error', 'Please correct all validation errors before saving.');
             return;
         }
 
@@ -1140,19 +1671,19 @@
             .then(data => {
                 if (data.success) {
                     closeDrawer();
-                    showSuccessMessage(data.message || 'Employee saved successfully!');
-                    setTimeout(() => location.reload(), 1000);
+                    showAlert('success', data.message || 'Employee saved successfully!');
+                    setTimeout(() => loadEmployees(), 1000);
                 } else {
                     if (data.errors) {
                         showValidationErrors(data.errors);
                     } else {
-                        showErrorMessage(data.message || 'Failed to save employee.');
+                        showAlert('error', data.message || 'Failed to save employee.');
                     }
                 }
             })
             .catch(error => {
                 console.error('Error saving employee:', error);
-                showErrorMessage('An error occurred while saving the employee.');
+                showAlert('error', 'An error occurred while saving the employee.');
             })
             .finally(() => {
                 // Reset button state
@@ -1196,15 +1727,15 @@
             .then(data => {
                 if (data.success) {
                     closeDeleteModal();
-                    showSuccessMessage(data.message || 'Employee deleted successfully!');
-                    setTimeout(() => location.reload(), 1000);
+                    showAlert('success', data.message || 'Employee deleted successfully!');
+                    setTimeout(() => loadEmployees(), 1000);
                 } else {
-                    showErrorMessage(data.message || 'Failed to delete employee.');
+                    showAlert('error', data.message || 'Failed to delete employee.');
                 }
             })
             .catch(error => {
                 console.error('Error deleting employee:', error);
-                showErrorMessage('An error occurred while deleting the employee.');
+                showAlert('error', 'An error occurred while deleting the employee.');
             })
             .finally(() => {
                 // Reset button state
@@ -1250,53 +1781,18 @@
         return parseFloat(amount).toFixed(2);
     }
 
-    function showSuccessMessage(message) {
-        const alert = document.createElement('div');
-        alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
-        alert.innerHTML = `
-                <div class="flex items-center">
-                    <i class="ri-check-line mr-2"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-        document.body.appendChild(alert);
-
-        // Trigger enter animation
+    function showAlert(type, message) {
+        const container = document.getElementById('alertContainer');
+        const alertClass = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+        
+        container.innerHTML = `
+            <div class="${alertClass} px-4 py-3 rounded border" role="alert">
+                <span class="block sm:inline">${message}</span>
+            </div>
+        `;
+        
         setTimeout(() => {
-            alert.classList.remove('toast-enter');
-            alert.classList.add('toast-enter-active');
-        }, 10);
-
-        // Remove after 3 seconds
-        setTimeout(() => {
-            alert.classList.remove('toast-enter-active');
-            alert.classList.add('toast-exit-active');
-            setTimeout(() => alert.remove(), 300);
-        }, 3000);
-    }
-
-    function showErrorMessage(message) {
-        const alert = document.createElement('div');
-        alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 toast-enter';
-        alert.innerHTML = `
-                <div class="flex items-center">
-                    <i class="ri-error-warning-line mr-2"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-        document.body.appendChild(alert);
-
-        // Trigger enter animation
-        setTimeout(() => {
-            alert.classList.remove('toast-enter');
-            alert.classList.add('toast-enter-active');
-        }, 10);
-
-        // Remove after 5 seconds
-        setTimeout(() => {
-            alert.classList.remove('toast-enter-active');
-            alert.classList.add('toast-exit-active');
-            setTimeout(() => alert.remove(), 300);
+            container.innerHTML = '';
         }, 5000);
     }
 
@@ -1315,7 +1811,3 @@
         }
     });
 </script>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
