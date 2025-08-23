@@ -4,6 +4,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <div class="p-1">
     <!-- Breadcrumb Navigation -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
@@ -32,10 +34,10 @@
             <h2 class="text-2xl font-bold text-gray-900">Lease Management</h2>
             <p class="text-gray-600 mt-1">Manage lease agreements and rental properties</p>
         </div>
-        <a href="@Url.Action("Create")" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+        <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
             <i class="ri-add-line mr-2"></i>
             Add New Lease
-        </a>
+        </button>
     </div>
 
     <!-- Filters/Search -->
@@ -53,7 +55,7 @@
                 </div>
                 <!-- Page Size Selection -->
                 <div class="relative">
-                    <select name="PageSize" asp-for="PageSize" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent" 
+                    <select name="PageSize" asp-for="PageSize" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent"
                             asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="document.getElementById('searchForm').submit()">
                     </select>
                     <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -77,268 +79,1385 @@
         </form>
     </div>
 
-    <!-- Data Table -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <input type="checkbox" id="selectAll">
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lease Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var lease in Model.Items)
-                    {
-                        <tr class="hover:bg-gray-50 table-row">
-                            <td class="px-4 py-4 text-center">
-                                <input type="checkbox" class="lease-checkbox">
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@lease.RefNo</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">@lease.EmployeeName</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">@lease.VendorName</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.TotalLeaseAmount).ToString("C") ?? "N/A")</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">@(Convert.ToDecimal(lease.MonthlyRentPayable).ToString("C") ?? "N/A")</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <form method="post" asp-controller="SecurityDeposit" asp-action="ToggleStatus" asp-route-id="@lease.Id">
-                                    <button type="submit" class="hover:opacity-80 transition-opacity">
-                                        @{
-                                            string statusText = lease.Status;
-                                            string bgColor = "";
-                                            string textColor = "";
-                                            string dotColor = "";
+    <!-- Data Table Container -->
+    <div id="tableContainer">
+        @await Html.PartialAsync("_LeaseTablePartial", Model)
+    </div>
+</div>
 
-                                            switch (statusText)
-                                            {
-                                                case "Active":
-                                                    bgColor = "bg-green-100";
-                                                    textColor = "text-green-800";
-                                                    dotColor = "bg-green-400";
-                                                    break;
-                                                case "Expired":
-                                                    bgColor = "bg-gray-100";
-                                                    textColor = "text-gray-800";
-                                                    dotColor = "bg-gray-400";
-                                                    break;
-                                                case "Upcoming":
-                                                    bgColor = "bg-yellow-100";
-                                                    textColor = "text-yellow-800";
-                                                    dotColor = "bg-yellow-400";
-                                                    break;
-                                                case "Terminated":
-                                                    bgColor = "bg-red-100";
-                                                    textColor = "text-red-800";
-                                                    dotColor = "bg-red-400";
-                                                    break;
-                                                default:
-                                                    bgColor = "bg-blue-100";
-                                                    textColor = "text-blue-800";
-                                                    dotColor = "bg-blue-400";
-                                                    break;
-                                            }
-                                        }
+<!-- Drawer for Create/Edit -->
+<div id="leaseDrawer" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeDrawer()"></div>
 
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @bgColor @textColor">
-                                            <span class="w-1.5 h-1.5 @dotColor rounded-full mr-1.5"></span>
-                                            @statusText
-                                        </span>
-                                    </button>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex gap-2 justify-center">
-                                    <a href="@Url.Action("Details", new { id = lease.Id })" class="text-primary hover:text-primary/80" title="View Details">
-                                        <i class="ri-eye-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Edit", new { id = lease.Id })" class="text-green-600 hover:text-green-800" title="Edit">
-                                        <i class="ri-edit-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Delete", new { id = lease.Id })" class="text-red-600 hover:text-red-700" title="Delete" 
-                                       onclick="return confirm('Are you sure you want to delete this lease?')">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Drawer Panel -->
+    <div class="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" id="drawerPanel">
+        <div class="h-full flex flex-col">
+            <!-- Drawer Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 id="drawerTitle" class="text-xl font-bold text-gray-900">Create New Lease</h2>
+                <button onclick="closeDrawer()" class="text-gray-400 hover:text-gray-500">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Drawer Body with Form -->
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <!-- Validation Summary Alert -->
+                <div id="drawerAlert" class="hidden mb-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i id="drawerAlertIcon" class="ri-error-warning-line text-red-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <h3 id="drawerAlertTitle" class="text-sm font-medium text-red-800">
+                                There were errors with your submission
+                            </h3>
+                            <div id="drawerAlertMessage" class="mt-2 text-sm text-red-700">
+                                <ul id="validationErrorList" class="list-disc list-inside space-y-1">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="ml-auto pl-3">
+                            <button type="button" onclick="clearDrawerAlert()" class="inline-flex text-gray-400 hover:text-gray-500">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="leaseForm" class="space-y-6">
+                    <input type="hidden" id="leaseId" name="Id" value="0" />
+
+                    <!-- Perquisite Type Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Perquisite Type:</label>
+                            <div class="space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="PerquisiteType" value="Government" class="mr-2">
+                                    <span>Government</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="PerquisiteType" value="Non-Government" checked class="mr-2">
+                                    <span>Non-Government</span>
+                                </label>
+                            </div>
+                            <span class="text-red-600 text-sm" data-validation="PerquisiteType"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable</label>
+                            <select name="PerquisiteApplicablePercentId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PerquisitePercents)
+                                {
+                                    <option value="@item.Id">@item.Description</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PerquisiteApplicablePercentId"></span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Rent Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent Payable <span class="text-red-500">*</span></label>
+                            <input type="number" name="MonthlyRentPayable" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
+                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                        </div>
+                    </div>
+
+                    <!-- Lease Information Section -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Lease Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Type <span class="text-red-500">*</span></label>
+                            <select name="LeaseTypeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.LeaseTypes)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="LeaseTypeId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Ref No. <span class="text-red-500">*</span></label>
+                            <input type="text" name="RefNo" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RefNo"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease Ref Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="RefDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RefDate"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease From Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="FromDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="FromDate"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Lease End Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="EndDate" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="EndDate"></span>
+                        </div>
+                    </div>
+
+                    <!-- Owner & Employee Details -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Owner & Employee Details</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name (Employee) <span class="text-red-500">*</span></label>
+                            <select name="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.EmployeeNames)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="EmployeeId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Owner's Name <span class="text-red-500">*</span></label>
+                            <select name="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.Owners)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="VendorId"></span>
+                        </div>
+                    </div>
+
+                    <!-- Rent Recovery Section -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Rent Recovery</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Recovery Element</label>
+                            <select name="RentRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.RentRecoveryElements)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="RentRecoveryElementId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Recovery Element</label>
+                            <select name="LicenseFeeRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.LicenseFeeRecoveryElements)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="LicenseFeeRecoveryElementId"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount <span class="text-red-500">*</span></label>
+                            <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="LicenseFeeAmount"></span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Payment Information</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500">*</span></label>
+                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PaymentTerms)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PaymentTermId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before <span class="text-red-500">*</span></label>
+                            <select name="PayableOnOrBeforeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PayableOnOrBeforeOptions)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PayableOnOrBeforeId"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit <span class="text-red-500">*</span></label>
+                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RentDeposit"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount <span class="text-red-500">*</span></label>
+                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="BrokerageAmount"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty <span class="text-red-500">*</span></label>
+                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="StampDuty"></span>
+                        </div>
+                    </div>
+
+                    <!-- Miscellaneous -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Miscellaneous</h3>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Narration <span class="text-red-500">*</span></label>
+                        <textarea name="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
+                        <span class="text-red-600 text-sm" data-validation="Narration"></span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="closeDrawer()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button onclick="saveLease()" id="saveButton" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <span id="saveButtonText">Create Lease</span>
+                </button>
+            </div>
         </div>
+    </div>
+</div>
 
-        <!-- Empty State -->
-        @if (!Model.Items.Any())
-        {
-            <div class="px-6 py-12 text-center">
-                <div class="text-gray-500">
-                    <i class="ri-file-list-line text-4xl text-gray-300 mb-4"></i>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                    {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
-                        <p class="text-sm">No leases found matching your search criteria.</p>
-                    }
-                    else
-                    {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No leases found</p>
-                        <p class="text-sm mb-4">Get started by creating your first lease agreement.</p>
-                        <a href="@Url.Action("Create")" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
-                            <i class="ri-add-line mr-2"></i>
-                            Create First Lease
-                        </a>
-                    }
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+
+    <!-- Modal -->
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="p-6">
+                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                        <i class="ri-error-warning-line text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">Delete Lease</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">
+                        Are you sure you want to delete this lease? This action cannot be undone.
+                    </p>
+                    <div class="flex gap-3">
+                        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                        <button onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </div>
-        }
+        </div>
+    </div>
+</div>
 
-        <!-- Pagination -->
-        <div class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-            <div class="flex items-center text-sm text-gray-700">
-                <span>
-                    Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
-                    to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
-                    of @Model.TotalItems results
-                </span>
+<!-- Details Slideover -->
+<div id="detailsSlideover" class="fixed inset-0 z-40 hidden">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="closeDetailsSlideover()"></div>
+
+    <!-- Slideover Panel -->
+    <div class="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" id="detailsPanel">
+        <div class="h-full flex flex-col">
+            <!-- Slideover Header with Gradient -->
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Lease Details</h2>
+                        <p class="text-indigo-100 text-sm mt-1">Complete information about this lease</p>
+                    </div>
+                    <button onclick="closeDetailsSlideover()" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="flex items-center space-x-2">
-                @if (Model.HasPreviousPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        <i class="ri-arrow-left-s-line mr-1"></i>
-                        Previous
-                    </a>
-                }
-                else
-                {
-                    <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
-                        <i class="ri-arrow-left-s-line mr-1"></i>
-                        Previous
-                    </span>
-                }
+            <!-- Slideover Body -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Loading State -->
+                <div id="detailsLoading" class="hidden p-6">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="ri-loader-4-line text-4xl text-gray-400 animate-spin"></i>
+                            <p class="mt-2 text-sm text-gray-500">Loading lease details...</p>
+                        </div>
+                    </div>
+                </div>
 
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    if (i == Model.PageNumber)
-                    {
-                        <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-md">
-                            @i
-                        </span>
-                    }
-                    else
-                    {
-                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                           class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                            @i
-                        </a>
-                    }
-                }
+                <!-- Details Content -->
+                <div id="detailsContent" class="p-6">
+                    <!-- Details will be loaded here -->
+                </div>
+            </div>
 
-                @if (Model.HasNextPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        Next
-                        <i class="ri-arrow-right-s-line ml-1"></i>
-                    </a>
-                }
-                else
-                {
-                    <span class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
-                        Next
-                        <i class="ri-arrow-right-s-line ml-1"></i>
-                    </span>
-                }
+            <!-- Slideover Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <span id="detailsLeaseRef" class="font-medium text-gray-700"></span>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="editFromDetails()" id="editFromDetailsBtn" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                            <i class="ri-edit-line mr-2"></i>
+                            Edit Lease
+                        </button>
+                        <button onclick="closeDetailsSlideover()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function () {
+        let currentLeaseId = 0;
+        let deleteLeaseId = 0;
+
+        // Initialize on document ready
+        $(document).ready(function () {
+            initializeSelect2();
             initializeEventListeners();
         });
 
-        // Event listeners
+        function initializeSelect2() {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#leaseDrawer')
+            });
+        }
+
+        // Define all functions in global scope (outside document.ready)
+
+        // Drawer Functions
+        function openCreateDrawer() {
+            currentLeaseId = 0;
+            document.getElementById('drawerTitle').textContent = 'Create New Lease';
+            document.getElementById('saveButtonText').textContent = 'Create Lease';
+            document.getElementById('leaseForm').reset();
+            clearValidationErrors();
+            clearDrawerAlert();
+            // Reset Select2 dropdowns
+            $('.searchable-dropdown').val(null).trigger('change');
+            openDrawer();
+        }
+
+        function openEditDrawer(id) {
+            currentLeaseId = id;
+            document.getElementById('drawerTitle').textContent = 'Edit Lease';
+            document.getElementById('saveButtonText').textContent = 'Update Lease';
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            // Show loading state in drawer
+            showDrawerAlert('warning', 'Loading...', 'Please wait while we load the lease details.');
+
+            // Load lease data
+            fetch(`/Lease/GetLeaseDetails?id=${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        clearDrawerAlert();
+                        populateForm(result.data);
+                        openDrawer();
+                    } else {
+                        showDrawerAlert('error', 'Failed to load lease', result.message || 'Unable to load lease details. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                });
+        }
+
+        function openDrawer() {
+            const drawer = document.getElementById('leaseDrawer');
+            const panel = document.getElementById('drawerPanel');
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+                // Focus on first input
+                const firstInput = document.querySelector('#leaseForm input[type="text"], #leaseForm input[type="number"], #leaseForm select');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const panel = document.getElementById('drawerPanel');
+            panel.classList.add('translate-x-full');
+
+            // Clear all validation errors and alerts when closing
+            setTimeout(() => {
+                document.getElementById('leaseDrawer').classList.add('hidden');
+                clearValidationErrors();
+                clearDrawerAlert();
+                document.getElementById('leaseForm').reset();
+                $('.searchable-dropdown').val(null).trigger('change');
+            }, 300);
+        }
+
+        // Delete Functions
+        function openDeleteModal(id) {
+            deleteLeaseId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteLeaseId = 0;
+        }
+
+        function confirmDelete() {
+            if (!deleteLeaseId) return;
+
+            fetch(`/Lease/DeleteAjax?id=${deleteLeaseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        refreshTable();
+                    } else {
+                        showAlert('error', result.message || 'Failed to delete lease');
+                    }
+                    closeDeleteModal();
+                })
+                .catch(error => {
+                    showAlert('error', 'An error occurred while deleting the lease');
+                    closeDeleteModal();
+                });
+        }
+
+        // View Details Functions with Slideover
+        function viewDetails(id) {
+            currentLeaseId = id;
+            showDetailsLoading(true);
+            openDetailsSlideover();
+
+            fetch(`/Lease/GetLeaseDetails?id=${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Details response:', result); // Debug log
+                    if (result.success) {
+                        displayDetails(result.data);
+                        showDetailsLoading(false);
+                    } else {
+                        showAlert('error', result.message || 'Failed to load lease details');
+                        closeDetailsSlideover();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading details:', error); // Debug log
+                    showAlert('error', 'An error occurred while loading lease details');
+                    closeDetailsSlideover();
+                });
+        }
+
+        function openDetailsSlideover() {
+            const slideover = document.getElementById('detailsSlideover');
+            const panel = document.getElementById('detailsPanel');
+            slideover.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeDetailsSlideover() {
+            const panel = document.getElementById('detailsPanel');
+            panel.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.getElementById('detailsSlideover').classList.add('hidden');
+                currentLeaseId = 0;
+            }, 300);
+        }
+
+        function showDetailsLoading(show) {
+            const loadingDiv = document.getElementById('detailsLoading');
+            const contentDiv = document.getElementById('detailsContent');
+
+            if (show) {
+                loadingDiv.classList.remove('hidden');
+                contentDiv.classList.add('hidden');
+            } else {
+                loadingDiv.classList.add('hidden');
+                contentDiv.classList.remove('hidden');
+            }
+        }
+
+        function editFromDetails() {
+            const leaseId = document.getElementById('editFromDetailsBtn').getAttribute('data-lease-id');
+            if (leaseId && leaseId !== 'null' && leaseId !== 'undefined') {
+                closeDetailsSlideover();
+                setTimeout(() => {
+                    openEditDrawer(parseInt(leaseId));
+                }, 350);
+            } else {
+                showAlert('error', 'Unable to edit lease. Invalid lease ID.');
+            }
+        }
+
+        function displayDetails(data) {
+            const content = document.getElementById('detailsContent');
+
+            // Handle both PascalCase and camelCase property names
+            const getValue = (obj, pascalKey, camelKey) => {
+                return obj[pascalKey] || obj[camelKey] || null;
+            };
+
+            // Get values with proper casing
+            const refNo = getValue(data, 'RefNo', 'refNo');
+            const status = getValue(data, 'Status', 'status');
+            const leaseTypeName = getValue(data, 'LeaseTypeName', 'leaseTypeName');
+            const employeeName = getValue(data, 'EmployeeName', 'employeeName');
+            const vendorName = getValue(data, 'VendorName', 'vendorName');
+            const perquisiteType = getValue(data, 'PerquisiteType', 'perquisiteType');
+            const perquisitePercent = getValue(data, 'PerquisiteApplicablePercent', 'perquisiteApplicablePercent');
+            const monthlyRent = getValue(data, 'MonthlyRentPayable', 'monthlyRentPayable');
+            const fromDate = getValue(data, 'FromDate', 'fromDate');
+            const endDate = getValue(data, 'EndDate', 'endDate');
+            const refDate = getValue(data, 'RefDate', 'refDate');
+            const totalAmount = getValue(data, 'TotalLeaseAmount', 'totalLeaseAmount');
+            const rentDeposit = getValue(data, 'RentDeposit', 'rentDeposit');
+            const additionalRent = getValue(data, 'AdditionalRentRecovery', 'additionalRentRecovery');
+            const licenseFee = getValue(data, 'LicenseFeeAmount', 'licenseFeeAmount');
+            const brokerage = getValue(data, 'BrokerageAmount', 'brokerageAmount');
+            const stampDuty = getValue(data, 'StampDuty', 'stampDuty');
+            const rentRecoveryElement = getValue(data, 'RentRecoveryElementName', 'rentRecoveryElementName');
+            const licenseFeeRecoveryElement = getValue(data, 'LicenseFeeRecoveryElementName', 'licenseFeeRecoveryElementName');
+            const paymentTerm = getValue(data, 'PaymentTermName', 'paymentTermName');
+            const payableOnOrBefore = getValue(data, 'PayableOnOrBeforeName', 'payableOnOrBeforeName');
+            const narration = getValue(data, 'Narration', 'narration');
+            const createdAt = getValue(data, 'CreatedAt', 'createdAt');
+            const modifiedAt = getValue(data, 'ModifiedAt', 'modifiedAt');
+            const leaseId = getValue(data, 'Id', 'id');
+
+            // Update footer with lease reference
+            document.getElementById('detailsLeaseRef').textContent = `Lease #${refNo || 'N/A'}`;
+
+            // Store the lease ID for edit functionality
+            if (leaseId) {
+                document.getElementById('editFromDetailsBtn').setAttribute('data-lease-id', leaseId);
+                currentLeaseId = leaseId; // Also update the global variable
+            }
+
+            // Calculate lease duration
+            let leaseDuration = 'N/A';
+            if (fromDate && endDate) {
+                const start = new Date(fromDate);
+                const end = new Date(endDate);
+                const months = ((end.getFullYear() - start.getFullYear()) * 12) + (end.getMonth() - start.getMonth()) + 1;
+                leaseDuration = `${months} month${months !== 1 ? 's' : ''}`;
+            }
+
+            // Status badge HTML
+            let statusBadge = '';
+            const statusText = status || 'Unknown';
+            switch (statusText) {
+                case 'Active':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"><span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>Active</span>';
+                    break;
+                case 'Expired':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"><span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Expired</span>';
+                    break;
+                case 'Upcoming':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800"><span class="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>Upcoming</span>';
+                    break;
+                case 'Terminated':
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800"><span class="w-2 h-2 bg-red-400 rounded-full mr-2"></span>Terminated</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>' + statusText + '</span>';
+            }
+
+            content.innerHTML = `
+                        <!-- Status and Key Info -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-lg font-semibold text-gray-900">Lease Status</h3>
+                                ${statusBadge}
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Duration:</span>
+                                    <span class="ml-2 font-medium text-gray-900">${leaseDuration}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Total Amount:</span>
+                                    <span class="ml-2 font-medium text-gray-900">${formatCurrency(totalAmount)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lease Information Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Lease Information</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Lease Type</dt>
+                                    <dd class="text-sm text-gray-900">${leaseTypeName || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Reference Number</dt>
+                                    <dd class="text-sm text-gray-900 font-mono">${refNo || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Reference Date</dt>
+                                    <dd class="text-sm text-gray-900">${formatDate(refDate)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Perquisite Type</dt>
+                                    <dd class="text-sm text-gray-900">${perquisiteType || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Perquisite %</dt>
+                                    <dd class="text-sm text-gray-900">${perquisitePercent || 'N/A'}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Parties Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Parties</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Employee/Tenant</dt>
+                                    <dd class="text-sm text-gray-900 font-medium">${employeeName || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Owner/Vendor</dt>
+                                    <dd class="text-sm text-gray-900 font-medium">${vendorName || 'N/A'}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Lease Period Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Lease Period</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Start Date</dt>
+                                    <dd class="text-sm text-gray-900">${formatDate(fromDate)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">End Date</dt>
+                                    <dd class="text-sm text-gray-900">${formatDate(endDate)}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Financial Details Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Financial Details</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Monthly Rent</dt>
+                                    <dd class="text-sm text-gray-900 font-semibold">${formatCurrency(monthlyRent)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Rent Deposit</dt>
+                                    <dd class="text-sm text-gray-900">${formatCurrency(rentDeposit)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Additional Rent Recovery</dt>
+                                    <dd class="text-sm text-gray-900">${formatCurrency(additionalRent)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">License Fee Amount</dt>
+                                    <dd class="text-sm text-gray-900">${formatCurrency(licenseFee)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Brokerage Amount</dt>
+                                    <dd class="text-sm text-gray-900">${formatCurrency(brokerage)}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Stamp Duty</dt>
+                                    <dd class="text-sm text-gray-900">${formatCurrency(stampDuty)}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Recovery Elements Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recovery Elements</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Rent Recovery Element</dt>
+                                    <dd class="text-sm text-gray-900">${rentRecoveryElement || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">License Fee Recovery Element</dt>
+                                    <dd class="text-sm text-gray-900">${licenseFeeRecoveryElement || 'N/A'}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Payment Terms Section -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Payment Terms</h3>
+                            <dl class="grid grid-cols-1 gap-4">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Payment Term</dt>
+                                    <dd class="text-sm text-gray-900">${paymentTerm || 'N/A'}</dd>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <dt class="text-sm font-medium text-gray-500">Payable On or Before</dt>
+                                    <dd class="text-sm text-gray-900">${payableOnOrBefore || 'N/A'}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Narration Section -->
+                        ${narration ? `
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Narration</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">${narration}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Metadata Section -->
+                        <div class="pt-4 border-t border-gray-200">
+                            <dl class="grid grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <dt class="text-gray-500">Created:</dt>
+                                    <dd class="text-gray-700">${formatDateTime(createdAt)}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-gray-500">Last Modified:</dt>
+                                    <dd class="text-gray-700">${formatDateTime(modifiedAt)}</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    `;
+        }
+
+        function closeDetailsModal() {
+            // This function is no longer used but kept for backward compatibility
+            closeDetailsSlideover();
+        }
+
         function initializeEventListeners() {
             // Search functionality
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     document.getElementById('searchForm').submit();
                 }
             });
 
-            // Select all checkbox
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    const checkboxes = document.querySelectorAll('.lease-checkbox');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                    });
-                });
-            }
+            // Add input event listeners to clear validation errors on change
+            document.querySelectorAll('#leaseForm input, #leaseForm textarea').forEach(element => {
+                element.addEventListener('input', function () {
+                    // Clear validation error for this field
+                    const errorSpan = document.querySelector(`[data-validation="${this.name}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = '';
+                    }
+                    this.classList.remove('border-red-500');
+                    this.classList.remove('focus:ring-red-500');
 
-            // Individual checkboxes
-            const leaseCheckboxes = document.querySelectorAll('.lease-checkbox');
-            leaseCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const allChecked = Array.from(leaseCheckboxes).every(cb => cb.checked);
-                    const noneChecked = Array.from(leaseCheckboxes).every(cb => !cb.checked);
-                    
-                    if (selectAllCheckbox) {
-                        if (allChecked) {
-                            selectAllCheckbox.checked = true;
-                            selectAllCheckbox.indeterminate = false;
-                        } else if (noneChecked) {
-                            selectAllCheckbox.checked = false;
-                            selectAllCheckbox.indeterminate = false;
-                        } else {
-                            selectAllCheckbox.checked = false;
-                            selectAllCheckbox.indeterminate = true;
-                        }
+                    // Clear drawer alert if all errors are resolved
+                    const hasErrors = document.querySelectorAll('[data-validation]:not(:empty)').length > 0;
+                    if (!hasErrors) {
+                        clearDrawerAlert();
+                    }
+                });
+            });
+
+            // Add change event listeners for select elements
+            document.querySelectorAll('#leaseForm select').forEach(element => {
+                $(element).on('change', function () {
+                    // Clear validation error for this field
+                    const errorSpan = document.querySelector(`[data-validation="${this.name}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = '';
+                    }
+                    this.classList.remove('border-red-500');
+                    this.classList.remove('focus:ring-red-500');
+
+                    // Also update Select2 container
+                    const select2Container = $(this).next('.select2-container');
+                    if (select2Container.length) {
+                        select2Container.find('.select2-selection--single').removeClass('border-red-500');
+                    }
+
+                    // Clear drawer alert if all errors are resolved
+                    const hasErrors = document.querySelectorAll('[data-validation]:not(:empty)').length > 0;
+                    if (!hasErrors) {
+                        clearDrawerAlert();
+                    }
+                });
+            });
+
+            // Add change event for radio buttons
+            document.querySelectorAll('input[name="PerquisiteType"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const errorSpan = document.querySelector('[data-validation="PerquisiteType"]');
+                    if (errorSpan) {
+                        errorSpan.textContent = '';
                     }
                 });
             });
         }
 
-        // Utility functions
+        // Drawer Functions
+        function openCreateDrawer() {
+            currentLeaseId = 0;
+            document.getElementById('drawerTitle').textContent = 'Create New Lease';
+            document.getElementById('saveButtonText').textContent = 'Create Lease';
+            document.getElementById('leaseForm').reset();
+            clearValidationErrors();
+            clearDrawerAlert();
+            // Reset Select2 dropdowns
+            $('.searchable-dropdown').val(null).trigger('change');
+            openDrawer();
+        }
+
+        function openEditDrawer(id) {
+            currentLeaseId = id;
+            document.getElementById('drawerTitle').textContent = 'Edit Lease';
+            document.getElementById('saveButtonText').textContent = 'Update Lease';
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            // Show loading state in drawer
+            showDrawerAlert('warning', 'Loading...', 'Please wait while we load the lease details.');
+
+            // Load lease data
+            fetch(`/Lease/GetLeaseDetails?id=${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        clearDrawerAlert();
+                        populateForm(result.data);
+                        openDrawer();
+                    } else {
+                        showDrawerAlert('error', 'Failed to load lease', result.message || 'Unable to load lease details. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                });
+        }
+                
+
+        function openDrawer() {
+            const drawer = document.getElementById('leaseDrawer');
+            const panel = document.getElementById('drawerPanel');
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+                // Focus on first input
+                const firstInput = document.querySelector('#leaseForm input[type="text"], #leaseForm input[type="number"], #leaseForm select');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const panel = document.getElementById('drawerPanel');
+            panel.classList.add('translate-x-full');
+
+            // Clear all validation errors and alerts when closing
+            setTimeout(() => {
+                document.getElementById('leaseDrawer').classList.add('hidden');
+                clearValidationErrors();
+                clearDrawerAlert();
+                document.getElementById('leaseForm').reset();
+                $('.searchable-dropdown').val(null).trigger('change');
+            }, 300);
+        }
+
+        function populateForm(data) {
+            // Handle both PascalCase and camelCase property names
+            const getValue = (obj, pascalKey, camelKey) => {
+                return obj[pascalKey] || obj[camelKey] || null;
+            };
+
+            const leaseId = getValue(data, 'Id', 'id');
+            document.getElementById('leaseId').value = leaseId || 0;
+
+            // Set radio button
+            const perquisiteType = getValue(data, 'PerquisiteType', 'perquisiteType');
+            const perquisiteRadio = document.querySelector(`input[name="PerquisiteType"][value="${perquisiteType}"]`);
+            if (perquisiteRadio) perquisiteRadio.checked = true;
+
+            // Set form fields - handle both naming conventions
+            const fieldMappings = [
+                { field: 'RefNo', pascalKey: 'RefNo', camelKey: 'refNo' },
+                { field: 'MonthlyRentPayable', pascalKey: 'MonthlyRentPayable', camelKey: 'monthlyRentPayable' },
+                { field: 'AdditionalRentRecovery', pascalKey: 'AdditionalRentRecovery', camelKey: 'additionalRentRecovery' },
+                { field: 'RentDeposit', pascalKey: 'RentDeposit', camelKey: 'rentDeposit' },
+                { field: 'BrokerageAmount', pascalKey: 'BrokerageAmount', camelKey: 'brokerageAmount' },
+                { field: 'StampDuty', pascalKey: 'StampDuty', camelKey: 'stampDuty' },
+                { field: 'LicenseFeeAmount', pascalKey: 'LicenseFeeAmount', camelKey: 'licenseFeeAmount' },
+                { field: 'Narration', pascalKey: 'Narration', camelKey: 'narration' }
+            ];
+
+            fieldMappings.forEach(mapping => {
+                const element = document.querySelector(`[name="${mapping.field}"]`);
+                if (element) {
+                    element.value = getValue(data, mapping.pascalKey, mapping.camelKey) || '';
+                }
+            });
+
+            // Set date fields
+            const dateMappings = [
+                { field: 'RefDate', pascalKey: 'RefDate', camelKey: 'refDate' },
+                { field: 'FromDate', pascalKey: 'FromDate', camelKey: 'fromDate' },
+                { field: 'EndDate', pascalKey: 'EndDate', camelKey: 'endDate' }
+            ];
+
+            dateMappings.forEach(mapping => {
+                const element = document.querySelector(`[name="${mapping.field}"]`);
+                const dateValue = getValue(data, mapping.pascalKey, mapping.camelKey);
+                if (element && dateValue) {
+                    element.value = dateValue.split('T')[0];
+                }
+            });
+
+            // Set select fields with Select2
+            const selectMappings = [
+                { name: 'LeaseTypeId', pascalKey: 'LeaseTypeId', camelKey: 'leaseTypeId' },
+                { name: 'EmployeeId', pascalKey: 'EmployeeId', camelKey: 'employeeId' },
+                { name: 'PerquisiteApplicablePercentId', pascalKey: 'PerquisiteApplicablePercentId', camelKey: 'perquisiteApplicablePercentId' },
+                { name: 'VendorId', pascalKey: 'VendorId', camelKey: 'vendorId' },
+                { name: 'RentRecoveryElementId', pascalKey: 'RentRecoveryElementId', camelKey: 'rentRecoveryElementId' },
+                { name: 'LicenseFeeRecoveryElementId', pascalKey: 'LicenseFeeRecoveryElementId', camelKey: 'licenseFeeRecoveryElementId' },
+                { name: 'PaymentTermId', pascalKey: 'PaymentTermId', camelKey: 'paymentTermId' },
+                { name: 'PayableOnOrBeforeId', pascalKey: 'PayableOnOrBeforeId', camelKey: 'payableOnOrBeforeId' }
+            ];
+
+            selectMappings.forEach(mapping => {
+                const value = getValue(data, mapping.pascalKey, mapping.camelKey);
+                if (value) {
+                    $(`select[name="${mapping.name}"]`).val(value).trigger('change');
+                }
+            });
+        }
+
+        function saveLease() {
+            // Clear previous errors
+            clearDrawerAlert();
+            clearValidationErrors();
+
+            if (!validateForm()) {
+                // Scroll to top of drawer to show validation summary
+                document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('leaseForm'));
+            const data = {};
+
+            formData.forEach((value, key) => {
+                if (key.endsWith('Id') && value) {
+                    data[key] = parseInt(value) || 0;
+                } else if (['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit',
+                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(key)) {
+                    data[key] = parseFloat(value) || 0;
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            data.Id = parseInt(document.getElementById('leaseId').value) || 0;
+            data.IsActive = true;
+            data.Status = 'Active';
+
+            const url = data.Id === 0 ? '/Lease/CreateAjax' : '/Lease/UpdateAjax';
+
+            // Disable save button
+            const saveButton = document.getElementById('saveButton');
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Saving...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeDrawer();
+                        refreshTable();
+                    } else {
+                        // Display errors in drawer
+                        if (result.errors) {
+                            displayValidationErrors(result.errors);
+                        } else {
+                            showDrawerAlert('error', 'Failed to save lease', result.message || 'An error occurred while saving the lease. Please check your input and try again.');
+                        }
+                        // Scroll to top to show error message
+                        document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                    document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                })
+                .finally(() => {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = `<span id="saveButtonText">${data.Id === 0 ? 'Create' : 'Update'} Lease</span>`;
+                });
+        }
+
+        function validateForm() {
+            let isValid = true;
+            let errors = [];
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            // Required field validation
+            const requiredFields = [
+                { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
+                { name: 'RefNo', message: 'Lease Reference Number is required', displayName: 'Lease Reference Number' },
+                { name: 'EmployeeId', message: 'Employee Name is required', displayName: 'Employee Name' },
+                { name: 'RefDate', message: 'Reference Date is required', displayName: 'Reference Date' },
+                { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
+                { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
+                { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+                { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
+                { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
+                { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
+                { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
+                { name: 'Narration', message: 'Narration is required', displayName: 'Narration' }
+            ];
+
+            requiredFields.forEach(field => {
+                const element = document.querySelector(`[name="${field.name}"]`);
+                const value = element.value;
+
+                if (!value || value === '0' || value === '') {
+                    const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = field.message;
+                        element.classList.add('border-red-500');
+                    }
+                    errors.push(field.displayName + ' is required');
+                    isValid = false;
+                }
+            });
+
+            // Date validation
+            const fromDate = new Date(document.querySelector('[name="FromDate"]').value);
+            const endDate = new Date(document.querySelector('[name="EndDate"]').value);
+
+            if (fromDate && endDate && fromDate > endDate) {
+                const errorSpan = document.querySelector('[data-validation="EndDate"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'End Date must be after From Date';
+                    document.querySelector('[name="EndDate"]').classList.add('border-red-500');
+                }
+                errors.push('End Date must be after From Date');
+                isValid = false;
+            }
+
+            // Narration length validation
+            const narration = document.querySelector('[name="Narration"]').value;
+            if (narration && narration.length > 200) {
+                const errorSpan = document.querySelector('[data-validation="Narration"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'Narration cannot be longer than 200 characters';
+                    document.querySelector('[name="Narration"]').classList.add('border-red-500');
+                }
+                errors.push('Narration cannot be longer than 200 characters');
+                isValid = false;
+            }
+
+            // Show validation summary if there are errors
+            if (!isValid && errors.length > 0) {
+                showDrawerAlert('error', 'Please correct the following errors:', errors);
+            }
+
+            return isValid;
+        }
+
+        function displayValidationErrors(errors) {
+            clearValidationErrors();
+            clearDrawerAlert();
+
+            let errorMessages = [];
+
+            for (const [field, message] of Object.entries(errors)) {
+                const errorSpan = document.querySelector(`[data-validation="${field}"]`);
+                if (errorSpan) {
+                    errorSpan.textContent = message;
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.classList.add('border-red-500');
+                        input.classList.add('focus:ring-red-500');
+                    }
+                }
+                errorMessages.push(message);
+            }
+
+            // Show validation summary
+            if (errorMessages.length > 0) {
+                showDrawerAlert('error', 'Please correct the following errors:', errorMessages);
+            }
+        }
+
+        function clearValidationErrors() {
+            document.querySelectorAll('[data-validation]').forEach(span => {
+                span.textContent = '';
+            });
+            document.querySelectorAll('.border-red-500').forEach(element => {
+                element.classList.remove('border-red-500');
+                element.classList.remove('focus:ring-red-500');
+            });
+        }
+
+        function showDrawerAlert(type, title, messages) {
+            const alertDiv = document.getElementById('drawerAlert');
+            const alertIcon = document.getElementById('drawerAlertIcon');
+            const alertTitle = document.getElementById('drawerAlertTitle');
+            const alertMessage = document.getElementById('drawerAlertMessage');
+            const errorList = document.getElementById('validationErrorList');
+
+            // Set styles based on type
+            if (type === 'error') {
+                alertDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4';
+                alertIcon.className = 'ri-error-warning-line text-red-400 text-xl';
+                alertTitle.className = 'text-sm font-medium text-red-800';
+                alertMessage.className = 'mt-2 text-sm text-red-700';
+            } else if (type === 'warning') {
+                alertDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4';
+                alertIcon.className = 'ri-alert-line text-yellow-400 text-xl';
+                alertTitle.className = 'text-sm font-medium text-yellow-800';
+                alertMessage.className = 'mt-2 text-sm text-yellow-700';
+            }
+
+            // Set title
+            alertTitle.textContent = title;
+
+            // Set messages
+            errorList.innerHTML = '';
+            if (typeof messages === 'string') {
+                errorList.innerHTML = `<li>${messages}</li>`;
+            } else if (Array.isArray(messages)) {
+                messages.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    errorList.appendChild(li);
+                });
+            }
+
+            // Show alert
+            alertDiv.classList.remove('hidden');
+        }
+
+        function clearDrawerAlert() {
+            document.getElementById('drawerAlert').classList.add('hidden');
+            document.getElementById('validationErrorList').innerHTML = '';
+        }
+
+        // Delete Functions
+        function openDeleteModal(id) {
+            deleteLeaseId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            deleteLeaseId = 0;
+        }
+
+        function confirmDelete() {
+            if (!deleteLeaseId) return;
+
+            fetch(`/Lease/DeleteAjax?id=${deleteLeaseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        refreshTable();
+                    } else {
+                        showAlert('error', result.message || 'Failed to delete lease');
+                    }
+                    closeDeleteModal();
+                })
+                .catch(error => {
+                    showAlert('error', 'An error occurred while deleting the lease');
+                    closeDeleteModal();
+                });
+        }
+
+        // View Details Functions
+        function viewDetails(id) {
+            fetch(`/Lease/GetLeaseDetails?id=${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.data)
+                        displayDetails(result.data);
+                        document.getElementById('detailsModal').classList.remove('hidden');
+                    } else {
+                        showAlert('error', 'Failed to load lease details');
+                    }
+                })
+                .catch(error => {
+                    showAlert('error', 'An error occurred while loading lease details');
+                });
+        }
+
+        function displayDetails(data) {
+            const content = document.getElementById('detailsContent');
+            content.innerHTML = `
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4">
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Perquisite Type</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.perquisiteType || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Status</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.status || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Lease Type</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.leaseTypeName || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Reference No</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.refNo || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Employee Name</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.employeeName || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Reference Date</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(data.refDate)}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Owner Name</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.vendorName || 'N/A'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Monthly Rent Payable</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(data.monthlyRentPayable)}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">From Date</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(data.fromDate)}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">End Date</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(data.endDate)}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Total Lease Amount</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatCurrency(data.totalLeaseAmount)}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Payment Term</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${data.paymentTermName || 'N/A'}</dd>
+                            </div>
+                            <div class="md:col-span-2">
+                                <dt class="text-sm font-semibold text-gray-500">Narration</dt>
+                                <dd class="mt-1 p-3 bg-gray-50 border border-gray-200 rounded-lg">${data.narration || 'N/A'}</dd>
+                            </div>
+                        </dl>
+                    `;
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
+        // Utility Functions
+        function refreshTable() {
+            const searchParams = new URLSearchParams(window.location.search);
+            const page = searchParams.get('page') || 1;
+            const pageSize = searchParams.get('PageSize') || 10;
+            const search = searchParams.get('search') || '';
+
+            fetch(`/Lease/GetTableData?page=${page}&pageSize=${pageSize}&search=${search}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('tableContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    showAlert('error', 'Failed to refresh table');
+                });
+        }
+
         function showAlert(type, message) {
             const container = document.getElementById('alertContainer');
-            const alertClass = type === 'success' 
-                ? 'bg-green-100 border-green-400 text-green-700' 
+            const alertClass = type === 'success'
+                ? 'bg-green-100 border-green-400 text-green-700'
                 : 'bg-red-100 border-red-400 text-red-700';
-            
+
             container.innerHTML = `
-                <div class="${alertClass} px-4 py-3 rounded border flex items-center" role="alert">
-                    <i class="ri-${type === 'success' ? 'check-line' : 'error-warning-line'} mr-2"></i>
-                    <span class="block sm:inline">${message}</span>
-                    <button onclick="this.parentElement.remove()" class="ml-auto pl-3">
-                        <i class="ri-close-line text-lg hover:opacity-70"></i>
-                    </button>
-                </div>
-            `;
-            
+                        <div class="${alertClass} px-4 py-3 rounded border flex items-center" role="alert">
+                            <i class="ri-${type === 'success' ? 'check-line' : 'error-warning-line'} mr-2"></i>
+                            <span class="block sm:inline">${message}</span>
+                            <button onclick="this.parentElement.remove()" class="ml-auto pl-3">
+                                <i class="ri-close-line text-lg hover:opacity-70"></i>
+                            </button>
+                        </div>
+                    `;
+
             setTimeout(() => {
                 const alert = container.querySelector('.border');
                 if (alert) {
@@ -351,116 +1470,185 @@
             }, 5000);
         }
 
-        // Show success message if available
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <text>
-            setTimeout(() => {
-                showAlert('success', '@TempData["SuccessMessage"]');
-            }, 100);
-            </text>
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
         }
 
-        // Show error message if available
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <text>
-            setTimeout(() => {
-                showAlert('error', '@TempData["ErrorMessage"]');
-            }, 100);
-            </text>
+        function formatDateTime(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatCurrency(amount) {
+            if (!amount && amount !== 0) return 'N/A';
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
         }
     </script>
-}
 
-<style>
-    .table-row:hover {
-        background-color: #f9fafb;
-    }
+    <style>
+        .select2-container--default .select2-selection--single {
+            height: 42px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 6px 12px;
+        }
 
-    /* Custom primary color - adjust as needed */
-    :root {
-        --primary-color: #3b82f6;
-        --primary-color-hover: #2563eb;
-    }
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                color: #374151;
+                line-height: 28px;
+            }
 
-    .bg-primary {
-        background-color: var(--primary-color);
-    }
+            .select2-container--default .select2-selection--single .select2-selection__arrow {
+                height: 40px;
+            }
 
-    .text-primary {
-        color: var(--primary-color);
-    }
+            /* Error state for Select2 */
+            .select2-container--default .select2-selection--single.border-red-500 {
+                border-color: #ef4444 !important;
+            }
 
-    .border-primary {
-        border-color: var(--primary-color);
-    }
+        :root {
+            --primary-color: #3b82f6;
+            --primary-color-hover: #2563eb;
+        }
 
-    .bg-primary\/90 {
-        background-color: var(--primary-color-hover);
-    }
+        .bg-primary {
+            background-color: var(--primary-color);
+        }
 
-    .hover\:bg-primary\/90:hover {
-        background-color: var(--primary-color-hover);
-    }
+        .text-primary {
+            color: var(--primary-color);
+        }
 
-    .text-primary\/80 {
-        color: rgba(59, 130, 246, 0.8);
-    }
+        .hover\:bg-primary\/90:hover {
+            background-color: var(--primary-color-hover);
+        }
 
-    .hover\:text-primary\/80:hover {
-        color: rgba(59, 130, 246, 0.8);
-    }
+        #alertContainer .border {
+            transition: all 0.3s ease-out;
+        }
 
-    /* Alert animations */
-    #alertContainer .border {
-        transition: all 0.3s ease-out;
-    }
+        /* Validation error styles */
+        input.border-red-500,
+        select.border-red-500,
+        textarea.border-red-500 {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2;
+        }
 
-    /* Checkbox indeterminate state styling */
-    input[type="checkbox"]:indeterminate {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 8h8'/%3e%3c/svg%3e");
-    }
+            input.border-red-500:focus,
+            select.border-red-500:focus,
+            textarea.border-red-500:focus {
+                border-color: #dc2626 !important;
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            }
 
-    /* Status badge improvements */
-    .status-badge {
-        transition: all 0.2s ease;
-    }
-
-    /* Hover effects for action buttons */
-    .table-row a, .table-row button {
-        transition: all 0.2s ease;
-        padding: 0.25rem;
-        border-radius: 0.25rem;
-    }
-
-    .table-row a:hover, .table-row button:hover {
-        background-color: rgba(0, 0, 0, 0.05);
-        transform: scale(1.05);
-    }
-
-    /* Loading states */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-    /* Responsive improvements */
-  /*   media (max-width: 768px) {
-        .table-responsive {
+        [data-validation] {
+            display: block;
+            margin-top: 0.25rem;
             font-size: 0.875rem;
+            color: #dc2626;
+            min-height: 1.25rem;
         }
-        
-        .px-6 {
-            padding-left: 1rem;
-            padding-right: 1rem;
+
+        /* Drawer alert animations */
+        #drawerAlert {
+            animation: slideDown 0.3s ease-out;
         }
-        
-        .py-4 {
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
+
+        /* Slideover transitions */
+        #detailsPanel, #drawerPanel {
+            transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-    } */
-</style>
+
+            /* Custom scrollbar for slideovers */
+            #detailsPanel .overflow-y-auto::-webkit-scrollbar,
+            #drawerPanel .overflow-y-auto::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            #detailsPanel .overflow-y-auto::-webkit-scrollbar-track,
+            #drawerPanel .overflow-y-auto::-webkit-scrollbar-track {
+                background: #f3f4f6;
+            }
+
+            #detailsPanel .overflow-y-auto::-webkit-scrollbar-thumb,
+            #drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb {
+                background: #9ca3af;
+                border-radius: 3px;
+            }
+
+                #detailsPanel .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+                #drawerPanel .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                    background: #6b7280;
+                }
+
+        /* Status badge animations */
+        .status-badge {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @@keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Smooth scroll for drawer and slideover */
+        #drawerPanel .overflow-y-auto,
+        #detailsPanel .overflow-y-auto {
+            scroll-behavior: smooth;
+        }
+
+        /* Details content styling */
+        #detailsContent dl dt {
+            font-weight: 500;
+        }
+
+        #detailsContent dl dd {
+            text-align: right;
+        }
+
+        /* Hover effects for interactive elements */
+        #detailsSlideover button:hover,
+        #leaseDrawer button:hover {
+            transform: translateY(-1px);
+            transition: transform 0.2s ease;
+        }
+    </style>
+}
