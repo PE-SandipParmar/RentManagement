@@ -146,7 +146,7 @@
     {
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
+                    <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.TotalRecords)</h3>
                 <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
             </div>
             <div class="space-y-3">
@@ -223,7 +223,7 @@
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
             <!-- Approval Status Filter (Checker Only) -->
-            @if (isChecker)
+            @if (isChecker || isMaker)
             {
                 <div class="relative">
                     <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -980,15 +980,15 @@
                             </button>`;
 
                     // Add edit/delete for approved employees
-                    if (employee.approvalStatus === 2) {
-                        actionButtons += `
-                                <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
-                                    <i class="ri-edit-line"></i>
-                                </button>
-                                <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
-                                    <i class="ri-delete-bin-line"></i>
-                                </button>`;
-                    }
+                    // if (employee.approvalStatus === 2) {
+                    //     actionButtons += `
+                    //             <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                    //                 <i class="ri-edit-line"></i>
+                    //             </button>
+                    //             <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
+                    //                 <i class="ri-delete-bin-line"></i>
+                    //             </button>`;
+                    // }
                 }
             } else {
                 // Action buttons for makers (only for approved employees)
@@ -1061,6 +1061,24 @@
     function initializePagination() {
         generatePaginationButtons();
     }
+
+           function showAllPendingApprovals() {
+            document.getElementById('approvalStatusFilter').value = 'Pending';
+            //document.getElementById('approvalStatusFilter').value = 'Pending';
+
+            // Clear search term and status filter to show all pending items
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+
+            // Set page size to a large number to show all pending approvals
+            // Or you can set it to the total pending count if available
+            const originalPageSize = pageSize;
+            pageSize = 100; // Set to a large number or use Model.TotalRecords if available
+
+            // Reset to first page
+            currentPage = 1;
+            searchEmployees();
+        }
 
     function updatePagination(pagination) {
         const info = document.getElementById('paginationInfo');

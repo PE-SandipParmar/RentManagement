@@ -24,7 +24,7 @@ namespace RentManagement.Controllers
         }
 
         // GET: Vendor
-        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index1(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
         {
             try
             {
@@ -82,7 +82,95 @@ namespace RentManagement.Controllers
                 return View(new VendorListViewModel());
             }
         }
+        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var employees = await _employeeRepository.GetAllEmployeesDropdownAsync();
 
+                var viewModel = new VendorListViewModel
+                {
+                    SearchTerm = searchTerm,
+                    StatusFilter = statusFilter,
+                    ApprovalStatusFilter = approvalStatusFilter,
+                    CurrentPage = page,
+                    PageSize = pageSize,
+                    CurrentUserRole = userRole,
+                    ShowApprovalSection = true // Show for all roles now
+                };
+
+                // Load different data based on user role and filter
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+                {
+                    // Set default approval status filter to show Approved by default
+                    if (string.IsNullOrEmpty(approvalStatusFilter))
+                    {
+                        approvalStatusFilter = "Pending";
+                        viewModel.ApprovalStatusFilter = "Pending";
+                    }
+
+                    if (approvalStatusFilter == "Approved")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetRejectedVendorsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetRejectedVendorCountAsync(searchTerm);
+                    }
+
+                    // Load pending approvals for the approval section
+                    viewModel.PendingApprovals = (await _vendorRepository.GetPendingApprovalsAsync("", 1, 10)).ToList();
+                }
+                else
+                {
+                    // Makers - Show approved by default, but allow viewing pending/rejected
+                    if (string.IsNullOrEmpty(approvalStatusFilter))
+                    {
+                        approvalStatusFilter = "Pending";
+                        viewModel.ApprovalStatusFilter = "Pending";
+                    }
+
+                    if (approvalStatusFilter == "Approved")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        // For makers, show only their own pending submissions
+                        viewModel.Vendors = (await _vendorRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        // For makers, show only their own rejected submissions
+                        viewModel.Vendors = (await _vendorRepository.GetRejectedVendorsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetRejectedVendorCountAsync( searchTerm);
+                    }
+
+                    // Load pending approvals for makers (their own submissions)
+                    viewModel.PendingApprovals = (await _vendorRepository.GetPendingApprovalsAsync( "", 1, 10)).ToList();
+                }
+
+                ViewBag.Employees = employees.ToList();
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching vendors");
+                TempData["ErrorMessage"] = "An error occurred while loading vendors.";
+                return View(new VendorListViewModel { CurrentUserRole = GetCurrentUserRole() });
+            }
+        }
         // AJAX: Get vendor details for view/edit
         // AJAX: Get vendor details for view/edit
         [HttpGet]
@@ -423,8 +511,110 @@ namespace RentManagement.Controllers
         }
 
         // AJAX: Get vendors with pagination (for refresh after operations)
+        // AJAX: Get vendors with pagination - Updated for Makers
+[HttpGet]
+public async Task<IActionResult> GetVendors(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
+{
+    try
+    {
+        var userRole = GetCurrentUserRole();
+        var userId = GetCurrentUserId();
+        IEnumerable<Vendor> vendors;
+        int totalCount;
+
+        if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+        {
+            if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+            {
+                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+            }
+            else if (approvalStatusFilter == "Pending")
+            {
+                vendors = await _vendorRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize);
+                totalCount = await _vendorRepository.GetPendingApprovalCountAsync(searchTerm);
+            }
+            else if (approvalStatusFilter == "Rejected")
+            {
+                vendors = await _vendorRepository.GetRejectedVendorsAsync(searchTerm, page, pageSize);
+                totalCount = await _vendorRepository.GetRejectedVendorCountAsync(searchTerm);
+            }
+            else
+            {
+                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+            }
+        }
+        else // Maker role
+        {
+            if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+            {
+                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+            }
+            else if (approvalStatusFilter == "Pending")
+            {
+                // Show only maker's own pending submissions
+                vendors = await _vendorRepository.GetPendingApprovalsAsync( searchTerm, page, pageSize);
+                totalCount = await _vendorRepository.GetPendingApprovalCountAsync(searchTerm);
+            }
+            else if (approvalStatusFilter == "Rejected")
+            {
+                // Show only maker's own rejected submissions
+                vendors = await _vendorRepository.GetRejectedVendorsAsync( searchTerm, page, pageSize);
+                totalCount = await _vendorRepository.GetRejectedVendorCountAsync( searchTerm);
+            }
+            else
+            {
+                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+            }
+        }
+
+        var result = new
+        {
+            success = true,
+            data = vendors.Select(v => new
+            {
+                v.Id,
+                v.VendorCode,
+                v.VendorName,
+                v.MobileNumber,
+                v.IFSCCode,
+                v.BankName,
+                v.Status,
+                v.TotalRentAmount,
+                LinkedEmployees = v.LinkedEmployeesList,
+                ApprovalStatus = (int)v.ApprovalStatus,
+                ApprovalStatusText = v.ApprovalStatusText,
+                v.MakerUserName,
+                v.CheckerUserName,
+                MakerAction = (int)v.MakerAction,
+                MakerActionText = v.MakerAction.ToString(),
+                v.ApprovalDate,
+                v.RejectionReason,
+                v.CreatedDate,
+                v.UpdatedDate
+            }).ToList(),
+            pagination = new
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalRecords = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            }
+        };
+
+        return Json(result);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error occurred while fetching vendors");
+        return Json(new { success = false, message = "An error occurred while loading vendors." });
+    }
+}
         [HttpGet]
-        public async Task<IActionResult> GetVendors(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetVendors1(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int page = 1, int pageSize = 10)
         {
             try
             {

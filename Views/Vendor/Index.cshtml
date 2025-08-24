@@ -48,7 +48,7 @@
     {
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count)</h3>
+                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.TotalRecords)</h3>
                 <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
             </div>
             <div class="space-y-3">
@@ -122,19 +122,11 @@
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
             <!-- Approval Status Filter (Checker Only) -->
-            @if (isChecker)
+            @if (isChecker || isMaker)
             {
                 <div class="relative">
                     <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
-                        @if (Model.ApprovalStatusFilter == "Approved" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
-                        {
-                            <option value="Approved" selected>Approved</option>
-                        }
-                        else
-                        {
-                            <option value="Approved">Approved</option>
-                        }
-                        @if (Model.ApprovalStatusFilter == "Pending")
+                        @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
                         {
                             <option value="Pending" selected>Pending</option>
                         }
@@ -142,6 +134,15 @@
                         {
                             <option value="Pending">Pending</option>
                         }
+                    @if (Model.ApprovalStatusFilter == "Approved" )
+                        {
+                            <option value="Approved" selected>Approved</option>
+                        }
+                        else
+                        {
+                            <option value="Approved">Approved</option>
+                        }
+                      
                         @if (Model.ApprovalStatusFilter == "Rejected")
                         {
                             <option value="Rejected" selected>Rejected</option>
@@ -691,6 +692,19 @@
         // Additional approval workflow functions
         function showAllPendingApprovals() {
             document.getElementById('approvalStatusFilter').value = 'Pending';
+            //document.getElementById('approvalStatusFilter').value = 'Pending';
+
+            // Clear search term and status filter to show all pending items
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+
+            // Set page size to a large number to show all pending approvals
+            // Or you can set it to the total pending count if available
+            const originalPageSize = pageSize;
+            pageSize = 100; // Set to a large number or use Model.TotalRecords if available
+
+            // Reset to first page
+            currentPage = 1;
             searchVendors();
         }
 
@@ -864,7 +878,140 @@
         }
 
         // Modified updateTable function to handle approval workflow
+        // Modified updateTable function - replace the action buttons section
         function updateTable(vendors) {
+            const tbody = document.getElementById('vendorTableBody');
+            tbody.innerHTML = '';
+
+            console.log('Updating table with Owners:', vendors);
+
+            if (!vendors || vendors.length === 0) {
+                const colspan = isChecker ? 10 : 8; // Adjust colspan based on role
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No Owners found</td></tr>`;
+                return;
+            }
+
+            vendors.forEach(vendor => {
+                let approvalStatusCell = '';
+                let makerCell = '';
+                let actionButtons = '';
+
+                if (isChecker) {
+                    // Approval status column
+                    let statusClass = '';
+                    let statusText = '';
+
+                    switch (vendor.approvalStatus) {
+                        case 1:
+                            statusClass = 'status-pending';
+                            statusText = 'Pending';
+                            break;
+                        case 2:
+                            statusClass = 'status-approved';
+                            statusText = 'Approved';
+                            break;
+                        case 3:
+                            statusClass = 'status-rejected';
+                            statusText = 'Rejected';
+                            break;
+                        default:
+                            statusClass = 'status-pending';
+                            statusText = 'Unknown';
+                    }
+
+                    approvalStatusCell = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>`;
+
+                    makerCell = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.makerUserName || '-'}</td>`;
+
+                    // Action buttons for checkers
+                    if (vendor.approvalStatus === 1) { // Pending
+                        actionButtons = `
+                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="approveVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
+                                <i class="ri-check-line"></i>
+                            </button>
+                            <button onclick="openRejectModal(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Reject">
+                                <i class="ri-close-line"></i>
+                            </button>`;
+                    } else {
+                        actionButtons = `
+                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
+
+                        // // Add edit/delete for approved vendors
+                        // if (vendor.approvalStatus === 2) {
+                        //     actionButtons += `
+                        //         <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                        //             <i class="ri-edit-line"></i>
+                        //         </button>
+                        //         <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
+                        //             <i class="ri-delete-bin-line"></i>
+                        //         </button>`;
+                        // }
+                    }
+                } else {
+                    // Action buttons for makers - Modified logic
+                    if (vendor.approvalStatus === 1) { // Pending - Only show view button
+                        actionButtons = `
+                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
+                    } else if (vendor.approvalStatus === 2) { // Approved - Show all buttons
+                        actionButtons = `
+                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="editVendor(${vendor.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDeleteVendor(${vendor.id}, '${vendor.vendorName}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>`;
+                    } else { // Rejected - Only show view button
+                        actionButtons = `
+                            <button onclick="viewVendor(${vendor.id})" class="text-primary hover:text-primary/80" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
+                    }
+                }
+
+                const row = `
+                    <tr class="table-row hover:bg-gray-50">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" class="vendor-checkbox">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${vendor.vendorCode || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.ifscCode || vendor.iFSCCode || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.bankName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${vendor.status === 'Active' ? 'status-active' : 'status-inactive'}">
+                                ${vendor.status || 'Unknown'}
+                            </span>
+                        </td>
+                        ${approvalStatusCell}
+                        ${makerCell}
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex gap-1 justify-center">
+                                ${actionButtons}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            console.log('Table updated successfully with', vendors.length, 'rows');
+        }
+        function updateTable1(vendors) {
             const tbody = document.getElementById('vendorTableBody');
             tbody.innerHTML = '';
 
@@ -1652,7 +1799,7 @@
             loadVendors();
         }
 
-        function loadVendors() {
+        function loadVendors1() {
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;
 
@@ -1679,7 +1826,7 @@
                 });
         }
 
-        function updateTable(vendors) {
+        function updateTables(vendors) {
             const tbody = document.getElementById('vendorTableBody');
             tbody.innerHTML = '';
 

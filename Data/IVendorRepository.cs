@@ -33,5 +33,9 @@ namespace RentManagement.Data
 
         Task<Vendor?> GetOriginalVendorForUpdateAsync(int id);
         Task<bool> HasPendingChangesAsync(int id);
+        // Add these methods to your IVendorRepository interface
+
+        // Get pending approvals by specific maker
+
     }
 }

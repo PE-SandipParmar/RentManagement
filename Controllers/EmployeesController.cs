@@ -38,7 +38,7 @@ namespace RentManagement.Controllers
                 };
 
                 // Load different data based on user role and filter
-                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
                     // Checkers and Admins see approved employees by default
 
@@ -92,7 +92,7 @@ namespace RentManagement.Controllers
                 IEnumerable<Employee> employees;
                 int totalCount;
 
-                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
                     if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
                     {

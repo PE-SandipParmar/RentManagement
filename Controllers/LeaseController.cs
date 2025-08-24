@@ -695,7 +695,7 @@ namespace RentManagement.Controllers
                 IEnumerable<Lease> leases;
                 int totalCount;
 
-                if (userRole == UserRole.Checker || userRole == UserRole.Admin)
+                if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
                     if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
                     {
