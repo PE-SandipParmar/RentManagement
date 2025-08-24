@@ -141,7 +141,7 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-2 gap-6 px-8">
+    <div class="grid grid-cols-2 gap-6">
         <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="font-semibold text-gray-900">Monthly Expenditure Trend</h3>
@@ -170,7 +170,7 @@
     <!-- Recent Activities & Lease Expiry Alerts -->
     @if (Model.RecentActivities?.Any() == true || Model.ExpiringLeases?.Any() == true)
     {
-        <div class="grid grid-cols-2 gap-6 px-8 mt-6">
+        <div class="grid grid-cols-2 gap-6 mt-6">
             @if (Model.RecentActivities?.Any() == true)
             {
                 <div class="bg-white p-6 rounded shadow-sm border border-gray-100">

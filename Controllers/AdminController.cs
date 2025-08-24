@@ -49,7 +49,7 @@ namespace RentManagement.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading admin dashboard");
-                return RedirectToAction("Dashboard", "Account");
+                return RedirectToAction("Index", "Dashboard");
             }
         }
 
