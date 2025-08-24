@@ -7,6 +7,7 @@ using RentManagement.Data;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using System.Data.SqlClient;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
 {
@@ -151,7 +152,52 @@ public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
         return await connection.QueryAsync<Owner>(
             "VendorRead",
             commandType: CommandType.StoredProcedure);
+    }public async Task<IEnumerable<Owner>> GetOwnersByEmployeeAsync(int employeeid)
+    {
+        using var connection = CreateConnection();
+        var query = @"
+                SELECT 
+                    l.name
+                FROM employees l
+                WHERE l.id = @EmployeeId"
+      ;
+
+        var dbemployeeName = await connection.QuerySingleAsync<string>(query, new { EmployeeId = employeeid });
+
+
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@Name", dbemployeeName);
+
+        return await connection.QueryAsync<Owner>(
+            "[VendorReadbyEmployee]",
+            parameters,
+            commandType: CommandType.StoredProcedure);
     }
+
+    public async Task<IEnumerable<Lease>> GetLeasesByEmployeeAndVendorAsync(int employeeId, int vendorId)
+    {
+        using var connection = new SqlConnection(_connectionString);
+
+        //var query = @"
+        //        SELECT 
+        //            l.Id
+        //        FROM employees l
+        //        WHERE l.name = @EmployeeId"
+        //;
+
+        //var dbemployeeid = await connection.QuerySingleAsync<int>(query, new { EmployeeId = employeeId });
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@EmployeeId", employeeId);
+        parameters.Add("@VendorId", vendorId);
+
+        return await connection.QueryAsync<Lease>(
+                   "[LeaseGetByEmployeeandVendorId]",
+                   parameters,
+                   commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync()
     {
         using var connection = CreateConnection();
@@ -175,4 +221,5 @@ public class MonthlyRentPaymentRepository : IMonthlyRentPaymentRepository
             commandType: CommandType.StoredProcedure
         );
     }
+
 }

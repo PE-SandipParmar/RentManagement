@@ -8,10 +8,14 @@ namespace RentManagement.Controllers
 
     public class MonthlyRentPaymentController : Controller
     {
+        private readonly ILeaseRepository _leaseRepository;
         private readonly IMonthlyRentPaymentRepository _monthlyRentPaymentRepository;
 
-        public MonthlyRentPaymentController(IMonthlyRentPaymentRepository monthlyRentPaymentRepository)
+        public MonthlyRentPaymentController(
+            ILeaseRepository leaseRepository,
+            IMonthlyRentPaymentRepository monthlyRentPaymentRepository)
         {
+            _leaseRepository = leaseRepository;
             _monthlyRentPaymentRepository = monthlyRentPaymentRepository;
         }
 
@@ -36,6 +40,34 @@ namespace RentManagement.Controllers
                 return NotFound();
 
             return View(payment);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetVendorsByEmployee(int employeeId)
+        {
+            if (employeeId <= 0)
+                return Json(new { success = false, message = "Invalid employee ID" });
+
+            var vendors = await _monthlyRentPaymentRepository.GetOwnersByEmployeeAsync(employeeId);
+            return Json(new { success = true, vendors = vendors });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeasesByEmployeeAndVendor(int employeeId, int vendorId)
+        {
+            if (employeeId == null || vendorId <= 0)
+                return Json(new { success = false, message = "Invalid employee or vendor ID" });
+
+            var leases = await _monthlyRentPaymentRepository.GetLeasesByEmployeeAndVendorAsync(employeeId, vendorId);
+            return Json(new { success = true, leases = leases });
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeasesDetails(int id)
+        {
+            var lease = await _leaseRepository.GetLeaseByIdAsync(id);
+            return Json(new { success = true, lease = lease });
         }
 
         public async Task<IActionResult> Create()
@@ -125,9 +157,9 @@ namespace RentManagement.Controllers
         private async Task LoadDropdowns()
         {
 
-            ViewBag.Leases = await _monthlyRentPaymentRepository.GetLeaseNameAsync();
+            //ViewBag.Leases = await _monthlyRentPaymentRepository.GetLeaseNameAsync();
             ViewBag.Employees = await _monthlyRentPaymentRepository.GetEmployeeNamesAsync();
-            ViewBag.Vendors = await _monthlyRentPaymentRepository.GetOwnersAsync();
+            //ViewBag.Vendors = await _monthlyRentPaymentRepository.GetOwnersByEmployeeAsync(employeename);
             ViewBag.TDSApplicable = await _monthlyRentPaymentRepository.GetTdsApplicableAsync();
         }
     }
