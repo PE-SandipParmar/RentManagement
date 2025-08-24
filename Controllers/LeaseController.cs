@@ -78,7 +78,32 @@ namespace RentManagement.Controllers
                 return View(new LeaseListViewModel());
             }
         }
-
+        [HttpGet]
+        public async Task<IActionResult> GetEmployeeHRA(int employeeId)
+        {
+            try
+            {
+                var employeeHRA = await _leaseRepository.GetEmployeeHRAAsync(employeeId);
+                if (employeeHRA.HasValue)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        hra = employeeHRA.Value,
+                        maxAllowedRent = employeeHRA.Value * 2
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Employee HRA not found." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching employee HRA for ID: {EmployeeId}", employeeId);
+                return Json(new { success = false, message = "An error occurred while fetching employee HRA." });
+            }
+        }
         // AJAX: Get lease details for view/edit
         [HttpGet]
         public async Task<IActionResult> GetLeaseDetails(int id)
@@ -151,7 +176,7 @@ namespace RentManagement.Controllers
         // AJAX: Create lease (Maker role)
         [HttpPost]
         [Authorize(Roles = Roles.AdminOrEmployee)]
-        public async Task<IActionResult> CreateAjax([FromBody] LeaseCreateRequest request)
+        public async Task<IActionResult> CreateAjax1([FromBody] LeaseCreateRequest request)
         {
             try
             {
@@ -242,7 +267,7 @@ namespace RentManagement.Controllers
         // AJAX: Update lease (Maker role)
         [HttpPost]
         [Authorize(Roles = Roles.AdminOrEmployee)]
-        public async Task<IActionResult> UpdateAjax([FromBody] LeaseUpdateRequest request)
+        public async Task<IActionResult> UpdateAjax1([FromBody] LeaseUpdateRequest request)
         {
             try
             {
@@ -335,6 +360,223 @@ namespace RentManagement.Controllers
             }
         }
 
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> CreateAjax([FromBody] LeaseCreateRequest request)
+        {
+            try
+            {
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
+
+                // Validate Monthly Rent against Employee HRA
+                var employeeHRA = await _leaseRepository.GetEmployeeHRAAsync(request.EmployeeId);
+                if (employeeHRA.HasValue && request.MonthlyRentPayable.HasValue)
+                {
+                    var maxAllowedRent = employeeHRA.Value * 2;
+                    if (request.MonthlyRentPayable.Value > maxAllowedRent)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"Monthly Rent Payable (₹{request.MonthlyRentPayable.Value:N2}) cannot exceed Employee HRA × 2 (₹{maxAllowedRent:N2})"
+                        });
+                    }
+                }
+
+                // Check for duplicate lease reference number
+                var existingLease = await _leaseRepository.GetLeaseByRefNoAsync(request.RefNo);
+                if (existingLease != null)
+                {
+                    return Json(new { success = false, message = "Lease reference number already exists. Please use a different reference number." });
+                }
+
+                // Rest of the existing CreateAjax method code remains the same...
+                var lease = new Lease
+                {
+                    PerquisiteType = request.PerquisiteType,
+                    Status = request.Status ?? "Active",
+                    LeaseTypeId = request.LeaseTypeId,
+                    RefNo = request.RefNo,
+                    EmployeeId = request.EmployeeId,
+                    RefDate = request.RefDate,
+                    PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId,
+                    VendorId = request.VendorId,
+                    MonthlyRentPayable = request.MonthlyRentPayable,
+                    FromDate = request.FromDate,
+                    EndDate = request.EndDate,
+                    RentRecoveryElementId = request.RentRecoveryElementId,
+                    RentDeposit = request.RentDeposit,
+                    AdditionalRentRecovery = request.AdditionalRentRecovery,
+                    BrokerageAmount = request.BrokerageAmount,
+                    LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId,
+                    StampDuty = request.StampDuty,
+                    LicenseFeeAmount = request.LicenseFeeAmount,
+                    PaymentTermId = request.PaymentTermId,
+                    PayableOnOrBeforeId = request.PayableOnOrBeforeId,
+                    Narration = request.Narration,
+                    IsActive = true,
+                    CreatedBy = int.TryParse(userId, out int createdById) ? createdById : null
+                };
+
+                // Validate model
+                if (!TryValidateModel(lease))
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return Json(new { success = false, message = "Validation failed.", errors = errors });
+                }
+
+                int leaseId;
+                string message;
+
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly create approved leases
+                    lease.ApprovalStatus = ApprovalStatus.Approved;
+                    lease.MakerUserId = userId;
+                    lease.MakerUserName = userName;
+                    lease.CheckerUserId = userId;
+                    lease.CheckerUserName = userName;
+                    lease.MakerAction = MakerAction.Create;
+                    lease.ApprovalDate = DateTime.Now;
+                    leaseId = await _leaseRepository.CreateLeaseAsync(lease);
+                    message = "Lease created successfully.";
+                }
+                else
+                {
+                    // Maker role - create lease for approval
+                    leaseId = await _leaseRepository.AddLeaseForApprovalAsync(lease, userId, userName, MakerAction.Create);
+                    message = "Lease created successfully and sent for approval.";
+                }
+
+                if (leaseId > 0)
+                {
+                    return Json(new { success = true, message = message });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to create lease." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating lease");
+                return Json(new { success = false, message = "An error occurred while creating the lease." });
+            }
+        }
+
+        // Update the UpdateAjax method - Add HRA validation before updating lease
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> UpdateAjax([FromBody] LeaseUpdateRequest request)
+        {
+            try
+            {
+                var userRole = GetCurrentUserRole();
+                var userId = GetCurrentUserId();
+                var userName = GetCurrentUserName();
+
+                var lease = await _leaseRepository.GetLeaseByIdAsync(request.Id);
+                if (lease == null)
+                {
+                    return Json(new { success = false, message = "Lease not found." });
+                }
+
+                // Check if lease has pending changes
+                if (await _leaseRepository.HasPendingChangesAsync(request.Id))
+                {
+                    return Json(new { success = false, message = "This lease has pending approval changes. Please wait for approval before making new changes." });
+                }
+
+                // Validate Monthly Rent against Employee HRA
+                var employeeHRA = await _leaseRepository.GetEmployeeHRAAsync(request.EmployeeId);
+                if (employeeHRA.HasValue && request.MonthlyRentPayable.HasValue)
+                {
+                    var maxAllowedRent = employeeHRA.Value * 2;
+                    if (request.MonthlyRentPayable.Value > maxAllowedRent)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"Monthly Rent Payable (₹{request.MonthlyRentPayable.Value:N2}) cannot exceed Employee HRA × 2 (₹{maxAllowedRent:N2})"
+                        });
+                    }
+                }
+
+                // Check for duplicate lease reference number (excluding current lease)
+                var existingLease = await _leaseRepository.GetLeaseByRefNoAsync(request.RefNo);
+                if (existingLease != null && existingLease.Id != request.Id)
+                {
+                    return Json(new { success = false, message = "Lease reference number already exists. Please use a different reference number." });
+                }
+
+                // Rest of the existing UpdateAjax method code remains the same...
+                // Update lease properties
+                lease.PerquisiteType = request.PerquisiteType;
+                lease.Status = request.Status ?? "Active";
+                lease.LeaseTypeId = request.LeaseTypeId;
+                lease.RefNo = request.RefNo;
+                lease.EmployeeId = request.EmployeeId;
+                lease.RefDate = request.RefDate;
+                lease.PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId;
+                lease.VendorId = request.VendorId;
+                lease.MonthlyRentPayable = request.MonthlyRentPayable;
+                lease.FromDate = request.FromDate;
+                lease.EndDate = request.EndDate;
+                lease.RentRecoveryElementId = request.RentRecoveryElementId;
+                lease.RentDeposit = request.RentDeposit;
+                lease.AdditionalRentRecovery = request.AdditionalRentRecovery;
+                lease.BrokerageAmount = request.BrokerageAmount;
+                lease.LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId;
+                lease.StampDuty = request.StampDuty;
+                lease.LicenseFeeAmount = request.LicenseFeeAmount;
+                lease.PaymentTermId = request.PaymentTermId;
+                lease.PayableOnOrBeforeId = request.PayableOnOrBeforeId;
+                lease.Narration = request.Narration;
+                lease.ModifiedBy = int.TryParse(userId, out int modifiedById) ? modifiedById : null;
+
+                // Validate model
+                if (!TryValidateModel(lease))
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return Json(new { success = false, message = "Validation failed.", errors = errors });
+                }
+
+                bool success;
+                string message;
+
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly update approved leases
+                    lease.CheckerUserId = userId;
+                    lease.CheckerUserName = userName;
+                    lease.ApprovalDate = DateTime.Now;
+                    success = await _leaseRepository.UpdateLeaseAsync(lease);
+                    message = "Lease updated successfully.";
+                }
+                else
+                {
+                    // Maker role - update lease for approval
+                    success = await _leaseRepository.UpdateLeaseForApprovalAsync(lease, userId, userName);
+                    message = "Lease updated successfully and sent for approval.";
+                }
+
+                if (success)
+                {
+                    return Json(new { success = true, message = message });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to update lease." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while updating lease with ID: {Id}", request.Id);
+                return Json(new { success = false, message = "An error occurred while updating the lease." });
+            }
+        }
         // AJAX: Delete lease (Maker role)
         [HttpPost]
         [Authorize(Roles = Roles.AdminOrEmployee)]

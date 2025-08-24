@@ -41,6 +41,8 @@ namespace RentManagement.Data
         Task<IEnumerable<PaymentTerm>> GetPaymentTermsAsync();
         Task<IEnumerable<PayableOnOrBeforeOption>> GetPayableOnOrBeforeOptionsAsync();
         Task<IEnumerable<PerquisiteApplicablePercent>> GetPerquisiteApplicablePercentsAsync();
+
+        Task<decimal?> GetEmployeeHRAAsync(int employeeId);
     }
 }
 

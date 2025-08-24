@@ -417,20 +417,34 @@
                             <span class="text-red-600 text-sm" data-validation="PerquisiteApplicablePercentId"></span>
                         </div>
                     </div>
+                    <!-- Owner & Employee Details -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Owner & Employee Details</h3>
 
-                    <!-- Monthly Rent Section -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent Payable <span class="text-red-500">*</span></label>
-                            <input type="number" name="MonthlyRentPayable" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-                            <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name (Employee) <span class="text-red-500">*</span></label>
+                            <select name="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.EmployeeNames)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="EmployeeId"></span>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
-                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-                            <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Owner's Name <span class="text-red-500">*</span></label>
+                            <select name="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.Owners)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="VendorId"></span>
                         </div>
                     </div>
+                  
 
                     <!-- Lease Information Section -->
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Lease Information</h3>
@@ -475,33 +489,98 @@
                         </div>
                     </div>
 
-                    <!-- Owner & Employee Details -->
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Owner & Employee Details</h3>
+           
+
+                  
+
+                    <!-- Payment Information -->
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Payment Information</h3>
+                    <!-- Monthly Rent Section -->
+                @*     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Rent Payable <span class="text-red-500">*</span></label>
+                            <input type="number" name="MonthlyRentPayable" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
+                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                        </div>
+                    </div>
+                    *@<!-- Update the Monthly Rent Payable field in Index.cshtml -->
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Name (Employee) <span class="text-red-500">*</span></label>
-                            <select name="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                <option value="0">Select</option>
-                                @foreach (var item in ViewBag.EmployeeNames)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            </select>
-                            <span class="text-red-600 text-sm" data-validation="EmployeeId"></span>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Monthly Rent Payable <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number"
+                                       name="MonthlyRentPayable"
+                                       step="0.01"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
+                                       placeholder="Enter monthly rent payable"
+                                       title=""
+                                       required />
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="ri-information-line text-gray-400 text-sm" id="rentInfoIcon" style="display: none;"></i>
+                                </div>
+                            </div>
+                            <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
+                            <div class="text-xs text-gray-500 mt-1" id="rentHelpText" style="display: none;">
+                                Maximum allowed rent is 2 times the employee's HRA amount
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Owner's Name <span class="text-red-500">*</span></label>
-                            <select name="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
+                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit <span class="text-red-500">*</span></label>
+                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="RentDeposit"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount <span class="text-red-500">*</span></label>
+                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="BrokerageAmount"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty <span class="text-red-500">*</span></label>
+                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <span class="text-red-600 text-sm" data-validation="StampDuty"></span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500">*</span></label>
+                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
                                 <option value="0">Select</option>
-                                @foreach (var item in ViewBag.Owners)
+                                @foreach (var item in ViewBag.PaymentTerms)
                                 {
                                     <option value="@item.Id">@item.Name</option>
                                 }
                             </select>
-                            <span class="text-red-600 text-sm" data-validation="VendorId"></span>
+                            <span class="text-red-600 text-sm" data-validation="PaymentTermId"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before <span class="text-red-500">*</span></label>
+                            <select name="PayableOnOrBeforeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="0">Select</option>
+                                @foreach (var item in ViewBag.PayableOnOrBeforeOptions)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                            <span class="text-red-600 text-sm" data-validation="PayableOnOrBeforeId"></span>
                         </div>
                     </div>
+
+                    
 
                     <!-- Rent Recovery Section -->
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Rent Recovery</h3>
@@ -536,52 +615,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount <span class="text-red-500">*</span></label>
                             <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
                             <span class="text-red-600 text-sm" data-validation="LicenseFeeAmount"></span>
-                        </div>
-                    </div>
-
-                    <!-- Payment Information -->
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Payment Information</h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500">*</span></label>
-                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                <option value="0">Select</option>
-                                @foreach (var item in ViewBag.PaymentTerms)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            </select>
-                            <span class="text-red-600 text-sm" data-validation="PaymentTermId"></span>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payable On or Before <span class="text-red-500">*</span></label>
-                            <select name="PayableOnOrBeforeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                <option value="0">Select</option>
-                                @foreach (var item in ViewBag.PayableOnOrBeforeOptions)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            </select>
-                            <span class="text-red-600 text-sm" data-validation="PayableOnOrBeforeId"></span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit <span class="text-red-500">*</span></label>
-                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-                            <span class="text-red-600 text-sm" data-validation="RentDeposit"></span>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount <span class="text-red-500">*</span></label>
-                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-                            <span class="text-red-600 text-sm" data-validation="BrokerageAmount"></span>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty <span class="text-red-500">*</span></label>
-                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-                            <span class="text-red-600 text-sm" data-validation="StampDuty"></span>
                         </div>
                     </div>
 
@@ -696,8 +729,91 @@
                 dropdownParent: $('#leaseDrawer')
             });
         }
-
         function initializeEventListeners() {
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            searchLeases();
+        }
+    });
+
+    // Select all checkbox
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.lease-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+     $(document).on('change', 'select[name="EmployeeId"]', function() {
+        const employeeId = $(this).val();
+        if (employeeId && employeeId !== '0') {
+            fetchEmployeeHRA(employeeId);
+        } else {
+            currentEmployeeHRA = null;
+            maxAllowedRent = null;
+            updateRentInputPlaceholder();
+        }
+    });
+
+    // Add monthly rent input listener for real-time validation
+    $(document).on('input', 'input[name="MonthlyRentPayable"]', function() {
+        const monthlyRent = parseFloat($(this).val()) || 0;
+        const errorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+        
+        // Clear previous error
+        if (errorSpan) {
+            errorSpan.textContent = '';
+        }
+        $(this).removeClass('border-red-500');
+
+        // Validate against HRA if available
+        if (maxAllowedRent && monthlyRent > maxAllowedRent) {
+            if (errorSpan) {
+                errorSpan.textContent = `Monthly Rent cannot exceed Employee HRA × 2 (₹${maxAllowedRent.toLocaleString('en-IN')})`;
+            }
+            $(this).addClass('border-red-500');
+        }
+    });
+}
+
+// Add this new function to fetch employee HRA
+function fetchEmployeeHRA(employeeId) {
+    fetch(`@Url.Action("GetEmployeeHRA")?employeeId=${employeeId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                currentEmployeeHRA = result.hra;
+                maxAllowedRent = result.maxAllowedRent;
+                updateRentInputPlaceholder();
+            } else {
+                currentEmployeeHRA = null;
+                maxAllowedRent = null;
+                updateRentInputPlaceholder();
+                console.warn('Employee HRA not found:', result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching employee HRA:', error);
+            currentEmployeeHRA = null;
+            maxAllowedRent = null;
+            updateRentInputPlaceholder();
+        });
+}
+
+// Add this new function to update rent input placeholder
+function updateRentInputPlaceholder() {
+    const rentInput = document.querySelector('input[name="MonthlyRentPayable"]');
+    if (rentInput) {
+        if (maxAllowedRent) {
+            rentInput.placeholder = `Max allowed: ₹${maxAllowedRent.toLocaleString('en-IN')} (HRA × 2)`;
+            rentInput.title = `Employee HRA: ₹${currentEmployeeHRA.toLocaleString('en-IN')}, Maximum allowed rent: ₹${maxAllowedRent.toLocaleString('en-IN')}`;
+        } else {
+            rentInput.placeholder = 'Enter monthly rent payable';
+            rentInput.title = '';
+        }
+    }
+}
+        function initializeEventListeners1() {
             // Search functionality
             document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
@@ -1038,8 +1154,83 @@
                     saveButton.innerHTML = `<span id="saveButtonText">${data.Id === 0 ? 'Create' : 'Update'} Lease</span>`;
                 });
         }
-
         function validateForm() {
+    let isValid = true;
+    let errors = [];
+    clearValidationErrors();
+    clearDrawerAlert();
+
+    // Validate Monthly Rent against HRA first
+    if (!validateMonthlyRentAgainstHRA()) {
+        errors.push(`Monthly Rent cannot exceed Employee HRA × 2 (₹${maxAllowedRent ? maxAllowedRent.toLocaleString('en-IN') : 'N/A'})`);
+        isValid = false;
+    }
+
+    // Rest of existing validation code remains the same...
+    const requiredFields = [
+        { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
+        { name: 'RefNo', message: 'Lease Reference Number is required', displayName: 'Lease Reference Number' },
+        { name: 'EmployeeId', message: 'Employee Name is required', displayName: 'Employee Name' },
+        { name: 'RefDate', message: 'Reference Date is required', displayName: 'Reference Date' },
+        { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
+        { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
+        { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+        { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
+        { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
+        { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
+        { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
+        { name: 'Narration', message: 'Remarks is required', displayName: 'Narration' }
+    ];
+
+    requiredFields.forEach(field => {
+        const element = document.querySelector(`[name="${field.name}"]`);
+        const value = element.value;
+
+        if (!value || value === '0' || value === '') {
+            const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
+            if (errorSpan) {
+                errorSpan.textContent = field.message;
+                element.classList.add('border-red-500');
+            }
+            errors.push(field.displayName + ' is required');
+            isValid = false;
+        }
+    });
+
+    // Date validation
+    const fromDate = new Date(document.querySelector('[name="FromDate"]').value);
+    const endDate = new Date(document.querySelector('[name="EndDate"]').value);
+
+    if (fromDate && endDate && fromDate > endDate) {
+        const errorSpan = document.querySelector('[data-validation="EndDate"]');
+        if (errorSpan) {
+            errorSpan.textContent = 'End Date must be after From Date';
+            document.querySelector('[name="EndDate"]').classList.add('border-red-500');
+        }
+        errors.push('End Date must be after From Date');
+        isValid = false;
+    }
+
+    // Narration length validation
+    const narration = document.querySelector('[name="Narration"]').value;
+    if (narration && narration.length > 200) {
+        const errorSpan = document.querySelector('[data-validation="Narration"]');
+        if (errorSpan) {
+            errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
+            document.querySelector('[name="Narration"]').classList.add('border-red-500');
+        }
+        errors.push('Remarks cannot be longer than 200 characters');
+        isValid = false;
+    }
+
+    // Show validation summary if there are errors
+    if (!isValid && errors.length > 0) {
+        showDrawerAlert('error', 'Please correct the following errors:', errors);
+    }
+
+    return isValid;
+}
+        function validateForm1() {
             let isValid = true;
             let errors = [];
             clearValidationErrors();
@@ -1819,6 +2010,25 @@
                 maximumFractionDigits: 2
             }).format(amount);
         }
+        let currentEmployeeHRA = null;
+let maxAllowedRent = null;
+
+// Add this function after the existing JavaScript functions
+function validateMonthlyRentAgainstHRA() {
+    const monthlyRentInput = document.querySelector('[name="MonthlyRentPayable"]');
+    const monthlyRent = parseFloat(monthlyRentInput.value) || 0;
+    
+    if (maxAllowedRent && monthlyRent > maxAllowedRent) {
+        const errorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+        if (errorSpan) {
+            errorSpan.textContent = `Monthly Rent cannot exceed Employee HRA × 2 (₹${maxAllowedRent.toLocaleString('en-IN')})`;
+            monthlyRentInput.classList.add('border-red-500');
+        }
+        return false;
+    }
+    return true;
+}
+
     </script>
 
     <style>
@@ -2043,5 +2253,90 @@
         .select2-container--default .select2-selection--single.border-red-500 {
             border-color: #ef4444 !important;
         }
+    </style>
+    <style>
+        /* Add these CSS classes to the existing style section in Index.cshtml */
+
+/* HRA validation specific styles */
+.hra-info-tooltip {
+    position: relative;
+}
+
+.hra-info-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #374151;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+}
+
+.hra-info-tooltip:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #374151;
+    margin-bottom: -5px;
+}
+
+/* Enhanced validation styles for rent field */
+input[name="MonthlyRentPayable"].border-red-500 {
+    animation: shake 0.3s ease-in-out;
+    border-color: #ef4444 !important;
+    background-color: #fef2f2;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Rent help text styling */
+#rentHelpText {
+    font-style: italic;
+    opacity: 0.8;
+}
+
+#rentHelpText.visible {
+    display: block !important;
+}
+
+/* Info icon styling */
+#rentInfoIcon {
+    transition: opacity 0.3s ease;
+}
+
+#rentInfoIcon.visible {
+    display: inline-block !important;
+    opacity: 0.7;
+}
+
+#rentInfoIcon:hover {
+    opacity: 1;
+}
+
+/* Success state for rent field when within limits */
+input[name="MonthlyRentPayable"].valid-rent {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+/* Warning state for rent field when approaching limit */
+input[name="MonthlyRentPayable"].warning-rent {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+}
     </style>
 }
