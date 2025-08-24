@@ -45,7 +45,7 @@
                     <dt class="font-semibold">
                         Monthly Lease Amount
                     </dt>
-                    <dd>@Model.MonthlyLeaseAmount</dd>
+                    <dd>@Model.MonthlyLeaseAmount?.ToString("C")</dd>
                 </div>
 
                 <div>
@@ -56,7 +56,7 @@
                     <dt class="font-semibold">
                         Net Payable Amount
                     </dt>
-                    <dd>@Model.NetPayableAmount</dd>
+                    <dd>@Model.NetPayableAmount.ToString("C")</dd>
                 </div>
 
                 <div>

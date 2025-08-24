@@ -18,33 +18,46 @@
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 
                 <div>
-                    <dt class="font-semibold">Employee Name</dt>
-                    <dd>@Model.EmployeeName</dd>
+                    <dt class="text-sm font-semibold text-gray-500">Employee Name</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.EmployeeName</dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-semibold text-gray-500">Owner Name</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.VendorName</dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-semibold text-gray-500">Lease Ref.</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.LeaseName</dd>
+                </div>
+
+                <div>
+                    <dt class="text-sm font-semibold text-gray-500">Net Amount  (After TDS)</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Amount.ToString("C")</dd>
                 </div>
                 <div>
-                    <dt class="font-semibold">Owner Name</dt>
-                    <dd>@Model.VendorName</dd>
+                    <dt class="text-sm font-semibold text-gray-500">TDS Rate</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TdsRate</dd>
                 </div>
                 <div>
-                    <dt class="font-semibold">Lease Name</dt>
-                    <dd>@Model.LeaseName</dd>
+                    <dt class="text-sm font-semibold text-gray-500">TDS Amount</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TdsAmount?.ToString("C")</dd>
                 </div>
                 <div>
-                    <dt class="font-semibold">Amount</dt>
-                    <dd>@Model.Amount</dd>
+                    <dt class="text-sm font-semibold text-gray-500">Approval Status</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.ApprovalStatus</dd>
                 </div>
                 <div>
-                    <dt class="font-semibold">Approval Status</dt>
-                    <dd>@Model.ApprovalStatus</dd>
+                    <dt class="text-sm font-semibold text-gray-500">Remark</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Remark</dd>
                 </div>
-               @*  <div>
-                    <dt class="font-semibold">Created By</dt>
-                    <dd>@Model.CreatedBy</dd>
-                </div> *@
+
                 <div>
-                    <dt class="font-semibold">Created Date</dt>
-                    <dd>@Model.CreatedDate.ToString("dd/MM/yyyy")</dd>
+                    <dt class="text-sm font-semibold text-gray-500">Created Date</dt>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.CreatedDate.ToString("dd/MM/yyyy")</dd>
                 </div>
+
                 @* <div>
                     <dt class="font-semibold">Modified By</dt>
                     <dd>@Model.ModifiedBy</dd>

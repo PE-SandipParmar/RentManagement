@@ -19,7 +19,7 @@
             <li>
                 <div class="flex items-center">
                     <i class="ri-arrow-right-s-line text-gray-400"></i>
-                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Vendor Management</span>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Owner Management</span>
                 </div>
             </li>
         </ol>
@@ -31,14 +31,14 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Vendor Management</h2>
-            <p class="text-gray-600 mt-1">Manage your organization's vendors and their information</p>
+            <h2 class="text-2xl font-bold text-gray-900">Owner Management</h2>
+            <p class="text-gray-600 mt-1">Manage your organization's owners and their information</p>
         </div>
         @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
         {
             <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
                 <i class="ri-add-line mr-2"></i>
-                Add Vendor
+                Add Owner
             </button>
         }
     </div>
@@ -93,7 +93,7 @@
             <div class="flex-1">
                 <div class="relative">
                     <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search vendors..."
+                    <input type="text" id="searchInput" placeholder="Search owners..."
                            value="@Model.SearchTerm"
                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
@@ -179,8 +179,8 @@
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <input type="checkbox" id="selectAll">
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IFSC Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Name</th>
@@ -281,7 +281,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Reject Vendor</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Reject Owner</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -309,27 +309,29 @@
     <div class="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform translate-x-full transition-transform duration-300" id="createDrawerPanel">
         <div class="flex flex-col h-full">
             <!-- Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Add New Vendor</h2>
-                <button onclick="closeCreateDrawer()" class="text-gray-400 hover:text-gray-600">
-                    <i class="ri-close-line text-xl"></i>
-                </button>
-            </div>
 
+            <div class="px-6 py-4 bg-blue-600 text-white">
+                <div class="flex items-center justify-between">
+                    <h2 id="drawerTitle" class="text-xl font-semibold">Add New Owner</h2>
+                    <button onclick="closeDrawer()" class="text-white hover:text-gray-200">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+            </div>
             <!-- Form Content -->
             <div class="flex-1 overflow-y-auto">
                 <form id="createVendorForm" class="p-6 space-y-6">
                     <!-- Vendor Details Section -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -439,7 +441,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitCreateForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Save Vendor
+                    Save Owner
                 </button>
             </div>
         </div>
@@ -454,7 +456,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Edit Vendor</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Edit Owner</h2>
                 <button onclick="closeEditDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -466,15 +468,15 @@
                     <input type="hidden" name="vendorId" />
                     <!-- Same form structure as create, with error divs -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Code <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Code <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorCode" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorCode"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -584,7 +586,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitEditForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Update Vendor
+                    Update Owner
                 </button>
             </div>
         </div>
@@ -597,7 +599,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Vendor Details</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Owner Details</h2>
                 <button onclick="closeViewDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -623,7 +625,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -651,7 +653,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Vendor</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -707,7 +709,13 @@
                 }, 1000);
             }
         }
-
+        function closeDrawer() {
+            const drawer = document.getElementById('createVendorDrawer');
+            drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 300);
+        }
         function approveVendor(id) {
             if (!confirm('Are you sure you want to approve this vendor?')) {
                 return;
@@ -732,7 +740,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while approving the vendor.');
+                    showAlert('error', 'An error occurred while approving the owner.');
                 });
         }
 
@@ -784,7 +792,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while rejecting the vendor.');
+                    showAlert('error', 'An error occurred while rejecting the owner.');
                 });
         }
 
@@ -795,7 +803,7 @@
             const statusFilter = document.getElementById('statusFilter').value;
             const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
 
-            console.log('Loading vendors with filters:', {
+            console.log('Loading owners with filters:', {
                 searchTerm,
                 statusFilter,
                 approvalStatusFilter,
@@ -815,7 +823,7 @@
             // Show loading indicator
             const tbody = document.getElementById('vendorTableBody');
             const colspan = isChecker ? 10 : 8;
-            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading vendors...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading owners...</td></tr>`;
 
             fetch(`@Url.Action("GetVendors")?${params}`)
                 .then(response => {
@@ -829,7 +837,7 @@
                     console.log('GetVendors server response:', result);
 
                     if (result.success) {
-                        console.log('Received vendor data:', result.data);
+                        console.log('Received owners data:', result.data);
                         updateTable(result.data);
                         updatePagination(result.pagination);
 
@@ -844,14 +852,14 @@
                         console.log('Table now has', tableRows.length, 'rows');
                     } else {
                         console.error('GetVendors failed:', result);
-                        showAlert('error', result.message || 'Failed to load vendors');
-                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load vendors</td></tr>`;
+                        showAlert('error', result.message || 'Failed to load Owners');
+                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load Owners</td></tr>`;
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading vendors:', error);
-                    showAlert('error', 'An error occurred while loading vendors: ' + error.message);
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading vendors</td></tr>`;
+                    console.error('Error loading owners:', error);
+                    showAlert('error', 'An error occurred while loading Owners: ' + error.message);
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading Owners</td></tr>`;
                 });
         }
 
@@ -860,11 +868,11 @@
             const tbody = document.getElementById('vendorTableBody');
             tbody.innerHTML = '';
 
-            console.log('Updating table with vendors:', vendors);
+            console.log('Updating table with Owners:', vendors);
 
             if (!vendors || vendors.length === 0) {
                 const colspan = isChecker ? 10 : 8; // Adjust colspan based on role
-                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No vendors found</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No Owners found</td></tr>`;
                 return;
             }
 
@@ -1176,12 +1184,12 @@
             const form = document.getElementById(formId);
             let isValid = true;
 
-            // Validate all required fields
-            form.querySelectorAll('input[required], textarea[required]').forEach(input => {
-                if (!validateRequired(input)) {
-                    isValid = false;
-                }
-            });
+            // // Validate all required fields
+            // form.querySelectorAll('input[required], textarea[required]').forEach(input => {
+            //     if (!validateRequired(input)) {
+            //         isValid = false;
+            //     }
+            // });
 
             // Validate specific field formats
             form.querySelectorAll('input[name="panNumber"]').forEach(input => {
@@ -1385,7 +1393,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while creating the vendor.');
+                    showAlert('error', 'An error occurred while creating the owner.');
                 });
         }
 
@@ -1427,7 +1435,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading vendor details.');
+                    showAlert('error', 'An error occurred while loading owner details.');
                 });
         }
 
@@ -1488,7 +1496,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while updating the vendor.');
+                    showAlert('error', 'An error occurred while updating the owner.');
                 });
         }
 
@@ -1506,14 +1514,14 @@
                         document.getElementById('viewVendorDetails').innerHTML = `
                                     <div class="space-y-6">
                                         <div class="bg-gray-50 p-4 rounded-lg">
-                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Vendor Details</h3>
+                                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label class="block text-sm font-medium text-gray-700">Vendor Code</label>
+                                                            <label class="block text-sm font-medium text-gray-700">Owner Code</label>
                                                     <p class="text-sm text-gray-900">${vendor.vendorCode}</p>
                                                 </div>
                                                 <div>
-                                                    <label class="block text-sm font-medium text-gray-700">Vendor Name</label>
+                                                            <label class="block text-sm font-medium text-gray-700">Owner Name</label>
                                                     <p class="text-sm text-gray-900">${vendor.vendorName}</p>
                                                 </div>
                                                 <div>
@@ -1595,7 +1603,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading vendor details.');
+                    showAlert('error', 'An error occurred while loading owner details.');
                 });
         }
 
@@ -1628,7 +1636,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while deleting the vendor.');
+                    showAlert('error', 'An error occurred while deleting the owner.');
                 });
         }
 
@@ -1667,7 +1675,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading vendors.');
+                    showAlert('error', 'An error occurred while loading owners.');
                 });
         }
 

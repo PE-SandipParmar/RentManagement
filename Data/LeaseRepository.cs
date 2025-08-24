@@ -521,5 +521,31 @@ namespace RentManagement.Data
                 "PerquisiteApplicablePercentsRead",
                 commandType: CommandType.StoredProcedure);
         }
+        public async Task<decimal?> GetEmployeeHRAAsync(int employeeId)
+        {
+            try
+            {
+                using var connection = CreateConnection();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@EmployeeId", employeeId);
+
+                parameters.Add("@Salary", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                await connection.ExecuteAsync(
+                    "GetEmployeeSalary",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                return parameters.Get<decimal>("@Salary");
+                //var hra = await connection.QueryFirstOrDefaultAsync<decimal?>(query, new { EmployeeId = employeeId });
+            
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogError(ex, "Error occurred while fetching employee HRA for ID: {EmployeeId}", employeeId);
+                throw;
+            }
+        }
     }
 }

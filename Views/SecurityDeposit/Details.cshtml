@@ -26,10 +26,17 @@
             </div>
 
             <div>
-                <dt class="text-sm font-semibold text-gray-500">Amount</dt>
-                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Amount?.ToString("C")</dd>
+                <dt class="text-sm font-semibold text-gray-500">Net Amount  (After TDS)</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Amount.ToString("C")</dd>
             </div>
-
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">TDS Rate</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TdsRate</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-semibold text-gray-500">TDS Amount</dt>
+                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TdsAmount?.ToString("C")</dd>
+            </div>
             <div>
                 <dt class="text-sm font-semibold text-gray-500">Approval Status</dt>
                 <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.ApprovalStatus</dd>

@@ -1,4 +1,5 @@
 ﻿@model RentManagement.Models.SecurityDeposit
+
 @{
     ViewData["Title"] = "Create Security Deposit";
 }
@@ -46,6 +47,19 @@
     .validation-success {
         border-color: #16a34a !important;
     }
+
+    .warning-box {
+        background-color: #fef3cd;
+        border: 1px solid #ffc107;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .warning-text {
+        color: #856404;
+        font-weight: 500;
+    }
 </style>
 
 <div class="max-w-4xl mx-auto">
@@ -54,23 +68,30 @@
             <h1 class="text-2xl font-bold text-gray-900">Create Security Deposit</h1>
         </div>
 
-        <form asp-action="Create" method="post" class="px-6 py-4 space-y-6" id="securityDepositForm">
+        <form asp-action="Create" method="post" id="securityDepositForm" class="px-6 py-4 space-y-6">
             <div asp-validation-summary="ModelOnly" class="text-red-600"></div>
+
+            <!-- Duplicate Warning -->
+            <div id="duplicateWarning" class="warning-box" style="display: none;">
+                <div class="warning-text">
+                    <strong>Warning:</strong> <span id="duplicateMessage"></span>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Name (Employee) *</label>
-                    <select asp-for="EmployeeId" class="searchable-dropdown w-full" id="employeeSelect"
-                            asp-items="@(new SelectList(ViewBag.Employees, "Id", "Name"))" required>
+                    <label asp-for="EmployeeId" class="block text-sm font-medium text-gray-700 mb-1">Employee Name</label>
+                    <select asp-for="EmployeeId" id="employeeSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
+                            asp-items="@(new SelectList(ViewBag.Employees, "Id", "Name"))">
                         <option value="">Select Employee</option>
                     </select>
                     <span asp-validation-for="EmployeeId" class="text-red-500 text-sm"></span>
                     <div id="employeeSalaryInfo" class="info-text" style="display: none;"></div>
                 </div>
                 <div>
-                    <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner's Name *</label>
-                    <select asp-for="VendorId" class="searchable-dropdown w-full" id="vendorSelect"
-                            asp-items="@(new SelectList(ViewBag.Vendors, "Id", "Name"))" required disabled>
+                    <label asp-for="VendorId" class="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
+                    <select asp-for="VendorId" id="vendorSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" disabled
+                            asp-items="@(new SelectList(ViewBag.Vendors, "Id", "Name"))">
                         <option value="">Select Owner</option>
                     </select>
                     <span asp-validation-for="VendorId" class="text-red-500 text-sm"></span>
@@ -80,67 +101,81 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="LeaseId" class="block text-sm font-medium text-gray-700 mb-1">Lease Ref. *</label>
-                    <select asp-for="LeaseId" class="searchable-dropdown w-full" id="leaseSelect"
-                            asp-items="@(new SelectList(ViewBag.Leases, "Id", "Name"))" required disabled>
+                    <label asp-for="LeaseId" class="block text-sm font-medium text-gray-700 mb-1">Lease Reference</label>
+                    <select asp-for="LeaseId" id="leaseSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" disabled
+                            asp-items="@(new SelectList(ViewBag.Leases, "Id", "Name"))">
                         <option value="">Select Lease</option>
                     </select>
                     <span asp-validation-for="LeaseId" class="text-red-500 text-sm"></span>
                     <div class="info-text">Please select Employee first</div>
                 </div>
                 <div>
-                    <label asp-for="Amount" class="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
-                    <input asp-for="Amount" type="number" step="0.01" min="0.01" id="amountInput"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                    <label asp-for="Amount" class="block text-sm font-medium text-gray-700 mb-1">Deposit Amount</label>
+                    <input asp-for="Amount" id="amountInput" class="w-full px-3 py-2 border border-gray-300 rounded-md" type="number" step="0.01" min="0" placeholder="Enter deposit amount" />
                     <span asp-validation-for="Amount" class="text-red-500 text-sm"></span>
                     <div id="amountValidation" class="info-text"></div>
                     <div id="maxAmountInfo" class="info-text" style="display: none;"></div>
                 </div>
             </div>
 
+            <!-- TDS Fields Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label asp-for="ApprovalStatus" class="block text-sm font-medium text-gray-700 mb-1">Approval Status *</label>
-                    <select asp-for="ApprovalStatus" class="searchable-dropdown w-full" required>
-                        <option value="">Select Status</option>
+                    <label asp-for="TdsRate" class="block text-sm font-medium text-gray-700 mb-1">
+                        TDS Applicable <span class="text-xs text-gray-500">(Optional)</span>
+                    </label>
+                    <select asp-for="TdsRate" id="tdsRateSelect" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="0" data-rate="0">No TDS</option>
+                        <option value="2" data-rate="2">TDS 2%</option>
+                        <option value="10" data-rate="10">TDS 10%</option>
+                        <option value="20" data-rate="20">TDS 20%</option>
+                    </select>
+                    <span asp-validation-for="TdsRate" class="text-red-500 text-sm"></span>
+                    <div class="info-text">Select applicable TDS rate or leave as 'No TDS'</div>
+                </div>
+                <div>
+                    <label asp-for="TdsAmount" class="block text-sm font-medium text-gray-700 mb-1">TDS Amount</label>
+                    <input asp-for="TdsAmount" id="tdsAmountInput" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" type="number" step="0.01" readonly />
+                    <span asp-validation-for="TdsAmount" class="text-red-500 text-sm"></span>
+                    <div id="tdsCalculation" class="info-text">Auto-calculated based on Deposit Amount and TDS Rate</div>
+                </div>
+            </div>
+
+            <!-- Net Amount Display -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Net Amount (After TDS)</label>
+                    <div class="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-lg font-semibold text-green-600" id="netAmountDisplay">
+                        ₹0.00
+                    </div>
+                    <div class="info-text"> payable Amount after TDS deduction</div>
+                </div>
+                <div>
+                    <label asp-for="ApprovalStatus" class="block text-sm font-medium text-gray-700 mb-1">Approval Status</label>
+                    <select asp-for="ApprovalStatus" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
                         <option value="Pending">Pending</option>
                         <option value="Approved">Approved</option>
                         <option value="Rejected">Rejected</option>
                     </select>
                     <span asp-validation-for="ApprovalStatus" class="text-red-500 text-sm"></span>
                 </div>
-                <div>
-                    <label asp-for="Remark" class="block text-sm font-medium text-gray-700 mb-1">Remark</label>
-                    <textarea asp-for="Remark" rows="3"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
-                              placeholder="Enter any additional remarks..."></textarea>
-                    <span asp-validation-for="Remark" class="text-red-500 text-sm"></span>
-                </div>
             </div>
 
-            <div id="duplicateWarning" class="bg-yellow-50 border border-yellow-200 rounded-md p-4" style="display: none;">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-yellow-800">Warning</h3>
-                        <div class="mt-2 text-sm text-yellow-700" id="duplicateMessage"></div>
-                    </div>
-                </div>
+            <div>
+                <label asp-for="Remark" class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                <textarea asp-for="Remark" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+                          placeholder="Enter any additional remarks..."></textarea>
+                <span asp-validation-for="Remark" class="text-red-500 text-sm"></span>
             </div>
 
             <div class="flex justify-end space-x-3">
-                <a href="@Url.Action("Index")"
-                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                <button type="submit" id="submitBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    Create Security Deposit
+                </button>
+                <a href="@Url.Action("Index")" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                     Cancel
                 </a>
-                <button type="submit" id="submitBtn"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                    Save Security Deposit
-                </button>
             </div>
         </form>
     </div>
@@ -148,250 +183,335 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Initialize Select2
-            $('.searchable-dropdown').select2({
-                placeholder: "Select an option",
-                allowClear: true,
-                width: '100%'
-            });
+}
 
-            let employeeSalary = 0;
-            let maxSecurityDeposit = 0;
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.searchable-dropdown').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: '100%'
+        });
 
-            // Employee selection change
-            $('#employeeSelect').on('change', function () {
-                const employeeId = $(this).val();
+        let employeeSalary = 0;
+        let maxSecurityDeposit = 0;
 
-                if (employeeId) {
-                    // Enable lease dropdown
-                    $('#leaseSelect').prop('disabled', false);
+        // // TDS Calculation function
+        // function calculateTds() {
+        //     const amount = parseFloat($('#amountInput').val()) || 0;
+        //     const tdsRate = parseFloat($('#tdsRateInput').val()) || 0;
 
-                    // Fetch employee salary and leases
-                    fetchEmployeeData(employeeId);
-                    fetchEmployeeLeases(employeeId);
+        //     let tdsAmount = 0;
+        //     if (amount > 0 && tdsRate > 0) {
+        //         tdsAmount = (amount * tdsRate) / 100;
+        //         $('#tdsAmountInput').val(tdsAmount.toFixed(2));
+        //         $('#tdsCalculation').removeClass('error-message').addClass('success-message')
+        //             .text(`TDS: ₹${tdsAmount.toFixed(2)} (${tdsRate}% of ₹${amount.toFixed(2)})`);
+        //     } else {
+        //         $('#tdsAmountInput').val('');
+        //         $('#tdsCalculation').removeClass('error-message success-message')
+        //             .text('Auto-calculated based on Deposit Amount and TDS Rate');
+        //     }
 
-                    // Reset vendor selection
-                    $('#vendorSelect').val('').trigger('change');
-                    $('#duplicateWarning').hide();
-                } else {
-                    // Reset everything
-                    resetForm();
+        //     // Update net amount display
+        //     const netAmount = amount - tdsAmount;
+        //     $('#netAmountDisplay').text(`₹${netAmount.toFixed(2)}`);
+        // }
+
+        // Amount change - recalculate TDS
+        $('#amountInput').on('input blur', function () {
+            validateAmount();
+            calculateTds();
+        });
+
+        // TDS Rate change - recalculate TDS
+        $('#tdsRateInput').on('change', function () {
+            const rate = parseFloat($(this).val()) || 0;
+
+            // Validate TDS rate
+            if (rate < 0 || rate > 100) {
+                $(this).addClass('validation-error');
+                $('#tdsCalculation').addClass('error-message').text('TDS rate must be between 0 and 100%');
+            } else {
+                $(this).removeClass('validation-error');
+                $('#tdsCalculation').removeClass('error-message');
+            }
+
+            calculateTds();
+        });
+        function calculateTds() {
+            const amount = parseFloat($('#amountInput').val()) || 0;
+            const selectedOption = $('#tdsRateSelect option:selected');
+            const tdsRate = parseFloat(selectedOption.data('rate')) || 0;
+
+            let tdsAmount = 0;
+            if (amount > 0 && tdsRate > 0) {
+                tdsAmount = (amount * tdsRate) / 100;
+                $('#tdsAmountInput').val(tdsAmount.toFixed(2));
+                $('#tdsCalculation').removeClass('error-message').addClass('success-message')
+                    .text(`TDS: ₹${tdsAmount.toLocaleString()} (${tdsRate}% of ₹${amount.toLocaleString()})`);
+            } else {
+                $('#tdsAmountInput').val('0.00');
+                $('#tdsCalculation').removeClass('error-message success-message')
+                    .text('Auto-calculated based on Deposit Amount and TDS Rate');
+            }
+
+            // Update net amount display
+            const netAmount = amount - tdsAmount;
+            $('#netAmountDisplay').text(`₹${netAmount.toLocaleString()}`);
+        }
+
+        // TDS Rate change - recalculate TDS
+        $('#tdsRateSelect').on('change', function () {
+            const selectedOption = $(this).find('option:selected');
+            const rate = parseFloat(selectedOption.data('rate')) || 0;
+
+            // Visual feedback
+            if (rate > 0) {
+                $(this).removeClass('validation-error').addClass('validation-success');
+            } else {
+                $(this).removeClass('validation-error validation-success');
+            }
+
+            calculateTds();
+        });
+        // Employee selection change
+        $('#employeeSelect').on('change', function () {
+            const employeeId = $(this).val();
+
+            if (employeeId) {
+                // Enable lease dropdown
+                $('#leaseSelect').prop('disabled', false);
+
+                // Fetch employee salary and leases
+                fetchEmployeeData(employeeId);
+                fetchEmployeeLeases(employeeId);
+
+                // Reset vendor selection
+                $('#vendorSelect').val('').trigger('change');
+                $('#duplicateWarning').hide();
+            } else {
+                // Reset everything
+                resetForm();
+            }
+        });
+
+        // Lease selection change
+        $('#leaseSelect').on('change', function () {
+            const leaseId = $(this).val();
+            const employeeId = $('#employeeSelect').val();
+
+            if (leaseId && employeeId) {
+                // Auto-fetch owner based on lease
+                fetchLeaseOwner(leaseId);
+
+                // Check for duplicate records
+                checkDuplicateRecord(employeeId, leaseId);
+            } else {
+                $('#vendorSelect').val('').trigger('change').prop('disabled', true);
+                $('#duplicateWarning').hide();
+            }
+        });
+
+        // Form submission validation
+        $('#securityDepositForm').on('submit', function (e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Functions
+        function fetchEmployeeData(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeSalary", "SecurityDeposit")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    if (data.success) {
+                        employeeSalary = data.salary;
+                        maxSecurityDeposit = employeeSalary * 2;
+
+                        $('#employeeSalaryInfo').show().html(
+                            `Monthly Salary: ₹${employeeSalary.toLocaleString()}`
+                        );
+
+                        $('#maxAmountInfo').show().html(
+                            `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (HRA * 2)`
+                        );
+
+                        validateAmount();
+                    }
+                },
+                error: function () {
+                    showError('Error fetching employee salary information');
                 }
             });
+        }
 
-            // Lease selection change
-            $('#leaseSelect').on('change', function () {
-                const leaseId = $(this).val();
-                const employeeId = $('#employeeSelect').val();
+        function fetchEmployeeLeases(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeLeases", "SecurityDeposit")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    const leaseSelect = $('#leaseSelect');
+                    leaseSelect.empty().append('<option value="">Select Lease</option>');
 
-                if (leaseId && employeeId) {
-                    // Auto-fetch owner based on lease
-                    fetchLeaseOwner(leaseId);
+                    if (data && data.length > 0) {
+                        $.each(data, function (i, lease) {
+                            leaseSelect.append(`<option value="${lease.id}">${lease.name}</option>`);
+                        });
+                    } else {
+                        leaseSelect.append('<option value="">No leases found for this employee</option>');
+                    }
+                },
+                error: function () {
+                    showError('Error fetching employee leases');
+                }
+            });
+        }
 
-                    // Check for duplicate records
-                    checkDuplicateRecord(employeeId, leaseId);
+        function fetchLeaseOwner(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseOwner", "SecurityDeposit")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    if (data.success) {
+                        $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    showError('Error fetching lease owner information');
+                }
+            });
+        }
+
+        function checkDuplicateRecord(employeeId, leaseId) {
+            const vendorId = $('#vendorSelect').val();
+
+            if (employeeId && leaseId && vendorId) {
+                $.ajax({
+                    url: '@Url.Action("CheckDuplicateRecord", "SecurityDeposit")',
+                    type: 'GET',
+                    data: {
+                        employeeId: employeeId,
+                        leaseId: leaseId,
+                        vendorId: vendorId
+                    },
+                    success: function (data) {
+                        if (data.isDuplicate) {
+                            $('#duplicateWarning').show();
+                            $('#duplicateMessage').text(
+                                'A security deposit record already exists for this Employee + Lease + Owner combination.'
+                            );
+                            $('#submitBtn').prop('disabled', true);
+                        } else {
+                            $('#duplicateWarning').hide();
+                            $('#submitBtn').prop('disabled', false);
+                        }
+                    },
+                    error: function () {
+                        console.error('Error checking duplicate records');
+                    }
+                });
+            }
+        }
+
+        function validateAmount() {
+            const amount = parseFloat($('#amountInput').val()) || 0;
+            const amountInput = $('#amountInput');
+            const validation = $('#amountValidation');
+
+            // Clear previous validation
+            amountInput.removeClass('validation-error validation-success');
+            validation.removeClass('error-message success-message');
+
+            if (amount <= 0) {
+                amountInput.addClass('validation-error');
+                validation.addClass('error-message').text('Amount must be greater than 0');
+                return false;
+            }
+
+            if (maxSecurityDeposit > 0 && amount > maxSecurityDeposit) {
+                amountInput.addClass('validation-error');
+                validation.addClass('error-message').text(
+                    `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (HRA * 2)`
+                );
+                return false;
+            }
+
+            // Valid amount
+            amountInput.addClass('validation-success');
+            validation.addClass('success-message').text('Valid amount');
+            return true;
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Required field validation
+            const requiredFields = ['#employeeSelect', '#vendorSelect', '#leaseSelect', '#amountInput'];
+            requiredFields.forEach(function (field) {
+                if (!$(field).val()) {
+                    $(field).addClass('validation-error');
+                    isValid = false;
                 } else {
-                    $('#vendorSelect').val('').trigger('change').prop('disabled', true);
-                    $('#duplicateWarning').hide();
+                    $(field).removeClass('validation-error');
                 }
             });
 
             // Amount validation
-            $('#amountInput').on('input blur', function () {
-                validateAmount();
-            });
-
-            // Form submission validation
-            $('#securityDepositForm').on('submit', function (e) {
-                if (!validateForm()) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-
-            // Functions
-            function fetchEmployeeData(employeeId) {
-                $.ajax({
-                    url: '@Url.Action("GetEmployeeSalary", "SecurityDeposit")',
-                    type: 'GET',
-                    data: { employeeId: employeeId },
-                    success: function (data) {
-                        if (data.success) {
-                            employeeSalary = data.salary;
-                            maxSecurityDeposit = employeeSalary * 2;
-
-                            $('#employeeSalaryInfo').show().html(
-                                `Monthly Salary: ₹${employeeSalary.toLocaleString()}`
-                            );
-
-                            $('#maxAmountInfo').show().html(
-                                `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
-                            );
-
-                            validateAmount();
-                        }
-                    },
-                    error: function () {
-                        showError('Error fetching employee salary information');
-                    }
-                });
+            if (!validateAmount()) {
+                isValid = false;
             }
 
-            function fetchEmployeeLeases(employeeId) {
-                $.ajax({
-                    url: '@Url.Action("GetEmployeeLeases", "SecurityDeposit")',
-                    type: 'GET',
-                    data: { employeeId: employeeId },
-                    success: function (data) {
-                        const leaseSelect = $('#leaseSelect');
-                        leaseSelect.empty().append('<option value="">Select Lease</option>');
-
-                        if (data && data.length > 0) {
-                            $.each(data, function (i, lease) {
-                                leaseSelect.append(`<option value="${lease.id}">${lease.name}</option>`);
-                            });
-                        } else {
-                            leaseSelect.append('<option value="">No leases found for this employee</option>');
-                        }
-                    },
-                    error: function () {
-                        showError('Error fetching employee leases');
-                    }
-                });
+            // TDS Rate validation
+            const tdsRate = parseFloat($('#tdsRateInput').val()) || 0;
+            if (tdsRate < 0 || tdsRate > 100) {
+                $('#tdsRateInput').addClass('validation-error');
+                isValid = false;
             }
 
-            function fetchLeaseOwner(leaseId) {
-                $.ajax({
-                    url: '@Url.Action("GetLeaseOwner", "SecurityDeposit")',
-                    type: 'GET',
-                    data: { leaseId: leaseId },
-                    success: function (data) {
-                        if (data.success) {
-                            $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', false);
-                        }
-                    },
-                    error: function () {
-                        showError('Error fetching lease owner information');
-                    }
-                });
+            // Check for duplicates
+            if ($('#duplicateWarning').is(':visible')) {
+                isValid = false;
             }
 
-            function checkDuplicateRecord(employeeId, leaseId) {
-                const vendorId = $('#vendorSelect').val();
+            return isValid;
+        }
 
-                if (employeeId && leaseId && vendorId) {
-                    $.ajax({
-                        url: '@Url.Action("CheckDuplicateRecord", "SecurityDeposit")',
-                        type: 'GET',
-                        data: {
-                            employeeId: employeeId,
-                            leaseId: leaseId,
-                            vendorId: vendorId
-                        },
-                        success: function (data) {
-                            if (data.isDuplicate) {
-                                $('#duplicateWarning').show();
-                                $('#duplicateMessage').text(
-                                    'A security deposit record already exists for this Employee + Lease + Owner combination.'
-                                );
-                                $('#submitBtn').prop('disabled', true);
-                            } else {
-                                $('#duplicateWarning').hide();
-                                $('#submitBtn').prop('disabled', false);
-                            }
-                        },
-                        error: function () {
-                            console.error('Error checking duplicate records');
-                        }
-                    });
-                }
+        function resetForm() {
+            $('#leaseSelect').prop('disabled', true).val('').trigger('change');
+            $('#vendorSelect').prop('disabled', true).val('').trigger('change');
+            $('#employeeSalaryInfo, #maxAmountInfo').hide();
+            $('#duplicateWarning').hide();
+            $('#amountInput, #tdsRateInput, #tdsAmountInput').val('').removeClass('validation-error validation-success');
+            $('#amountValidation, #tdsCalculation').text('').removeClass('error-message success-message');
+            $('#netAmountDisplay').text('₹0.00');
+            employeeSalary = 0;
+            maxSecurityDeposit = 0;
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+
+        // Trigger validation on vendor change (for duplicate check)
+        $('#vendorSelect').on('change', function () {
+            const employeeId = $('#employeeSelect').val();
+            const leaseId = $('#leaseSelect').val();
+
+            if (employeeId && leaseId && $(this).val()) {
+                checkDuplicateRecord(employeeId, leaseId);
             }
-
-            function validateAmount() {
-                const amount = parseFloat($('#amountInput').val()) || 0;
-                const amountInput = $('#amountInput');
-                const validation = $('#amountValidation');
-
-                // Clear previous validation
-                amountInput.removeClass('validation-error validation-success');
-                validation.removeClass('error-message success-message');
-
-                if (amount <= 0) {
-                    amountInput.addClass('validation-error');
-                    validation.addClass('error-message').text('Amount must be greater than 0');
-                    return false;
-                }
-
-                if (maxSecurityDeposit > 0 && amount > maxSecurityDeposit) {
-                    amountInput.addClass('validation-error');
-                    validation.addClass('error-message').text(
-                        `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
-                    );
-                    return false;
-                }
-
-                // Valid amount
-                amountInput.addClass('validation-success');
-                validation.addClass('success-message').text('Valid amount');
-                return true;
-            }
-
-            function validateForm() {
-                let isValid = true;
-
-                // Required field validation
-                const requiredFields = ['#employeeSelect', '#vendorSelect', '#leaseSelect', '#amountInput'];
-                requiredFields.forEach(function (field) {
-                    if (!$(field).val()) {
-                        $(field).addClass('validation-error');
-                        isValid = false;
-                    } else {
-                        $(field).removeClass('validation-error');
-                    }
-                });
-
-                // Amount validation
-                if (!validateAmount()) {
-                    isValid = false;
-                }
-
-                // Check for duplicates
-                if ($('#duplicateWarning').is(':visible')) {
-                    isValid = false;
-                }
-
-                return isValid;
-            }
-
-            function resetForm() {
-                $('#leaseSelect').prop('disabled', true).val('').trigger('change');
-                $('#vendorSelect').prop('disabled', true).val('').trigger('change');
-                $('#employeeSalaryInfo, #maxAmountInfo').hide();
-                $('#duplicateWarning').hide();
-                $('#amountInput').val('').removeClass('validation-error validation-success');
-                $('#amountValidation').text('').removeClass('error-message success-message');
-                employeeSalary = 0;
-                maxSecurityDeposit = 0;
-            }
-
-            function showError(message) {
-                // You can implement a toast notification or alert here
-                alert(message);
-            }
-
-            // Trigger validation on vendor change (for duplicate check)
-            $('#vendorSelect').on('change', function () {
-                const employeeId = $('#employeeSelect').val();
-                const leaseId = $('#leaseSelect').val();
-
-                if (employeeId && leaseId && $(this).val()) {
-                    checkDuplicateRecord(employeeId, leaseId);
-                }
-            });
         });
-    </script>
-}
+
+        // Initial calculation
+        calculateTds();
+    });
+</script>

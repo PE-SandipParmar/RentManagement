@@ -177,4 +177,54 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
             commandType: CommandType.StoredProcedure
         );
     }
+    public async Task<IEnumerable<LeaseName>> GetLeasesByEmployeeAsync(int employeeId)
+    {
+        using var connection = CreateConnection();
+        return await connection.QueryAsync<LeaseName>(
+            "GetLeasesByEmployee",
+            new { EmployeeId = employeeId },
+            commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<decimal> GetEmployeeSalaryAsync(int employeeId)
+    {
+        using var connection = CreateConnection();
+        //var result = await connection.QuerySingleOrDefaultAsync<decimal?>(
+        //    "GetEmployeeSalary",
+        //    new { EmployeeId = employeeId },
+        //    commandType: CommandType.StoredProcedure);
+
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@EmployeeId", employeeId);
+
+        parameters.Add("@Salary", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+        await connection.ExecuteAsync(
+            "GetEmployeeSalary",
+            parameters,
+            commandType: CommandType.StoredProcedure);
+
+        return parameters.Get<decimal>("@Salary");
+
+       // return result ?? 0;
+    }
+
+    public async Task<LeaseDetails> GetLeaseDetailsAsync(int leaseId)
+    {
+        using var connection = CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<LeaseDetails>(
+            "GetLeaseDetails",
+            new { LeaseId = leaseId },
+            commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<BrokeragePayment?> CheckExistingBrokerageAsync(int employeeId, int leaseId)
+    {
+        using var connection = CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<BrokeragePayment>(
+            "CheckExistingBrokerage",
+            new { EmployeeId = employeeId, LeaseId = leaseId },
+            commandType: CommandType.StoredProcedure);
+    }
 }

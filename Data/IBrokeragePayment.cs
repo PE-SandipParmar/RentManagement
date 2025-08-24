@@ -21,7 +21,12 @@ namespace RentManagement.Data
         Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync();
         Task<IEnumerable<LeaseName>> GetLeaseNameAsync();
         Task ToggleActiveStatus(int Id);
+        Task<IEnumerable<LeaseName>> GetLeasesByEmployeeAsync(int employeeId);
+        Task<decimal> GetEmployeeSalaryAsync(int employeeId);
+        Task<LeaseDetails> GetLeaseDetailsAsync(int leaseId);
+        Task<BrokeragePayment?> CheckExistingBrokerageAsync(int employeeId, int leaseId);
 
     }
+
 }
 

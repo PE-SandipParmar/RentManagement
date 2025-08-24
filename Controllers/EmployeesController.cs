@@ -41,15 +41,16 @@ namespace RentManagement.Controllers
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
                     // Checkers and Admins see approved employees by default
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
-                    {
-                        viewModel.Employees = (await _employeeRepository.GetApprovedEmployeesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
-                        viewModel.TotalRecords = await _employeeRepository.GetApprovedEmployeeCountAsync(searchTerm, statusFilter);
-                    }
-                    else if (approvalStatusFilter == "Pending")
+
+                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Pending")
                     {
                         viewModel.Employees = (await _employeeRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
                         viewModel.TotalRecords = await _employeeRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        viewModel.Employees = (await _employeeRepository.GetApprovedEmployeesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _employeeRepository.GetApprovedEmployeeCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Rejected")
                     {
@@ -195,6 +196,7 @@ namespace RentManagement.Controllers
                         eligibleForLease = employee.EligibleForLease,
                         totalSalary = employee.TotalSalary,
                         basicSalary = employee.BasicSalary,
+                        hra = employee.HRA,
                         houseRentAllowance = employee.HouseRentAllowance,
                         travelAllowance = employee.TravelAllowance,
                         medicalAllowance = employee.MedicalAllowance,
@@ -244,6 +246,7 @@ namespace RentManagement.Controllers
                 employee.ProfessionalTax ??= 0;
                 employee.ESI ??= 0;
                 employee.HouseRentAllowance ??= 0;
+                employee.HRA ??= 0;
 
                 // Calculate gross salary after deductions
                 var totalDeductions = employee.PF.Value + employee.ProfessionalTax.Value + employee.ESI.Value;
@@ -385,20 +388,22 @@ namespace RentManagement.Controllers
                 employee.PF ??= 0;
                 employee.ProfessionalTax ??= 0;
                 employee.ESI ??= 0;
+                employee.HRA ??= 0;
 
                 // Auto-calculate HRA if not provided or zero
                 if (!employee.HouseRentAllowance.HasValue || employee.HouseRentAllowance <= 0)
                 {
-                    if (employee.BasicSalary.HasValue && employee.BasicSalary > 0)
+                    if (employee.HRA.HasValue && employee.HRA > 0)
                     {
-                        var maxHRA = (employee.BasicSalary.Value * 0.5m) * 2;
-                        employee.HouseRentAllowance = Math.Min(maxHRA, employee.BasicSalary.Value);
+                        var maxHouseRentAllowance = (employee.HRA.Value  * 2);
+                        employee.HouseRentAllowance = Math.Min(maxHouseRentAllowance, employee.HRA.Value);
                     }
                     else
                     {
                         employee.HouseRentAllowance = 0;
                     }
                 }
+
 
                 // Calculate gross salary after deductions
                 var totalDeductions = employee.PF.Value + employee.ProfessionalTax.Value + employee.ESI.Value;
@@ -742,13 +747,38 @@ namespace RentManagement.Controllers
                     ModelState.AddModelError("DateOfJoining", "Joining date cannot be before date of birth.");
                 }
             }
-
-            // Validate basic salary doesn't exceed total salary
-            if (employee.BasicSalary.HasValue && employee.TotalSalary.HasValue)
+            // Validate HRA against total salary
+            if (employee.HRA.HasValue && employee.BasicSalary.HasValue && employee.TotalSalary.HasValue)
             {
-                if (employee.BasicSalary.Value > employee.TotalSalary.Value)
+                decimal combinedAmount = employee.HRA.Value + employee.BasicSalary.Value;
+                if (combinedAmount > employee.TotalSalary.Value)
                 {
-                    ModelState.AddModelError("BasicSalary", "Basic salary cannot exceed total salary.");
+                    ModelState.AddModelError("HRA", "HRA and Basic Salary combined cannot exceed total salary.");
+                }
+            }
+            else if (employee.HRA.HasValue && employee.TotalSalary.HasValue)
+            {
+                if (employee.HRA.Value > employee.TotalSalary.Value)
+                {
+                    ModelState.AddModelError("HRA", "HRA cannot exceed total salary.");
+                }
+            }
+            //if (employee.HRA.HasValue && employee.HouseRentAllowance.HasValue)
+            //{
+            //    var maxHouseRentAllowance = (employee.HRA.Value * 0.5m) * 2; // (HRA × 50%) × 2
+            //    if (employee.HouseRentAllowance.Value > maxHouseRentAllowance)
+            //    {
+            //        ModelState.AddModelError("HouseRentAllowance",
+            //            $"House Rent Allowance cannot exceed ₹{maxHouseRentAllowance:F2} (HRA × 50% × 2).");
+            //    }
+            //}
+            // Validate salary and deductions
+            if (employee.TotalSalary.HasValue && employee.TotalSalary > 0)
+            {
+                var totalDeductions = (employee.PF ?? 0) + (employee.ProfessionalTax ?? 0) + (employee.ESI ?? 0);
+                if (totalDeductions > employee.TotalSalary.Value)
+                {
+                    ModelState.AddModelError("", "Total deductions cannot exceed total salary.");
                 }
             }
 
@@ -761,14 +791,14 @@ namespace RentManagement.Controllers
                     ModelState.AddModelError("", "Total deductions cannot exceed total salary.");
                 }
 
-                // Validate HRA against basic salary
-                if (employee.BasicSalary.HasValue && employee.HouseRentAllowance.HasValue)
+                // Updated: Validate House Rent Allowance against HRA (instead of basic salary)
+                if (employee.HRA.HasValue && employee.HouseRentAllowance.HasValue)
                 {
-                    var maxHRA = (employee.BasicSalary.Value * 0.5m) * 2; // (Basic × 50%) × 2
-                    if (employee.HouseRentAllowance.Value > maxHRA)
+                    var maxHouseRentAllowance = (employee.HRA.Value * 2); // (HRA × 50%) × 2
+                    if (employee.HouseRentAllowance.Value > maxHouseRentAllowance)
                     {
                         ModelState.AddModelError("HouseRentAllowance",
-                            $"HRA cannot exceed ₹{maxHRA:F2} (Basic Salary × 50% × 2).");
+                            $"House Rent Allowance cannot exceed ₹{maxHouseRentAllowance:F2} (HRA × 50% × 2).");
                     }
                 }
 
@@ -778,7 +808,7 @@ namespace RentManagement.Controllers
                     var maxPF = Math.Min(employee.BasicSalary.Value * 0.12m, 1800);
                     if (employee.PF.Value > maxPF)
                     {
-                        ModelState.AddModelError("PF", $"PF cannot exceed ₹{maxPF:F2} (12% of basic salary, max ₹1,800).");
+                        //ModelState.AddModelError("PF", $"PF cannot exceed ₹{maxPF:F2} (12% of basic salary, max ₹1,800).");
                     }
                 }
 
@@ -795,11 +825,11 @@ namespace RentManagement.Controllers
                     {
                         if (maxPT == 0)
                         {
-                            ModelState.AddModelError("ProfessionalTax", "Professional Tax not applicable for salary ≤ ₹21,000.");
+                            //ModelState.AddModelError("ProfessionalTax", "Professional Tax not applicable for salary ≤ ₹21,000.");
                         }
                         else
                         {
-                            ModelState.AddModelError("ProfessionalTax", $"Professional Tax cannot exceed ₹{maxPT} for this salary range.");
+                            //ModelState.AddModelError("ProfessionalTax", $"Professional Tax cannot exceed ₹{maxPT} for this salary range.");
                         }
                     }
                 }

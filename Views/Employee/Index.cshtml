@@ -18,14 +18,14 @@
         padding: 6px 12px;
     }
 
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: #374151;
-        line-height: 28px;
-    }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151;
+            line-height: 28px;
+        }
 
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px;
-    }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
 
     .toast-enter {
         transform: translateX(100%);
@@ -132,10 +132,13 @@
             <h2 class="text-2xl font-bold text-gray-900">Employee Management</h2>
             <p class="text-gray-600 mt-1">Manage your organization's employees and their information</p>
         </div>
-        <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
-            <i class="ri-add-line mr-2"></i>
-            Add New Employee
-        </button>
+        @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
+        {
+            <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+                <i class="ri-add-line mr-2"></i>
+                Add New Employee
+            </button>
+        }
     </div>
 
     <!-- Pending Approvals Section (Checker Only) -->
@@ -223,16 +226,8 @@
             @if (isChecker)
             {
                 <div class="relative">
-                      <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
-                        @if (Model.ApprovalStatusFilter == "Approved" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
-                        {
-                            <option value="Approved" selected>Approved</option>
-                        }
-                        else
-                        {
-                            <option value="Approved">Approved</option>
-                        }
-                        @if (Model.ApprovalStatusFilter == "Pending")
+                    <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                        @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
                         {
                             <option value="Pending" selected>Pending</option>
                         }
@@ -240,6 +235,15 @@
                         {
                             <option value="Pending">Pending</option>
                         }
+                        @if (Model.ApprovalStatusFilter == "Approved" )
+                        {
+                            <option value="Approved" selected>Approved</option>
+                        }
+                        else
+                        {
+                            <option value="Approved">Approved</option>
+                        }
+                      
                         @if (Model.ApprovalStatusFilter == "Rejected")
                         {
                             <option value="Rejected" selected>Rejected</option>
@@ -328,7 +332,7 @@
                             }
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex gap-2 justify-center">
-                                    <button onclick="(@employee.Id)" class="text-primary hover:text-primary/80" title="View">
+                                    <button onclick="viewEmployee(@employee.Id)" class="text-primary hover:text-primary/80" title="View">
                                         <i class="ri-eye-line"></i>
                                     </button>
                                     @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending && isChecker)
@@ -540,31 +544,39 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">HRA (₹) <span class="text-red-500">*</span></label>
+                                        <input type="number" step="0.01" min="0" id="hra" name="HRA" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <div id="hraError" class="error-message hidden"></div>
+                                    </div>
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
                                         <input type="number" step="0.01" min="0" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
-                                        <p class="text-xs text-gray-500 mt-1">Maximum allowed: (Basic Salary × 50%) × 2</p>
+                                        <p class="text-xs text-gray-500 mt-1">Maximum allowed: (HRA × 2)</p>
                                         <div id="houseRentAllowanceError" class="error-message hidden"></div>
                                     </div>
+                                  
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Travel Allowance (₹)</label>
                                         <input type="number" step="0.01" min="0" id="travelAllowance" name="TravelAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="travelAllowanceError" class="error-message hidden"></div>
                                     </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Medical Allowance (₹)</label>
                                         <input type="number" step="0.01" min="0" id="medicalAllowance" name="MedicalAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="medicalAllowanceError" class="error-message hidden"></div>
                                     </div>
+                                   
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Other Allowance (₹)</label>
                                         <input type="number" step="0.01" min="0" id="otherAllowance" name="OtherAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="otherAllowanceError" class="error-message hidden"></div>
                                     </div>
                                 </div>
-
                                 <!-- Deductions Section -->
                                 <div class="pt-4 border-t border-gray-200">
                                     <h4 class="text-md font-medium text-gray-900 mb-4">Deductions</h4>
@@ -745,19 +757,19 @@
             },
             body: `id=${id}`
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showAlert('success', result.message);
-                refreshTableAfterUpdate();
-            } else {
-                showAlert('error', result.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred while approving the employee.');
-        });
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('success', result.message);
+                    refreshTableAfterUpdate();
+                } else {
+                    showAlert('error', result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while approving the employee.');
+            });
     }
 
     function openRejectModal(id, name) {
@@ -796,20 +808,20 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showAlert('success', result.message);
-                closeRejectModal();
-                refreshTableAfterUpdate();
-            } else {
-                showAlert('error', result.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred while rejecting the employee.');
-        });
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('success', result.message);
+                    closeRejectModal();
+                    refreshTableAfterUpdate();
+                } else {
+                    showAlert('error', result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while rejecting the employee.');
+            });
     }
 
     function refreshTableAfterUpdate() {
@@ -942,87 +954,87 @@
                 }
 
                 approvalStatusCell = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </td>`;
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>`;
 
                 makerCell = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.makerUserName || '-'}</td>`;
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.makerUserName || '-'}</td>`;
 
                 // Action buttons for checkers
                 if (employee.approvalStatus === 1) { // Pending
                     actionButtons = `
-                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button onclick="approveEmployee(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
-                            <i class="ri-check-line"></i>
-                        </button>
-                        <button onclick="openRejectModal(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Reject">
-                            <i class="ri-close-line"></i>
-                        </button>`;
+                            <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="approveEmployee(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Approve">
+                                <i class="ri-check-line"></i>
+                            </button>
+                            <button onclick="openRejectModal(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Reject">
+                                <i class="ri-close-line"></i>
+                            </button>`;
                 } else {
                     actionButtons = `
-                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                            <i class="ri-eye-line"></i>
-                        </button>`;
+                            <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
 
                     // Add edit/delete for approved employees
                     if (employee.approvalStatus === 2) {
                         actionButtons += `
-                            <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
-                                <i class="ri-edit-line"></i>
-                            </button>
-                            <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>`;
+                                <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>`;
                     }
                 }
             } else {
                 // Action buttons for makers (only for approved employees)
                 if (employee.approvalStatus === 2) {
                     actionButtons = `
-                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>`;
+                            <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80 mr-2" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button onclick="openEditDrawer(${employee.id})" class="text-green-600 hover:text-green-800 mr-2" title="Edit">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="confirmDeleteEmployee(${employee.id}, '${employee.name}')" class="text-red-600 hover:text-red-700" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>`;
                 } else {
                     actionButtons = `
-                        <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80" title="View">
-                            <i class="ri-eye-line"></i>
-                        </button>`;
+                            <button onclick="viewEmployee(${employee.id})" class="text-primary hover:text-primary/80" title="View">
+                                <i class="ri-eye-line"></i>
+                            </button>`;
                 }
             }
 
             const row = `
-                <tr class="table-row hover:bg-gray-50">
-                    <td class="px-4 py-4 text-center">
-                        <input type="checkbox" class="employee-checkbox">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.code || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.name || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.departmentName || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.designationName || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${(employee.totalSalary || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="status-badge ${employee.isActive ? 'status-active' : 'status-inactive'}">
-                            ${employee.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    ${approvalStatusCell}
-                    ${makerCell}
-                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <div class="flex gap-1 justify-center">
-                            ${actionButtons}
-                        </div>
-                    </td>
-                </tr>
-            `;
+                    <tr class="table-row hover:bg-gray-50">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" class="employee-checkbox">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.code || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.name || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.departmentName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.designationName || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${(employee.totalSalary || 0).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${employee.isActive ? 'status-active' : 'status-inactive'}">
+                                ${employee.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        ${approvalStatusCell}
+                        ${makerCell}
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex gap-1 justify-center">
+                                ${actionButtons}
+                            </div>
+                        </td>
+                    </tr>
+                `;
             tbody.innerHTML += row;
         });
 
@@ -1031,14 +1043,14 @@
 
     function initializeEventListeners() {
         // Search functionality
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 searchEmployees();
             }
         });
 
         // Select all checkbox
-        document.getElementById('selectAll').addEventListener('change', function() {
+        document.getElementById('selectAll').addEventListener('change', function () {
             const checkboxes = document.querySelectorAll('.employee-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
@@ -1053,21 +1065,21 @@
     function updatePagination(pagination) {
         const info = document.getElementById('paginationInfo');
         const buttons = document.getElementById('paginationButtons');
-        
+
         const startRecord = (pagination.currentPage - 1) * pagination.pageSize + 1;
         const endRecord = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalRecords);
-        
+
         info.textContent = `Showing ${startRecord} to ${endRecord} of ${pagination.totalRecords} results`;
-        
+
         let buttonsHtml = '';
-        
+
         // Previous button
         if (pagination.currentPage > 1) {
             buttonsHtml += `<button onclick="goToPage(${pagination.currentPage - 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Previous</button>`;
         } else {
             buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Previous</span>`;
         }
-        
+
         // Page numbers
         for (let i = 1; i <= pagination.totalPages; i++) {
             if (i === pagination.currentPage) {
@@ -1076,14 +1088,14 @@
                 buttonsHtml += `<button onclick="goToPage(${i})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">${i}</button>`;
             }
         }
-        
+
         // Next button
         if (pagination.currentPage < pagination.totalPages) {
             buttonsHtml += `<button onclick="goToPage(${pagination.currentPage + 1})" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Next</button>`;
         } else {
             buttonsHtml += `<span class="rounded px-3 py-1 text-sm text-gray-400">Next</span>`;
         }
-        
+
         buttons.innerHTML = buttonsHtml;
     }
 
@@ -1094,7 +1106,7 @@
             pageSize: pageSize,
             totalRecords: @Model.TotalRecords,
             totalPages: @Model.TotalPages
-        });
+            });
     }
 
     function goToPage(page) {
@@ -1173,7 +1185,7 @@
         });
 
         // Salary field validations - prevent negative values
-        const salaryFields = ['totalSalary', 'basicSalary', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi'];
+        const salaryFields = ['totalSalary', 'basicSalary', 'hra', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi'];
 
         salaryFields.forEach(fieldId => {
             $(`#${fieldId}`).on('input', function () {
@@ -1193,54 +1205,89 @@
             clearFieldError(this.id);
         });
     }
+    function validateHouseRentAllowance() {
+        const hra = parseFloat($('#hra').val()) || 0;
+        const houseRentAllowance = parseFloat($('#houseRentAllowance').val()) || 0;
 
+        clearFieldError('houseRentAllowance');
+
+        if (hra > 0 && houseRentAllowance > 0) {
+            const maxHouseRentAllowance = (hra  * 2); // (HRA × 50%) × 2
+
+            if (houseRentAllowance > maxHouseRentAllowance) {
+                showFieldError('houseRentAllowance', `House Rent Allowance cannot exceed ₹${maxHouseRentAllowance.toFixed(2)} (HRA × 2)`);
+                return false;
+            }
+        }
+
+        return true;
+    }
     function setupSalaryCalculation() {
-        // Setup real-time calculation
-        $('#totalSalary, #basicSalary, #pf, #professionalTax, #esi').on('input', function () {
+        $('#totalSalary, #basicSalary, #hra, #pf, #professionalTax, #esi').on('input', function () {
             calculateGrossSalary();
         });
 
-        // HRA validation when basic salary or HRA changes
-        $('#basicSalary, #houseRentAllowance').on('input', function () {
-            validateHRA();
+        // HRA validation when HRA or House Rent Allowance changes
+        $('#hra, #houseRentAllowance').on('input', function () {
+            validateHouseRentAllowance();
             calculateGrossSalary();
         });
 
         // Basic salary validation against total salary
         $('#basicSalary, #totalSalary').on('input', function () {
             validateBasicSalary();
+            validateHRAAndBasicCombined(1);
+        });
+
+        // HRA validation against total salary
+        $('#hra, #totalSalary').on('input', function () {
+            validateHRA();
+            validateHRAAndBasicCombined(2);
         });
     }
-
     function validateBasicSalary() {
         const totalSalary = parseFloat($('#totalSalary').val()) || 0;
         const basicSalary = parseFloat($('#basicSalary').val()) || 0;
-
         clearFieldError('basicSalary');
-
         if (basicSalary > totalSalary && totalSalary > 0) {
             showFieldError('basicSalary', 'Basic salary cannot exceed total salary');
             return false;
         }
-
         return true;
     }
 
     function validateHRA() {
+        const totalSalary = parseFloat($('#totalSalary').val()) || 0;
+        const hra = parseFloat($('#hra').val()) || 0;
+        clearFieldError('hra');
+        if (hra > totalSalary && totalSalary > 0) {
+            showFieldError('hra', 'HRA cannot exceed total salary');
+            return false;
+        }
+        return true;
+    }
+
+    // New function to validate HRA + Basic Salary combined
+    function validateHRAAndBasicCombined(flg) {
+        const totalSalary = parseFloat($('#totalSalary').val()) || 0;
         const basicSalary = parseFloat($('#basicSalary').val()) || 0;
-        const houseRentAllowance = parseFloat($('#houseRentAllowance').val()) || 0;
+        const hra = parseFloat($('#hra').val()) || 0;
 
-        clearFieldError('houseRentAllowance');
+        clearFieldError('hra');
+        clearFieldError('basicSalary');
 
-        if (basicSalary > 0 && houseRentAllowance > 0) {
-            const maxHRA = (basicSalary * 0.5) * 2; // (Basic Salary × 50%) × 2
-
-            if (houseRentAllowance > maxHRA) {
-                showFieldError('houseRentAllowance', `HRA cannot exceed ₹${maxHRA.toFixed(2)} (Basic Salary × 50% × 2)`);
+        if (totalSalary > 0 && (basicSalary > 0 || hra > 0)) {
+            const combinedAmount = hra + basicSalary;
+            if (combinedAmount > totalSalary) {
+                if (flg == 2) {
+                    showFieldError('hra', `HRA and Basic Salary combined (₹${combinedAmount.toFixed(2)}) cannot exceed Total Salary (₹${totalSalary.toFixed(2)})`);
+                }
+                else{
+                    showFieldError('basicSalary', `HRA and Basic Salary combined (₹${combinedAmount.toFixed(2)}) cannot exceed Total Salary (₹${totalSalary.toFixed(2)})`);
+                }
                 return false;
             }
         }
-
         return true;
     }
 
@@ -1434,9 +1481,8 @@
         document.getElementById('deleteModal').classList.add('hidden');
         deleteEmployeeId = null;
     }
-
     function clearAllErrors() {
-        const errorFields = ['name', 'dateOfBirth', 'gender', 'email', 'aadhar', 'pan', 'department', 'designation', 'dateOfJoining', 'totalSalary', 'basicSalary', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi', 'grossSalary'];
+        const errorFields = ['name', 'dateOfBirth', 'gender', 'email', 'aadhar', 'pan', 'department', 'designation', 'dateOfJoining', 'totalSalary', 'basicSalary', 'hra', 'houseRentAllowance', 'travelAllowance', 'medicalAllowance', 'otherAllowance', 'pf', 'professionalTax', 'esi', 'grossSalary'];
         errorFields.forEach(field => clearFieldError(field));
 
         const summaryDiv = document.getElementById('validationSummary');
@@ -1448,7 +1494,7 @@
         let isValid = true;
         clearAllErrors();
 
-        // Required field validations
+        // Required field validations - add HRA to the list
         const requiredFields = [
             { id: 'name', message: 'Name is required' },
             { id: 'dateOfBirth', message: 'Date of birth is required' },
@@ -1460,7 +1506,8 @@
             { id: 'designationId', message: 'Designation is required' },
             { id: 'dateOfJoining', message: 'Joining date is required' },
             { id: 'totalSalary', message: 'Total salary is required' },
-            { id: 'basicSalary', message: 'Basic salary is required' }
+            { id: 'basicSalary', message: 'Basic salary is required' },
+            { id: 'hra', message: 'HRA is required' }
         ];
 
         requiredFields.forEach(field => {
@@ -1474,6 +1521,9 @@
         // Validate salary relationships
         if (!validateBasicSalary()) isValid = false;
         if (!validateHRA()) isValid = false;
+        if (!validateHouseRentAllowance()) isValid = false;
+        if (!validateHRAAndBasicCombined()) isValid = false;
+        
 
         return isValid;
     }
@@ -1496,6 +1546,7 @@
                     document.getElementById('eligibleForLease').checked = employee.eligibleForLease || false;
                     document.getElementById('totalSalary').value = employee.totalSalary || '';
                     document.getElementById('basicSalary').value = employee.basicSalary || '';
+                    document.getElementById('hra').value = employee.hra || '';
                     document.getElementById('houseRentAllowance').value = employee.houseRentAllowance || '';
                     document.getElementById('travelAllowance').value = employee.travelAllowance || '';
                     document.getElementById('medicalAllowance').value = employee.medicalAllowance || '';
@@ -1527,91 +1578,95 @@
                     const detailsContainer = document.getElementById('employeeDetails');
 
                     detailsContainer.innerHTML = `
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Code</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Name</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Gender</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Email</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">PAN</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Department</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Designation</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Basic Salary</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.basicSalary) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500">Other Allowance</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">PF</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">ESI</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
-                            <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
-                        </div>
-                    `;
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Code</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Name</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfBirth) || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Gender</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.gender || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Email</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.email || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Aadhar</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.aadhar || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">PAN</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.pan || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Department</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.departmentName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Designation</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.designationName || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Date of Joining</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${formatDate(employee.dateOfJoining) || '-'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Eligible for Lease</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.eligibleForLease ? 'Yes' : 'No'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Total Salary</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.totalSalary) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Basic Salary</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.basicSalary) || '0.00'}</dd>
+                            </div>
+                                <div>
+                                        <dt class="text-sm font-semibold text-gray-500">HRA</dt>
+                                        <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.hra) || '0.00'}</dd>
+                                </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">House Rent Allowance (HRA)</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.houseRentAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Travel Allowance (TA)</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.travelAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Medical Allowance</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.medicalAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Other Allowance</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.otherAllowance) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">PF</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.pf) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Professional Tax</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.professionalTax) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">ESI</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.esi) || '0.00'}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-semibold text-gray-500">Gross Salary After Deductions</dt>
+                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹${formatCurrency(employee.grossSalaryAfterDeductions) || '0.00'}</dd>
+                            </div>
+                        `;
                 }
             })
             .catch(error => {
@@ -1784,13 +1839,13 @@
     function showAlert(type, message) {
         const container = document.getElementById('alertContainer');
         const alertClass = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
-        
+
         container.innerHTML = `
-            <div class="${alertClass} px-4 py-3 rounded border" role="alert">
-                <span class="block sm:inline">${message}</span>
-            </div>
-        `;
-        
+                <div class="${alertClass} px-4 py-3 rounded border" role="alert">
+                    <span class="block sm:inline">${message}</span>
+                </div>
+            `;
+
         setTimeout(() => {
             container.innerHTML = '';
         }, 5000);
