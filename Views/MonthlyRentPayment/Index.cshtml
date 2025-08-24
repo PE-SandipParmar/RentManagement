@@ -105,9 +105,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.EmployeeName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.VendorName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(payment.PaymentMonth?.ToString("MMM yyyy"))</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.MonthlyLeaseAmount?.ToString("C")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.MonthlyLeaseAmount?.ToString("")</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.TDSRate</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.NetPayableAmount.ToString("C")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.NetPayableAmount.ToString("")</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.PaymentStatus</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.DSCApprovalStatus</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.Remark</td>

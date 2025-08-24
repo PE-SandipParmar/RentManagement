@@ -34,7 +34,7 @@
 
                 <div>
                     <dt class="text-sm font-semibold text-gray-500">Net Amount  (After TDS)</dt>
-                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.Amount.ToString("C")</dd>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹@Model.Amount.ToString("")</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-semibold text-gray-500">TDS Rate</dt>
@@ -42,7 +42,7 @@
                 </div>
                 <div>
                     <dt class="text-sm font-semibold text-gray-500">TDS Amount</dt>
-                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">@Model.TdsAmount?.ToString("C")</dd>
+                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">₹@Model.TdsAmount?.ToString("")</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-semibold text-gray-500">Approval Status</dt>

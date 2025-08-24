@@ -70,7 +70,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.EmployeeName</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.VendorName</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.LeaseName</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@deposit.Amount.ToString("C")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@deposit.Amount.ToString("")</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if (deposit.TdsRate.HasValue && deposit.TdsRate > 0)
                             {
@@ -82,9 +82,9 @@
                             }
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            @if (deposit.TdsAmount.HasValue && deposit.TdsAmount > 0)
+                               @if (deposit.TdsAmount.HasValue && deposit.TdsAmount > 0)
                             {
-                                @deposit.TdsAmount.Value.ToString("C")
+                                                     <span>₹</span>          @deposit.TdsAmount.Value.ToString("")
                             }
                             else
                             {
@@ -92,7 +92,7 @@
                             }
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            @netAmount.ToString("C")
+                                ₹@netAmount.ToString("")
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
