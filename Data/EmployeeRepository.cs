@@ -95,6 +95,7 @@ namespace RentManagement.Data
             parameters.Add("@EligibleForLease", employee.EligibleForLease);
             parameters.Add("@TotalSalary", employee.TotalSalary);
             parameters.Add("@BasicSalary", employee.BasicSalary);
+            parameters.Add("@HRA", employee.HRA);
             parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
             parameters.Add("@TravelAllowance", employee.TravelAllowance);
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
@@ -147,6 +148,7 @@ namespace RentManagement.Data
             parameters.Add("@EligibleForLease", employee.EligibleForLease);
             parameters.Add("@TotalSalary", employee.TotalSalary);
             parameters.Add("@BasicSalary", employee.BasicSalary);
+            parameters.Add("@HRA", employee.HRA);
             parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
             parameters.Add("@TravelAllowance", employee.TravelAllowance);
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
@@ -346,6 +348,7 @@ namespace RentManagement.Data
                 parameters.Add("@EligibleForLease", employee.EligibleForLease);
                 parameters.Add("@TotalSalary", employee.TotalSalary);
                 parameters.Add("@BasicSalary", employee.BasicSalary);
+                parameters.Add("@HRA", employee.HRA);
                 parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
                 parameters.Add("@TravelAllowance", employee.TravelAllowance);
                 parameters.Add("@MedicalAllowance", employee.MedicalAllowance);
@@ -395,6 +398,7 @@ namespace RentManagement.Data
             parameters.Add("@EligibleForLease", employee.EligibleForLease);
             parameters.Add("@TotalSalary", employee.TotalSalary);
             parameters.Add("@BasicSalary", employee.BasicSalary);
+            parameters.Add("@HRA", employee.HRA);
             parameters.Add("@HouseRentAllowance", employee.HouseRentAllowance);
             parameters.Add("@TravelAllowance", employee.TravelAllowance);
             parameters.Add("@MedicalAllowance", employee.MedicalAllowance);

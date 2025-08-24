@@ -340,7 +340,7 @@
                         );
 
                         $('#maxAmountInfo').show().html(
-                            `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
+                            `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (HRA * 2)`
                         );
 
                         validateAmount();
@@ -440,7 +440,7 @@
             if (maxSecurityDeposit > 0 && amount > maxSecurityDeposit) {
                 amountInput.addClass('validation-error');
                 validation.addClass('error-message').text(
-                    `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
+                    `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (HRA * 2)`
                 );
                 return false;
             }

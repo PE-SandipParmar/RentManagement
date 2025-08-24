@@ -56,7 +56,7 @@ namespace RentManagement.Controllers
 
                 if (deposit.Amount > maxAllowedAmount)
                 {
-                    ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (2 × Monthly Salary of ₹{employeeSalary:N2})");
+                    ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (HRA * 2 of ₹{employeeSalary:N2})");
                 }
             }
 

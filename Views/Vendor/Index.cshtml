@@ -309,13 +309,15 @@
     <div class="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-xl transform translate-x-full transition-transform duration-300" id="createDrawerPanel">
         <div class="flex flex-col h-full">
             <!-- Header -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Add New Owner</h2>
-                <button onclick="closeCreateDrawer()" class="text-gray-400 hover:text-gray-600">
-                    <i class="ri-close-line text-xl"></i>
-                </button>
-            </div>
 
+            <div class="px-6 py-4 bg-blue-600 text-white">
+                <div class="flex items-center justify-between">
+                    <h2 id="drawerTitle" class="text-xl font-semibold">Add New Owner</h2>
+                    <button onclick="closeDrawer()" class="text-white hover:text-gray-200">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+            </div>
             <!-- Form Content -->
             <div class="flex-1 overflow-y-auto">
                 <form id="createVendorForm" class="p-6 space-y-6">
@@ -707,7 +709,13 @@
                 }, 1000);
             }
         }
-
+        function closeDrawer() {
+            const drawer = document.getElementById('createVendorDrawer');
+            drawer.querySelector('.w-screen').classList.remove('translate-x-0');
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 300);
+        }
         function approveVendor(id) {
             if (!confirm('Are you sure you want to approve this vendor?')) {
                 return;

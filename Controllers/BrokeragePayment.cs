@@ -165,7 +165,7 @@ namespace RentManagement.Controllers
                 }
 
                 // Get employee salary
-                var employeeSalary = await _BrokeragePaymentRepository.GetEmployeeSalaryAsync(employeeId);
+                    var employeeSalary = await _BrokeragePaymentRepository.GetEmployeeSalaryAsync(employeeId);
 
                 // Get lease details including max brokerage
                 var leaseDetails = await _BrokeragePaymentRepository.GetLeaseDetailsAsync(leaseId);
@@ -193,7 +193,7 @@ namespace RentManagement.Controllers
                     return Json(new
                     {
                         isValid = false,
-                        errorMessage = $"The Total Salary ₹{brokerageAmount:N2} is higher than the maximum allowed limit of ₹{maxAllowed:N2}. The maximum limit is decided based on either the Employee’s Salary (₹{employeeSalary:N2} or the Lease Brokerage Amount Maximum: ₹{leaseMaxBrokerage:N2}.",
+                        errorMessage = $" ₹{brokerageAmount:N2} this brokerage amount should not exceed the lease brokerage maximum amount of ₹{maxAllowed:N2}.",
                         employeeSalary = employeeSalary,
                         leaseMaxBrokerage = leaseMaxBrokerage,
                         maxAllowed = maxAllowed

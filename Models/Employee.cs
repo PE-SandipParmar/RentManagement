@@ -101,6 +101,9 @@ namespace RentManagement.Models
         // Helper property to check if employee is visible in main list
         public bool IsVisibleInMainList => ApprovalStatus == ApprovalStatus.Approved && IsActiveRecord;
 
+        [Display(Name = "HRA")]
+        public decimal? HRA { get; set; }
+
         // Helper property to get approval status display text
         public string ApprovalStatusText => ApprovalStatus switch
         {
