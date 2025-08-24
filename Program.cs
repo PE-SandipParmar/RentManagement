@@ -15,6 +15,12 @@ builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepo
 builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentRepository>();
 builder.Services.AddScoped<ISecurityDepositRepository, SecurityDepositRepository>();
 builder.Services.AddScoped<IMISReportRepository, MISReportRepository>();
+// Register repositories
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+// Register services
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 
 
 // Register Dapper and Repository
@@ -110,6 +116,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Dashboard}/{id?}");
+
+app.MapControllers(); // For API controllers
 
 // Create default admin user if none exists
 using (var scope = app.Services.CreateScope())

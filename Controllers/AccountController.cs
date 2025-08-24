@@ -242,7 +242,7 @@ namespace RentManagement.Controllers
                     return RedirectToAction("Login");
                 }
 
-                var model = new DashboardViewModel
+                var model = new ViewModels.DashboardViewModel
                 {
                     CurrentUser = currentUser
                 };

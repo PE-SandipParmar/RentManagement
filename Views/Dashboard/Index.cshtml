@@ -1,152 +1,413 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RentManagement.Models.DashboardViewModel
 @{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_Layout";
+    var financialYear = ViewBag.FinancialYear ?? DateTime.Now.Year;
 }
 
+@Html.AntiForgeryToken()
 
-<div class="mb-6">
-    <div class="mb-4">
-        <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
+<div class="p-6">
+    <div class="mb-6">
+        <div class="mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
+        </div>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <select id="financialYearSelect" class="!rounded-button flex items-center space-x-2 bg-white border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        @for (int year = 2020; year <= 2030; year++)
+                        {
+                            <option value="@year" selected="@(year == financialYear)">Financial Year @year</option>
+                        }
+                    </select>
+
+                </div>
+            </div>
+            <button id="exportReportBtn" class="!rounded-button bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90">
+                <i class="ri-download-line mr-2"></i>Export Report
+            </button>
+        </div>
+
+        <!-- Statistics Cards Row 1 -->
+        <div class="grid grid-cols-4 gap-6 mb-6 mt-5">
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Total Expenditure on Employee Lease</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded">
+                        <i class="ri-money-dollar-circle-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">₹@Model.Statistics.TotalExpenditure.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total amount paid to employees for lease</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Active Leases</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-green-600 bg-green-50 rounded">
+                        <i class="ri-file-list-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">@Model.Statistics.ActiveLeases.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total number of active leases</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Total Employees on Lease</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-orange-600 bg-orange-50 rounded">
+                        <i class="ri-team-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">@Model.Statistics.TotalEmployeesOnLease.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total employees for lease</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Total Vendors of Lease</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-purple-600 bg-purple-50 rounded">
+                        <i class="ri-store-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">@Model.Statistics.TotalVendors.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total vendors of lease</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards Row 2 -->
+        <div class="grid grid-cols-4 gap-6 mb-6">
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Monthly Lease to be paid</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded">
+                        <i class="ri-calendar-check-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">₹@Model.Statistics.MonthlyLeaseToPay.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Monthly expenditure to employees for lease</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Security Deposit paid</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-teal-600 bg-teal-50 rounded">
+                        <i class="ri-safe-2-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">₹@Model.Statistics.SecurityDepositPaid.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total paid to employees for Security Deposit</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Brokerage paid</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-yellow-600 bg-yellow-50 rounded">
+                        <i class="ri-exchange-dollar-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">₹@Model.Statistics.BrokeragePaid.ToString("N0")</p>
+                    <p class="text-xs text-gray-400 mt-1">Total paid to employees for Brokerage</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 text-sm">Approved / Pending Approvals</h3>
+                    <div class="w-8 h-8 flex items-center justify-center text-green-600 bg-green-50 rounded">
+                        <i class="ri-checkbox-circle-line"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-2xl font-semibold text-gray-900">@Model.Statistics.ApprovedCount / @Model.Statistics.PendingCount</p>
+                    <p class="text-xs text-gray-400 mt-1">Number of Approved / Pending lease payments</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <div class="relative">
-                <button class="!rounded-button flex items-center space-x-2 bg-white border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                    <span>Financial Year 2025</span>
-                    <div class="w-4 h-4 flex items-center justify-center">
-                        <i class="ri-arrow-down-s-line"></i>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-2 gap-6 px-8">
+        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-semibold text-gray-900">Monthly Expenditure Trend</h3>
+                <button class="!rounded-button text-sm text-gray-500 hover:text-gray-700">
+                    <div class="w-8 h-8 flex items-center justify-center">
+                        <i class="ri-more-2-fill"></i>
                     </div>
                 </button>
             </div>
+            <div id="monthlyTrendChart" class="w-full h-64"></div>
         </div>
-        <button class="!rounded-button bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90">
-            Export
-            Report
-        </button>
-    </div>
-    <div class="grid grid-cols-4 gap-6 mb-6 mt-5">
+
         <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Total Expenditure on Employee Lease</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-primary bg-blue-50 rounded">
-                    <i class="ri-money-dollar-circle-line"></i>
-                </div>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-semibold text-gray-900">Lease Payment Status</h3>
+                <button class="!rounded-button text-sm text-gray-500 hover:text-gray-700">
+                    <div class="w-8 h-8 flex items-center justify-center">
+                        <i class="ri-more-2-fill"></i>
+                    </div>
+                </button>
             </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">₹8,47,245</p>
-                <p class="text-xs text-gray-400 mt-1">Total amount paid to employees for lease</p>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Active Leases</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-green-600 bg-green-50 rounded">
-                    <i class="ri-file-list-line"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">1,284</p>
-                <p class="text-xs text-gray-400 mt-1">Total number of active leases</p>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Total Employees on Lease</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-orange-600 bg-orange-50 rounded">
-                    <i class="ri-team-line"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">3,157</p>
-                <p class="text-xs text-gray-400 mt-1">Total employees for lease</p>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Total Vendors of Lease</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-purple-600 bg-purple-50 rounded">
-                    <i class="ri-store-line"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">245</p>
-                <p class="text-xs text-gray-400 mt-1">Total vendors of lease</p>
-            </div>
+            <div id="leaseStatusPieChart" class="w-full h-64"></div>
         </div>
     </div>
-    <div class="grid grid-cols-4 gap-6 mb-6">
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Monthly Lease to be paid</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 rounded">
-                    <i class="ri-calendar-check-line"></i>
+
+    <!-- Recent Activities & Lease Expiry Alerts -->
+    @if (Model.RecentActivities?.Any() == true || Model.ExpiringLeases?.Any() == true)
+    {
+        <div class="grid grid-cols-2 gap-6 px-8 mt-6">
+            @if (Model.RecentActivities?.Any() == true)
+            {
+                <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                    <h3 class="font-semibold text-gray-900 mb-4">Recent Activities</h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        @foreach (var activity in Model.RecentActivities.Take(5))
+                        {
+                            <div class="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="ri-@(activity.ActivityType.ToLower() == "lease" ? "file-list" : activity.ActivityType.ToLower() == "employee" ? "user" : "store")-line text-blue-600 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-900">@activity.Description</p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        @activity.UserName - @activity.ActivityDate.ToString("MMM dd, yyyy HH:mm")
+                                        <span class="inline-flex px-2 py-0.5 text-xs rounded-full 
+                                            @(activity.Status == "Approved" ? "bg-green-100 text-green-800" : 
+                                              activity.Status == "Pending" ? "bg-yellow-100 text-yellow-800" : 
+                                              "bg-red-100 text-red-800")">
+                                            @activity.Status
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">₹1,24,850</p>
-                <p class="text-xs text-gray-400 mt-1">Monthly expenditure to employees for lease</p>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Security Deposit paid</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-teal-600 bg-teal-50 rounded">
-                    <i class="ri-safe-2-line"></i>
+            }
+
+            @if (Model.ExpiringLeases?.Any() == true)
+            {
+                <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
+                    <h3 class="font-semibold text-gray-900 mb-4">Lease Expiry Alerts</h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        @foreach (var lease in Model.ExpiringLeases.Take(5))
+                        {
+                            <div class="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0">
+                                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <i class="ri-alert-line text-orange-600 text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-900">@lease.RefNo - @lease.EmployeeName</p>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Expires on @lease.EndDate.ToString("MMM dd, yyyy") 
+                                        <span class="text-orange-600 font-semibold">(@lease.DaysRemaining days remaining)</span>
+                                    </p>
+                                    <p class="text-xs text-gray-400">Vendor: @lease.VendorName | Rent: ₹@lease.MonthlyRentPayable.ToString("N0")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">₹5,28,940</p>
-                <p class="text-xs text-gray-400 mt-1">Total paid to employees for Security Deposit</p>
-            </div>
+            }
         </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Brokerage paid</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-yellow-600 bg-yellow-50 rounded">
-                    <i class="ri-exchange-dollar-line"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">₹42,150</p>
-                <p class="text-xs text-gray-400 mt-1">Total paid to employees for Brokerage</p>
-            </div>
-        </div>
-        <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-500 text-sm">Approved / Pending Approvals</h3>
-                <div class="w-8 h-8 flex items-center justify-center text-green-600 bg-green-50 rounded">
-                    <i class="ri-checkbox-circle-line"></i>
-                </div>
-            </div>
-            <div>
-                <p class="text-2xl font-semibold text-gray-900">847 / 124</p>
-                <p class="text-xs text-gray-400 mt-1">Number of Approved / Pending lease payments</p>
-            </div>
-        </div>
-    </div>
+    }
 </div>
-<div class="grid grid-cols-2 gap-6 px-4">
-    <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="font-semibold text-gray-900">Monthly Expenditure Trend</h3>
-            <button class="!rounded-button text-sm text-gray-500 hover:text-gray-700">
-                <div class="w-8 h-8 flex items-center justify-center">
-                    <i class="ri-more-2-fill"></i>
-                </div>
-            </button>
-        </div>
-        <div id="monthlyTrendChart" class="w-full h-64"></div>
-    </div>
-    <div class="bg-white p-6 rounded shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="font-semibold text-gray-900">Lease Payment Status</h3>
-            <button class="!rounded-button text-sm text-gray-500 hover:text-gray-700">
-                <div class="w-8 h-8 flex items-center justify-center">
-                    <i class="ri-more-2-fill"></i>
-                </div>
-            </button>
-        </div>
-        <div id="leaseStatusPieChart" class="w-full h-64"></div>
-    </div>
-</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const financialYear = @financialYear;
+            
+            // Initialize charts
+            initializeMonthlyTrendChart();
+            initializeLeaseStatusChart();
+            
+            // Financial Year Change Handler
+            document.getElementById('financialYearSelect').addEventListener('change', function() {
+                window.location.href = '@Url.Action("index", "Dashboard")?year=' + this.value;
+            });
+            
+            // Export Report Handler
+            document.getElementById('exportReportBtn').addEventListener('click', function() {
+                fetch('/api/Dashboard/ExportReport', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                    },
+                    body: JSON.stringify({ year: financialYear })
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Dashboard_Report_${financialYear}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error exporting report:', error));
+            });
+            
+            // Initialize Monthly Trend Chart
+            function initializeMonthlyTrendChart() {
+                const chart = echarts.init(document.getElementById('monthlyTrendChart'));
+                const monthlyData = @Html.Raw(Json.Serialize(Model.MonthlyTrend));
+                
+                const option = {
+                    animation: true,
+                    grid: {
+                        top: 10,
+                        right: 10,
+                        bottom: 20,
+                        left: 40,
+                        containLabel: true
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            return params[0].name + '<br/>' +
+                                   'Amount: ₹' + params[0].value.toLocaleString('en-IN');
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: monthlyData.map(item => item.monthName),
+                        axisLine: {
+                            lineStyle: {
+                                color: '#E5E7EB'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#1F2937'
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            color: '#1F2937',
+                            formatter: function(value) {
+                                return '₹' + (value / 1000).toFixed(0) + 'K';
+                            }
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: '#E5E7EB'
+                            }
+                        }
+                    },
+                    series: [{
+                        data: monthlyData.map(item => item.amount),
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: '#3b82f6'
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                offset: 0,
+                                color: 'rgba(59, 130, 246, 0.3)'
+                            }, {
+                                offset: 1,
+                                color: 'rgba(59, 130, 246, 0)'
+                            }])
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+                window.addEventListener('resize', () => chart.resize());
+            }
+            
+            // Initialize Lease Status Pie Chart
+            function initializeLeaseStatusChart() {
+                const chart = echarts.init(document.getElementById('leaseStatusPieChart'));
+                const statusData = @Html.Raw(Json.Serialize(Model.LeasePaymentStatus));
+                
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        right: 10,
+                        top: 'center',
+                        data: statusData.map(item => item.status)
+                    },
+                    series: [{
+                        name: 'Lease Payment Status',
+                        type: 'pie',
+                        radius: ['50%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 8,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: true,
+                            position: 'outside',
+                            formatter: '{b}: {c}'
+                        },
+                        labelLine: {
+                            show: true
+                        },
+                        data: statusData.map(item => ({
+                            value: item.count,
+                            name: item.status,
+                            itemStyle: { color: item.color }
+                        }))
+                    }]
+                };
+                
+                chart.setOption(option);
+                window.addEventListener('resize', () => chart.resize());
+            }
+            
+            // Auto-refresh dashboard every 5 minutes
+            setInterval(function() {
+                refreshStatistics();
+            }, 300000); // 5 minutes
+            
+            function refreshStatistics() {
+                fetch('/api/Dashboard/GetStatistics?year=' + financialYear)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update statistics cards
+                            console.log('Dashboard statistics refreshed');
+                        }
+                    })
+                    .catch(error => console.error('Error refreshing statistics:', error));
+            }
+        });
+    </script>
+}

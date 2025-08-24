@@ -35,7 +35,7 @@ namespace RentManagement.Controllers
                 var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
                 var currentUser = await _userRepository.GetByIdAsync(userId);
 
-                var model = new DashboardViewModel
+                var model = new ViewModels.DashboardViewModel
                 {
                     CurrentUser = currentUser!,
                     TotalUsers = await _userRepository.GetTotalUsersCountAsync(),
