@@ -303,7 +303,12 @@
 
                                 // Populate lease details
                                 $('#MonthlyLeaseAmount').val(response.lease.monthlyRentPayable || 0);
-                                $('#LeaseEndDate').val(response.lease.endDate);
+                                var date = new Date(response.lease.endDate);
+
+                                var formattedDate = ("0" + date.getDate()).slice(-2) + "/" +
+                                    ("0" + (date.getMonth() + 1)).slice(-2) + "/" +
+                                    date.getFullYear();
+                                $('#LeaseEndDate').val(formattedDate);
                                 
                                 // Set current month as default payment month
                                 var currentDate = new Date();

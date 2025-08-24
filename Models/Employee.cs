@@ -32,9 +32,11 @@ namespace RentManagement.Models
         public string? Pan { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Department is required.")]
+        [Required(ErrorMessage = "Department is required.")]
         public int DepartmentId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Designation is required.")]
+        [Required(ErrorMessage = "Designation is required.")]
         public int DesignationId { get; set; }
 
         [Required(ErrorMessage = "Date of Joining is required.")]
@@ -50,6 +52,10 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Basic Salary is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Basic Salary must be a positive number.")]
         public decimal? BasicSalary { get; set; }
+
+        [Required(ErrorMessage = "HRA is required.")]
+        [Display(Name = "HRA")]
+        public decimal? HRA { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "House Rent Allowance must be a positive number.")]
         public decimal? HouseRentAllowance { get; set; }
@@ -101,8 +107,7 @@ namespace RentManagement.Models
         // Helper property to check if employee is visible in main list
         public bool IsVisibleInMainList => ApprovalStatus == ApprovalStatus.Approved && IsActiveRecord;
 
-        [Display(Name = "HRA")]
-        public decimal? HRA { get; set; }
+    
 
         // Helper property to get approval status display text
         public string ApprovalStatusText => ApprovalStatus switch

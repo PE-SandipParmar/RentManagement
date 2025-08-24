@@ -121,7 +121,7 @@
                             <div class="text-sm text-gray-900">@employee.DesignationName</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">@(employee.TotalSalary?.ToString("C") ?? "N/A")</div>
+                            <div class="text-sm text-gray-900">₹@(employee.TotalSalary?.ToString("") ?? "N/A")</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <form method="post" asp-controller="Employee" asp-action="ToggleActive" asp-route-id="@employee.Id">

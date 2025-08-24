@@ -161,7 +161,7 @@
                 </div>
             }
             <!-- Page Size Selection -->
-            <div class="relative">
+         @*    <div class="relative">
                
                     <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-sm">
                 <option value="5">5</option>
@@ -170,11 +170,22 @@
                 <option value="50">50</option>
             </select>
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-            </div>
+            </div> *@
             <button onclick="searchLeases()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">Search</button>
         </div>
     </div>
-
+       <!-- Data Table -->
+    <div class="flex justify-end items-center mb-2">
+        <div class="flex items-center">
+            <label for="pageSize" class="mr-2 text-sm text-gray-700">Rows per page:</label>
+            <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
     <!-- Data Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
