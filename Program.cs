@@ -115,7 +115,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Dashboard}/{id?}");
+    pattern: "{controller=Dashboard}/{action=index}/{id?}");
 
 app.MapControllers(); // For API controllers
 
