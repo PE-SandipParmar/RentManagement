@@ -321,7 +321,7 @@
                             $('#LeaseId').prop('disabled', false);
                             
                             $.each(response.leases, function(index, lease) {
-                                var optionText = lease.name;
+                                var optionText = lease.refNo;
                                 if (lease.monthlyRentPayable) {
                                     optionText += ' - ₹' + formatNumber(lease.monthlyRentPayable);
                                 }
