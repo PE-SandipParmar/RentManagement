@@ -1,58 +1,13 @@
-﻿@model PagedResult<MonthlyRentPayment>
+﻿@model RentManagement.Models.MonthlyPaymentListViewModel
 @{
     ViewData["Title"] = "Monthly Rent Payments";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var isChecker = Model.CurrentUserRole == RentManagement.Models.UserRole.Checker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin;
+    var isMaker = Model.CurrentUserRole == RentManagement.Models.UserRole.Maker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin;
 }
+
+<!-- Keep all existing styles from original file -->
 <style>
-    .select2-container--default .select2-selection--single {
-        height: 42px;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        padding: 6px 12px;
-    }
-
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #374151;
-            line-height: 28px;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 40px;
-        }
-
-    .toast-enter {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    .toast-enter-active {
-        transform: translateX(0);
-        opacity: 1;
-        transition: transform 300ms ease-out, opacity 300ms ease-out;
-    }
-
-    .toast-exit {
-        transform: translateX(0);
-        opacity: 1;
-    }
-
-    .toast-exit-active {
-        transform: translateX(100%);
-        opacity: 0;
-        transition: transform 300ms ease-in, opacity 300ms ease-in;
-    }
-
-    .input-error {
-        border-color: #ef4444 !important;
-        border-width: 2px !important;
-    }
-
-    .error-message {
-        color: #ef4444;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
     .status-badge {
         display: inline-block;
         padding: 0.25rem 0.5rem;
@@ -63,41 +18,17 @@
         letter-spacing: 0.05em;
     }
 
-    .status-active {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-
-    .status-inactive {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-
-    .status-pending {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-
-    .status-approved {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-
-    .status-rejected {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-
-    .table-row:hover {
-        background-color: #f9fafb;
-    }
-
-    .animate-spin {
-        animation: spin 1s linear infinite;
-    }
+    .status-active { background-color: #d1fae5; color: #065f46; }
+    .status-inactive { background-color: #fee2e2; color: #991b1b; }
+    .status-pending { background-color: #fef3c7; color: #92400e; }
+    .status-approved { background-color: #d1fae5; color: #065f46; }
+    .status-rejected { background-color: #fee2e2; color: #991b1b; }
+    .table-row:hover { background-color: #f9fafb; }
+    .animate-spin { animation: spin 1s linear infinite; }
 </style>
+
 <div class="p-1">
-    <!-- Breadcrumb -->
+    <!-- Breadcrumb - Keep as is -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
             <li class="inline-flex items-center">
@@ -115,63 +46,170 @@
         </ol>
     </nav>
 
-    <!-- Success/Error Messages -->
-    <div id="alertContainer" class="mb-4"></div>
+    <!-- Success/Error Messages - Keep as is -->
+    <div id="alertContainer" class="mb-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border-green-400 text-green-700 px-4 py-3 rounded border" role="alert">
+                <span class="block sm:inline">@TempData["SuccessMessage"]</span>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded border" role="alert">
+                <span class="block sm:inline">@TempData["ErrorMessage"]</span>
+            </div>
+        }
+    </div>
 
-    <!-- Page Header -->
+    <!-- Page Header - Keep as is -->
     <div class="flex items-center justify-between mb-6">
         <div>
             <h2 class="text-2xl font-bold text-gray-900">Monthly Rent Payments</h2>
             <p class="text-gray-600 mt-1">Manage monthly rent payment records</p>
         </div>
-        <a href="@Url.Action("Create")" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
-            <i class="ri-add-line mr-2"></i>
-            Add New Payment
-        </a>
+        @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
+        {
+            <a href="@Url.Action("Create")" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
+                <i class="ri-add-line mr-2"></i>
+                Add New Payment
+            </a>
+        }
     </div>
 
-    <!-- Filters/Search -->
-    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
-        <form method="get" id="searchForm">
-            <div class="flex flex-col md:flex-row gap-4">
-                <!-- Search -->
-                <div class="flex-1">
-                    <div class="relative">
-                        <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" name="search" value="@ViewBag.Search" id="searchInput"
-                               placeholder="Search by name, email or code..."
-                               class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+    <!-- Pending Approvals Section (Checker Only) - Keep existing structure -->
+    @if (isChecker && Model.PendingApprovals != null && Model.PendingApprovals.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-yellow-800">Pending Approvals (@Model.PendingApprovals.Count())</h3>
+                <button onclick="showAllPendingApprovals()" class="text-sm text-yellow-700 hover:text-yellow-900">View All</button>
+            </div>
+            <div class="space-y-3">
+                @foreach (var payment in Model.PendingApprovals.Take(3))
+                {
+                    <div class="bg-white rounded border p-3 flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <span class="font-medium text-gray-900">@payment.EmployeeName</span>
+                                    <span class="text-sm text-gray-500">- @payment.VendorName</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Action: <span class="font-medium">@payment.MakerAction.ToString()</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    By: <span class="font-medium">@payment.MakerUserName</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Amount: <span class="font-medium">₹@payment.NetPayableAmount.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="viewPayment(@payment.Id)" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200">
+                                View
+                            </button>
+                            <button onclick="approvePayment(@payment.Id)" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">
+                                Approve
+                            </button>
+                            <button onclick="openRejectModal(@payment.Id, '@payment.EmployeeName')" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200">
+                                Reject
+                            </button>
+                        </div>
                     </div>
-                </div>
+                }
+            </div>
+        </div>
+    }
 
-                <!-- Page Size -->
+    <!-- Enhanced Filters/Search -->
+    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <!-- Search Bar -->
+            <div class="flex-1">
                 <div class="relative">
-                    <select name="PageSize" asp-for="PageSize" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent"
-                            asp-items="@(new SelectList(new[] {10,25,50,100}, ViewBag.PageSize))" onchange="document.getElementById('searchForm').submit()">
-                    </select>
-                    <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                </div>
-
-                <!-- Buttons -->
-                <div class="flex gap-2">
-                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center">
-                        <i class="ri-search-line mr-2"></i>
-                        Search
-                    </button>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                    {
-                        <a href="@Url.Action("Index")" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
-                            <i class="ri-close-line mr-2"></i>
-                            Clear
-                        </a>
-                    }
+                    <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search payments..."
+                           value="@Model.SearchTerm"
+                           class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
             </div>
-            <input type="hidden" name="page" value="1" />
-        </form>
+
+            <!-- Payment Status Filter -->
+            <div class="relative">
+                <select id="statusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Status</option>
+                    @if (Model.StatusFilter == "Active")
+                    {
+                        <option value="Active" selected>Active</option>
+                    }
+                    else
+                    {
+                        <option value="Active">Active</option>
+                    }
+                    @if (Model.StatusFilter == "Inactive")
+                    {
+                        <option value="Inactive" selected>Inactive</option>
+                    }
+                    else
+                    {
+                        <option value="Inactive">Inactive</option>
+                    }
+                </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
+
+            <!-- Approval Status Filter - Updated with All option -->
+            <div class="relative">
+                <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                    {
+                        <option value="Pending" selected>Pending</option>
+                    }
+                    else
+                    {
+                        <option value="Pending">Pending</option>
+                    }
+                    @if (Model.ApprovalStatusFilter == "Approved")
+                    {
+                        <option value="Approved" selected>Approved</option>
+                    }
+                    else
+                    {
+                        <option value="Approved">Approved</option>
+                    }
+
+                    @if (Model.ApprovalStatusFilter == "Rejected")
+                    {
+                        <option value="Rejected" selected>Rejected</option>
+                    }
+                    else
+                    {
+                        <option value="Rejected">Rejected</option>
+                    }
+                </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
+
+            <button onclick="searchPayments()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">Search</button>
+        </div>
     </div>
 
-    <!-- Table -->
+    <!-- Page Size Selector -->
+    <div class="flex justify-end items-center mb-2">
+        <div class="flex items-center">
+            <label for="pageSize" class="mr-2 text-sm text-gray-700">Rows per page:</label>
+            <select id="pageSize" onchange="changePageSize()" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Data Table - Updated with all columns -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -179,55 +217,88 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
-
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease end date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TDS (%)</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DSC Approval Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Month</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
+                        @if (isChecker)
+                        {
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        }
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var payment in Model.Items)
+                <tbody id="paymentTableBody" class="bg-white divide-y divide-gray-200">
+                    @if (Model.Payments != null && Model.Payments.Any())
                     {
-                        <tr class="hover:bg-gray-50 table-row">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.EmployeeName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.VendorName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.MonthlyLeaseAmount?.ToString("")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(payment.LeaseEndDate.ToString("dd/MM/yyyy"))</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.TDSRate</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                @if (payment.DSCApprovalStatus.Equals("Pending"))
+                        @foreach (var payment in Model.Payments)
+                        {
+                            <tr class="table-row">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.EmployeeName</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.VendorName</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.PaymentMonth?.ToString("MMM yyyy")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.NetPayableAmount.ToString("N2")</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="status-badge @(payment.PaymentStatus == "Paid" ? "status-approved" : payment.PaymentStatus == "Cancelled" ? "status-rejected" : "status-pending")">
+                                        @payment.PaymentStatus
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (payment.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                    else if (payment.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else if (payment.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                    {
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    }
+                                </td>
+                                @if (isChecker)
                                 {
-                                    <span class="status-badge status-pending">Pending</span>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.MakerUserName</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.MakerAction.ToString()</td>
                                 }
-                                else if (payment.DSCApprovalStatus.Equals("Approved"))
-                                {
-                                    <span class="status-badge status-approved">Approved</span>
-                                }
-                                else if (payment.DSCApprovalStatus.Equals("Rejected"))
-                                {
-                                    <span class="status-badge status-rejected">Rejected</span>
-                                }
-                            
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.Remark</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <form method="post" asp-controller="MonthlyRentPayment" asp-action="ToggleActive" asp-route-id="@payment.Id">
-                                    <button type="submit" class="hover:opacity-80 transition-opacity">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @(payment.IsActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
-                                            <span class="w-1.5 h-1.5 @(payment.IsActive ? "bg-green-400" : "bg-red-400") rounded-full mr-1.5"></span>
-                                            @(payment.IsActive ? "Active" : "Inactive")
-                                        </span>
-                                    </button>
-                                </form>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                                <a href="@Url.Action("Details", new { id = payment.Id })" class="text-primary hover:text-primary/80" title="View Details"><i class="ri-eye-line"></i></a>
-                                <a href="@Url.Action("Edit", new { id = payment.Id })" class="text-green-600 hover:text-green-800" title="Edit"><i class="ri-edit-line"></i></a>
-                                <a href="@Url.Action("Delete", new { id = payment.Id })" class="text-red-600 hover:text-red-700" title="Delete" onclick="return confirm('Are you sure you want to delete this payment?')"><i class="ri-delete-bin-line"></i></a>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex gap-2 justify-center">
+                                        <button onclick="viewPayment(@payment.Id)" class="text-primary hover:text-primary/80" title="View">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                        @if (payment.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending && isChecker)
+                                        {
+                                            <button onclick="approvePayment(@payment.Id)" class="text-green-600 hover:text-green-800" title="Approve">
+                                                <i class="ri-check-line"></i>
+                                            </button>
+                                            <button onclick="openRejectModal(@payment.Id, '@payment.EmployeeName')" class="text-red-600 hover:text-red-700" title="Reject">
+                                                <i class="ri-close-line"></i>
+                                            </button>
+                                        }
+                                        @if (payment.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved && isMaker)
+                                        {
+                                            <a href="@Url.Action("Edit", new { id = payment.Id })" class="text-green-600 hover:text-green-800" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                            <a href="@Url.Action("Delete", new { id = payment.Id })" class="text-red-600 hover:text-red-700" title="Delete">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="@(isChecker ? 9 : 7)" class="px-6 py-12 text-center">
+                                <div class="text-gray-500">
+                                    <i class="ri-file-list-line text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg font-medium text-gray-900 mb-2">No payments found</p>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -235,81 +306,237 @@
             </table>
         </div>
 
-        <!-- Empty state -->
-        @if (!Model.Items.Any())
+        <!-- Pagination - Keep existing pagination -->
+        @if (Model.TotalPages > 0)
         {
-            <div class="px-6 py-12 text-center">
-                <div class="text-gray-500">
-                    <i class="ri-file-list-line text-4xl text-gray-300 mb-4"></i>
-                    @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+            <div id="pagination" class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+                <div class="flex items-center text-sm text-gray-700">
+                    <span id="paginationInfo">
+                        Showing @((Model.CurrentPage - 1) * Model.PageSize + 1) to @Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalRecords) of @Model.TotalRecords results
+                    </span>
+                </div>
+                <div class="flex items-center space-x-2" id="paginationButtons">
+                    @if (Model.CurrentPage > 1)
                     {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No records found</p>
-                        <p class="text-sm">No payments found matching your search criteria.</p>
+                        <button onclick="goToPage(@(Model.CurrentPage - 1))" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Previous</button>
                     }
-                    else
+                    @for (int i = 1; i <= Model.TotalPages; i++)
                     {
-                        <p class="text-lg font-medium text-gray-900 mb-2">No payments found</p>
-                        <p class="text-sm mb-4">Get started by adding a new payment record.</p>
-                        <a href="@Url.Action("Create")" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
-                            <i class="ri-add-line mr-2"></i>
-                            Add the first payment
-                        </a>
+                        if (i == Model.CurrentPage)
+                        {
+                            <span class="rounded px-3 py-1 text-sm bg-primary text-white">@i</span>
+                        }
+                        else
+                        {
+                            <button onclick="goToPage(@i)" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">@i</button>
+                        }
+                    }
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <button onclick="goToPage(@(Model.CurrentPage + 1))" class="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700">Next</button>
                     }
                 </div>
             </div>
         }
+    </div>
+</div>
 
-        <!-- Pagination -->
-        <div class="bg-white px-6 py-3 border-t border-gray-200 flex items-center justify-between">
-            <div class="text-sm text-gray-700">
-                Showing @(((Model.PageNumber - 1) * Model.PageSize) + 1)
-                to @Math.Min(Model.PageNumber * Model.PageSize, Model.TotalItems)
-                of @Model.TotalItems results
+<!-- Keep existing Reject Payment Modal -->
+<div id="rejectModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <!-- Modal content as is -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-50" onclick="closeRejectModal()"></div>
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 relative">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="ri-error-warning-line text-red-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Reject Payment</h3>
+                </div>
             </div>
-            <div class="flex space-x-1">
-                @if (Model.HasPreviousPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber - 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Previous
-                    </a>
-                }
-                else
-                {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">
-                        Previous
-                    </span>
-                }
-
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    if (i == Model.PageNumber)
-                    {
-                        <span class="px-3 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-md">@i</span>
-                    }
-                    else
-                    {
-                        <a href="@Url.Action("Index", new { page = i, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                            @i
-                        </a>
-                    }
-                }
-
-                @if (Model.HasNextPage)
-                {
-                    <a href="@Url.Action("Index", new { page = Model.PageNumber + 1, search = ViewBag.Search, PageSize = ViewBag.PageSize })"
-                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Next
-                    </a>
-                }
-                else
-                {
-                    <span class="px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md">
-                        Next
-                    </span>
-                }
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-3">Are you sure you want to reject payment for <strong id="rejectPaymentName"></strong>?</p>
+                <textarea id="rejectionReason" placeholder="Please provide a reason for rejection..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows="3" required></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeRejectModal()" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                    Cancel
+                </button>
+                <button type="button" onclick="rejectPayment()" class="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg">
+                    Reject
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Keep all existing JavaScript functions
+        let currentPage = @Model.CurrentPage;
+        let pageSize = @Model.PageSize;
+        let currentPaymentId = null;
+        let currentUserRole = '@Model.CurrentUserRole';
+        let isChecker = @(isChecker ? "true" : "false");
+
+        // Show all pending approvals
+        function showAllPendingApprovals() {
+            document.getElementById('approvalStatusFilter').value = 'Pending';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            currentPage = 1;
+            searchPayments();
+        }
+
+        // Search payments
+        function searchPayments() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const approvalStatusFilter = document.getElementById('approvalStatusFilter').value;
+            
+            const params = new URLSearchParams({
+                searchTerm: searchTerm,
+                statusFilter: statusFilter,
+                approvalStatusFilter: approvalStatusFilter,
+                page: currentPage,
+                pageSize: pageSize
+            });
+            
+            window.location.href = '@Url.Action("Index")?' + params.toString();
+        }
+
+        // Change page size
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            searchPayments();
+        }
+
+        // Go to page
+        function goToPage(page) {
+            currentPage = page;
+            searchPayments();
+        }
+
+        // View payment details
+        function viewPayment(id) {
+            window.location.href = '@Url.Action("Details")/' + id;
+        }
+
+        // Approve payment
+        function approvePayment(id) {
+            if (!confirm('Are you sure you want to approve this payment?')) {
+                return;
+            }
+
+            fetch('@Url.Action("ApprovePayment")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: 'id=' + id
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('success', result.message);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showAlert('error', result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while approving the payment.');
+            });
+        }
+
+        // Open reject modal
+        function openRejectModal(id, name) {
+            currentPaymentId = id;
+            document.getElementById('rejectPaymentName').textContent = name;
+            document.getElementById('rejectionReason').value = '';
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close reject modal
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            currentPaymentId = null;
+        }
+
+        // Reject payment
+        function rejectPayment() {
+            if (!currentPaymentId) return;
+
+            const rejectionReason = document.getElementById('rejectionReason').value.trim();
+            if (!rejectionReason) {
+                showAlert('error', 'Please provide a reason for rejection.');
+                return;
+            }
+
+            const data = {
+                id: currentPaymentId,
+                rejectionReason: rejectionReason
+            };
+
+            fetch('@Url.Action("RejectPayment")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('success', result.message);
+                    closeRejectModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showAlert('error', result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while rejecting the payment.');
+            });
+        }
+
+        // Show alert
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+
+            container.innerHTML = `
+                <div class="${alertClass} px-4 py-3 rounded border" role="alert">
+                    <span class="block sm:inline">${message}</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set page size from model
+            document.getElementById('pageSize').value = '@Model.PageSize';
+            
+            // Search on enter key
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchPayments();
+                }
+            });
+        });
+    </script>
+}
