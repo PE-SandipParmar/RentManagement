@@ -35,7 +35,7 @@ namespace RentManagement.Controllers
         {
             if (User.Identity?.IsAuthenticated == true && !isAdmin)
             {
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("Index", "Dashboard");
             }
 
             if (isAdmin && !User.IsInRole(Roles.Admin))
@@ -143,7 +143,7 @@ namespace RentManagement.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("Index", "Dashboard");
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -214,9 +214,9 @@ namespace RentManagement.Controllers
                 return user.Role switch
                 {
                     UserRole.Admin => RedirectToAction("Dashboard", "Admin"),
-                    UserRole.Checker => RedirectToAction("Dashboard"),
-                    UserRole.Maker => RedirectToAction("Dashboard"),
-                    _ => RedirectToAction("Dashboard")
+                    UserRole.Checker =>  RedirectToAction("Index", "Dashboard"),
+                    UserRole.Maker => RedirectToAction("Index", "Dashboard"),
+                    _ => RedirectToAction("Index","Dashboard")
                 };
             }
             catch (Exception ex)
@@ -255,6 +255,8 @@ namespace RentManagement.Controllers
                     model.RecentUsers = await _userRepository.GetRecentUsersAsync();
                     model.UsersByRole = await _userRepository.GetUserCountByRoleAsync();
                 }
+
+
 
                 return View(model);
             }
