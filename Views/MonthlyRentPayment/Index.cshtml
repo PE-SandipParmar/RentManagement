@@ -3,7 +3,99 @@
     ViewData["Title"] = "Monthly Rent Payments";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+    }
 
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151;
+            line-height: 28px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
+
+    .toast-enter {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    .toast-enter-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: transform 300ms ease-out, opacity 300ms ease-out;
+    }
+
+    .toast-exit {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast-exit-active {
+        transform: translateX(100%);
+        opacity: 0;
+        transition: transform 300ms ease-in, opacity 300ms ease-in;
+    }
+
+    .input-error {
+        border-color: #ef4444 !important;
+        border-width: 2px !important;
+    }
+
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .table-row:hover {
+        background-color: #f9fafb;
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+</style>
 <div class="p-1">
     <!-- Breadcrumb -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
@@ -87,11 +179,10 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Month</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Lease Amount</th>
+
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lease end date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TDS (%)</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Payable</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DSC Approval Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -104,12 +195,24 @@
                         <tr class="hover:bg-gray-50 table-row">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.EmployeeName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.VendorName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(payment.PaymentMonth?.ToString("MMM yyyy"))</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.MonthlyLeaseAmount?.ToString("")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(payment.LeaseEndDate.ToString("dd/MM/yyyy"))</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.TDSRate</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@payment.NetPayableAmount.ToString("")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.PaymentStatus</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.DSCApprovalStatus</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if (payment.DSCApprovalStatus.Equals("Pending"))
+                                {
+                                    <span class="status-badge status-pending">Pending</span>
+                                }
+                                else if (payment.DSCApprovalStatus.Equals("Approved"))
+                                {
+                                    <span class="status-badge status-approved">Approved</span>
+                                }
+                                else if (payment.DSCApprovalStatus.Equals("Rejected"))
+                                {
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                }
+                            
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@payment.Remark</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <form method="post" asp-controller="MonthlyRentPayment" asp-action="ToggleActive" asp-route-id="@payment.Id">
