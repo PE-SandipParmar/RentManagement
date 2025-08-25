@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using RentManagement.Data;
 using RentManagement.Models;
+using RentPaymentSystem.Repositories;
+using RentPaymentSystem.Repositories.RentPaymentSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,7 @@ builder.Services.AddScoped<IMonthlyRentPaymentRepository, MonthlyRentPaymentRepo
 builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentRepository>();
 builder.Services.AddScoped<ISecurityDepositRepository, SecurityDepositRepository>();
 builder.Services.AddScoped<IMISReportRepository, MISReportRepository>();
+builder.Services.AddScoped<IReportService, ReportService>();
 // Register repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 

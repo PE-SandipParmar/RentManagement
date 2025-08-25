@@ -694,8 +694,61 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
             initializeValidation();
+            setupFormValidations();
         });
+        function setupFormValidations() {
+            $('#vendorName').on('input', function () {
+                const value = this.value;
+                const regex = /^[a-zA-Z\s]*$/;
+                if (!regex.test(value)) {
+                    this.value = value.replace(/[^a-zA-Z\s]/g, '');
+                    showFieldError('name', 'Only alphabetic characters and spaces are allowed');
+                } else {
+                    clearFieldError('name');
+                }
+            });
 
+           
+
+            // Enhanced PAN validation - exact format validation
+            $('#pan').on('input', function () {
+                let value = this.value.toUpperCase();
+                value = value.replace(/[^A-Z0-9]/g, '');
+
+                let formattedValue = '';
+                for (let i = 0; i < Math.min(value.length, 10); i++) {
+                    if (i < 5) {
+                        if (/[A-Z]/.test(value[i])) {
+                            formattedValue += value[i];
+                        }
+                    } else if (i >= 5 && i < 9) {
+                        if (/[0-9]/.test(value[i])) {
+                            formattedValue += value[i];
+                        }
+                    } else if (i === 9) {
+                        if (/[A-Z]/.test(value[i])) {
+                            formattedValue += value[i];
+                        }
+                    }
+                }
+
+                this.value = formattedValue;
+
+                if (formattedValue.length === 0) {
+                    clearFieldError('pan');
+                } else if (formattedValue.length < 10) {
+                    showFieldError('pan', 'PAN must be exactly 10 characters (Format: ABCDE1234F)');
+                } else if (formattedValue.length === 10) {
+                    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+                    if (panRegex.test(formattedValue)) {
+                        clearFieldError('pan');
+                    } else {
+                        showFieldError('pan', 'Invalid PAN format. Must be: 5 letters + 4 digits + 1 letter');
+                    }
+                }
+            });
+
+        }
         // Additional approval workflow functions
         function showAllPendingApprovals() {
             document.getElementById('approvalStatusFilter').value = 'Pending';
@@ -827,7 +880,56 @@
             clearFieldError(input);
             return true;
         }
+        function validateVendorName(input) {
+            const namePattern = /^[a-zA-Z\s]+$/;
+            if (input.value && !namePattern.test(input.value)) {
+                showFieldError(input, 'Owner Name can only contain letters and spaces');
+                return false;
+            }
+            clearFieldError(input);
+            return true;
+        }
+        function validateToDate(input, fromDateInput) {
+            const selectedDate = new Date(input.value);
+            const today = new Date();
+            const fromDate = fromDateInput ? new Date(fromDateInput.value) : null;
 
+            if (selectedDate > today) {
+                showFieldError(input, 'To Date cannot be in the future');
+                return false;
+            }
+
+            if (fromDate && selectedDate < fromDate) {
+                showFieldError(input, 'To Date cannot be before From Date');
+                return false;
+            }
+
+            clearFieldError(input);
+            return true;
+        }
+
+        function validateFromDate(input) {
+            const selectedDate = new Date(input.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (selectedDate < today) {
+                showFieldError(input, 'From Date cannot be in the past');
+                return false;
+            }
+            clearFieldError(input);
+            return true;
+        }
+        function validateAccountNumber(input) {
+            // Basic validation - adjust pattern as per your bank's requirements
+            const accountPattern = /^[0-9]{9,18}$/; // 9-18 digits
+            if (input.value && !accountPattern.test(input.value)) {
+                showFieldError(input, 'Account Number must be 9-18 digits only');
+                return false;
+            }
+            clearFieldError(input);
+            return true;
+        }
         // Modified loadVendors function to include approval status filter
         function loadVendors() {
             debugger
@@ -1252,8 +1354,22 @@
             // Account Number validation
             document.querySelectorAll('input[name="accountNumber"]').forEach(input => {
                 input.addEventListener('input', function () {
-                    this.value = this.value.replace(/[^A-Z0-9]/gi, '');
+                    // Only allow numbers
+                    this.value = this.value.replace(/[^0-9]/g, '');
                     clearFieldError(this);
+                });
+                input.addEventListener('blur', function () {
+                    validateAccountNumber(this);
+                });
+            });
+            document.querySelectorAll('input[name="vendorName"]').forEach(input => {
+                input.addEventListener('input', function () {
+                    // Remove numbers and special characters as user types
+                    this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+                    clearFieldError(this);
+                });
+                input.addEventListener('blur', function () {
+                    validateVendorName(this);
                 });
             });
 
@@ -1282,6 +1398,23 @@
                 if (!validateBankFields(input)) {
                     isValid = false;
                 }
+            });
+            document.querySelectorAll('input[name="toDate"]').forEach(input => {
+                input.addEventListener('change', function () {
+                    const fromDateInput = document.querySelector('input[name="fromDate"]');
+                    validateToDate(this, fromDateInput);
+                });
+            });
+
+            document.querySelectorAll('input[name="fromDate"]').forEach(input => {
+                input.addEventListener('change', function () {
+                    validateFromDate(this);
+                    // Also validate to date if it exists
+                    const toDateInput = document.querySelector('input[name="toDate"]');
+                    if (toDateInput && toDateInput.value) {
+                        validateToDate(toDateInput, this);
+                    }
+                });
             });
             // Required field validation
             document.querySelectorAll('input[required], textarea[required]').forEach(input => {
@@ -1384,12 +1517,7 @@
             const form = document.getElementById(formId);
             let isValid = true;
 
-            // // Validate all required fields
-            // form.querySelectorAll('input[required], textarea[required]').forEach(input => {
-            //     if (!validateRequired(input)) {
-            //         isValid = false;
-            //     }
-            // });
+           
 
             // Validate specific field formats
             form.querySelectorAll('input[name="panNumber"]').forEach(input => {
@@ -1404,11 +1532,11 @@
                 }
             });
 
-            // form.querySelectorAll('input[name="ifscCode"]').forEach(input => {
-            //     if (!validateIFSCCode(input)) {
-            //         isValid = false;
-            //     }
-            // });
+            form.querySelectorAll('input[name="ifscCode"]').forEach(input => {
+                if (!validateIFSCCode(input)) {
+                    isValid = false;
+                }
+            });
 
             form.querySelectorAll('input[name="emailId"]').forEach(input => {
                 if (!validateEmail(input)) {
@@ -1416,6 +1544,47 @@
                 }
             });
 
+            // Validate vendor name (only alphabetic)
+            form.querySelectorAll('input[name="vendorName"]').forEach(input => {
+                if (!validateVendorName(input)) {
+                    isValid = false;
+                }
+            });
+
+            // Validate bank fields (no special characters or numbers)
+            form.querySelectorAll('input[name="bankName"], input[name="accountHolderName"], input[name="branchName"]').forEach(input => {
+                if (!validateBankFields(input)) {
+                    isValid = false;
+                }
+            });
+
+            // Validate account number format
+            form.querySelectorAll('input[name="accountNumber"]').forEach(input => {
+                if (!validateAccountNumber(input)) {
+                    isValid = false;
+                }
+            });
+
+            // Validate date fields if they exist
+            form.querySelectorAll('input[name="fromDate"]').forEach(input => {
+                if (input.value && !validateFromDate(input)) {
+                    isValid = false;
+                }
+            });
+
+            form.querySelectorAll('input[name="toDate"]').forEach(input => {
+                if (input.value) {
+                    const fromDateInput = form.querySelector('input[name="fromDate"]');
+                    if (!validateToDate(input, fromDateInput)) {
+                        isValid = false;
+                    }
+                }
+            });
+            form.querySelectorAll('input[required], textarea[required]').forEach(input => {
+                if (!validateRequired(input)) {
+                    isValid = false;
+                }
+            });
             return isValid;
         }
 

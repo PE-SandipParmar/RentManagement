@@ -302,9 +302,9 @@
                                 <input type="checkbox" class="employee-checkbox">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                @employee.Name
-                                @employee.Code
-                                
+
+                                @employee.Code - @employee.Name
+
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.DepartmentName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.DesignationName</td>
@@ -447,7 +447,7 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
                                         <input type="date" id="dateOfBirth" name="DateOfBirth" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                        <div id="dobError" class="error-message hidden"></div>
+                                        <div id="dateOfBirthError" class="error-message hidden"></div>
                                     </div>
                                 </div>
 
@@ -498,7 +498,7 @@
                                                 <option value="@dept.Id">@dept.Name</option>
                                             }
                                         </select>
-                                        <div id="departmentError" class="error-message hidden"></div>
+                                        <div id="departmentIdError" class="error-message hidden"></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Designation <span class="text-red-500">*</span></label>
@@ -509,14 +509,14 @@
                                                 <option value="@desig.Id">@desig.Name</option>
                                             }
                                         </select>
-                                        <div id="designationError" class="error-message hidden"></div>
+                                        <div id="designationIdError" class="error-message hidden"></div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Date of Joining <span class="text-red-500">*</span></label>
                                     <input type="date" id="dateOfJoining" name="DateOfJoining" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                    <div id="joiningDateError" class="error-message hidden"></div>
+                                    <div id="dateOfJoiningError" class="error-message hidden"></div>
                                 </div>
 
                                 <div>
@@ -1018,8 +1018,7 @@
                         <td class="px-4 py-4 text-center">
                             <input type="checkbox" class="employee-checkbox">
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${employee.code || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.name || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.code + '- ' + employee.name  || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.departmentName || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.designationName || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${(employee.totalSalary || 0).toFixed(2)}</td>
@@ -1268,8 +1267,9 @@
     function validateBasicSalary() {
         const totalSalary = parseFloat($('#totalSalary').val()) || 0;
         const basicSalary = parseFloat($('#basicSalary').val()) || 0;
-        clearFieldError('basicSalary');
+       
         if (basicSalary > totalSalary && totalSalary > 0) {
+            clearFieldError('basicSalary');
             showFieldError('basicSalary', 'Basic salary cannot exceed total salary');
             return false;
         }
@@ -1279,8 +1279,9 @@
     function validateHRA() {
         const totalSalary = parseFloat($('#totalSalary').val()) || 0;
         const hra = parseFloat($('#hra').val()) || 0;
-        clearFieldError('hra');
+       
         if (hra > totalSalary && totalSalary > 0) {
+            clearFieldError('hra');
             showFieldError('hra', 'HRA cannot exceed total salary');
             return false;
         }
@@ -1293,16 +1294,18 @@
         const basicSalary = parseFloat($('#basicSalary').val()) || 0;
         const hra = parseFloat($('#hra').val()) || 0;
 
-        clearFieldError('hra');
-        clearFieldError('basicSalary');
+       
+      
 
         if (totalSalary > 0 && (basicSalary > 0 || hra > 0)) {
             const combinedAmount = hra + basicSalary;
             if (combinedAmount > totalSalary) {
                 if (flg == 2) {
+                    clearFieldError('hra');
                     showFieldError('hra', `HRA and Basic Salary combined (₹${combinedAmount.toFixed(2)}) cannot exceed Total Salary (₹${totalSalary.toFixed(2)})`);
                 }
                 else{
+                    clearFieldError('basicSalary');
                     showFieldError('basicSalary', `HRA and Basic Salary combined (₹${combinedAmount.toFixed(2)}) cannot exceed Total Salary (₹${totalSalary.toFixed(2)})`);
                 }
                 return false;
@@ -1598,13 +1601,10 @@
                     const detailsContainer = document.getElementById('employeeDetails');
 
                     detailsContainer.innerHTML = `
-                            <div>
-                                <dt class="text-sm font-semibold text-gray-500">Code</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code || '-'}</dd>
-                            </div>
+                         
                             <div>
                                 <dt class="text-sm font-semibold text-gray-500">Name</dt>
-                                <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.name || '-'}</dd>
+                                    <dd class="mt-1 p-2 bg-gray-50 rounded-lg border border-gray-200">${employee.code + '-' + employee.name || '-'}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-semibold text-gray-500">Date of Birth</dt>
