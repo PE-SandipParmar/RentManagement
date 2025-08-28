@@ -61,3 +61,4 @@ Thumbs.db
 *.tmp
 *.temp
 /Views/MISReport/Index.cshtml
+/wwwroot/Content/LeaseDocuments
