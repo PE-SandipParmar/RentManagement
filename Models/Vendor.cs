@@ -70,9 +70,9 @@ namespace RentManagement.Models
         [StringLength(500, ErrorMessage = "Property Address cannot exceed 500 characters")]
         public string PropertyAddress { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Total Rent Amount is required")]
+        //[Required(ErrorMessage = "Total Rent Amount is required")]
         [Display(Name = "Total Rent Amount")]
-        [Range(0.01, 999999999.99, ErrorMessage = "Total Rent Amount must be greater than 0")]
+     
         public decimal TotalRentAmount { get; set; }
 
         [Display(Name = "Linked Employees")]

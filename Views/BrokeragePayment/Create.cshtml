@@ -70,7 +70,7 @@
                         <span class="text-xs text-gray-500">(Max: Lease Brokerage)</span>
                     </label>
                     <input asp-for="BrokerageAmount" id="BrokerageAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                           type="number" step="0.01" />
+                           type="number" step="0.01" onkeypress="return event.charCode >= 48 && event.charCode <= 57"/>
                     <div id="brokerageValidation" class="text-red-500 text-sm mt-1" style="display: none;"></div>
                     <span asp-validation-for="BrokerageAmount" class="text-red-500 text-sm"></span>
                 </div>

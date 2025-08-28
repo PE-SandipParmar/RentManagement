@@ -472,7 +472,7 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Aadhar Number <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Aadhar Number <span class="text-red-500"></span></label>
                                         <input type="text" id="aadhar" name="Aadhar" maxlength="12" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter 12-digit Aadhar number" />
                                         <div id="aadharError" class="error-message hidden"></div>
                                     </div>
@@ -534,12 +534,12 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Total Salary (₹) <span class="text-red-500">*</span></label>
-                                        <input type="number" step="0.01" min="0" id="totalSalary" name="TotalSalary" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="totalSalary" name="TotalSalary" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="totalSalaryError" class="error-message hidden"></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Basic Salary (₹) <span class="text-red-500">*</span></label>
-                                        <input type="number" step="0.01" min="0" id="basicSalary" name="BasicSalary" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="basicSalary" name="BasicSalary" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="basicSalaryError" class="error-message hidden"></div>
                                     </div>
                                 </div>
@@ -547,12 +547,12 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">HRA (₹) <span class="text-red-500">*</span></label>
-                                        <input type="number" step="0.01" min="0" id="hra" name="HRA" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="hra" name="HRA" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="hraError" class="error-message hidden"></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">House Rent Allowance (₹)</label>
-                                        <input type="number" step="0.01" min="0" id="houseRentAllowance" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="houseRentAllowance" onkeypress="return event.charCode >= 48 && event.charCode <= 57" name="HouseRentAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <p class="text-xs text-gray-500 mt-1">Maximum allowed: (HRA × 2)</p>
                                         <div id="houseRentAllowanceError" class="error-message hidden"></div>
                                     </div>
@@ -562,12 +562,12 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Travel Allowance (₹)</label>
-                                        <input type="number" step="0.01" min="0" id="travelAllowance" name="TravelAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="travelAllowance" name="TravelAllowance" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="travelAllowanceError" class="error-message hidden"></div>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Medical Allowance (₹)</label>
-                                        <input type="number" step="0.01" min="0" id="medicalAllowance" name="MedicalAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="medicalAllowance" name="MedicalAllowance"onkeypress="return event.charCode >= 48 && event.charCode <= 57"  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="medicalAllowanceError" class="error-message hidden"></div>
                                     </div>
                                    
@@ -575,7 +575,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Other Allowance (₹)</label>
-                                        <input type="number" step="0.01" min="0" id="otherAllowance" name="OtherAllowance" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                        <input type="number" step="0.01" min="0" id="otherAllowance" name="OtherAllowance" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                         <div id="otherAllowanceError" class="error-message hidden"></div>
                                     </div>
                                 </div>
@@ -587,14 +587,14 @@
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">PF (₹)</label>
                                             <input type="number" step="0.01" min="0" id="pf" name="PF"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                    placeholder="0.00" />
                                             <div id="pfError" class="error-message hidden"></div>
                                         </div>
 
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Professional Tax (₹)</label>
-                                            <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax"
+                                            <input type="number" step="0.01" min="0" id="professionalTax" name="ProfessionalTax" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                    placeholder="0.00" />
                                             <div id="professionalTaxError" class="error-message hidden"></div>
@@ -602,7 +602,7 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-1">ESI (₹)</label>
-                                            <input type="number" step="0.01" min="0" id="esi" name="ESI"
+                                            <input type="number" step="0.01" min="0" id="esi" name="ESI" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                    placeholder="0.00" />
                                             <div id="esiError" class="error-message hidden"></div>
@@ -1523,7 +1523,7 @@
             { id: 'dateOfBirth', message: 'Date of birth is required' },
             { id: 'gender', message: 'Gender is required' },
             { id: 'email', message: 'Email is required' },
-            { id: 'aadhar', message: 'Aadhar number is required' },
+           // { id: 'aadhar', message: 'Aadhar number is required' },
             { id: 'pan', message: 'PAN number is required' },
             { id: 'departmentId', message: 'Department is required' },
             { id: 'designationId', message: 'Designation is required' },

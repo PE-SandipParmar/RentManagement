@@ -58,7 +58,7 @@
                     <div class="flex items-center">
                         <select asp-for="EmployeeId" id="EmployeeId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md"
                                 asp-items="@(new SelectList(ViewBag.Employees, "Id", "Name"))">
-                            <option value="">Select Employee</option>
+                            <option value="0">Select Employee</option>
                         </select>
                         <span class="loading-spinner" id="employeeLoader"></span>
                     </div>
@@ -126,7 +126,7 @@
                         TDS Applicable <span class="text-red-500">*</span>
                     </label>
                     <select asp-for="TDSApplicableId" id="TDSApplicableId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
-                        <option value="">Select TDS Applicable</option>
+                        <option value="0">Select TDS Applicable</option>
                         @foreach (var item in ViewBag.TDSApplicable)
                         {
                             <option value="@item.Id" data-rate="@item.Rate">@item.Name</option>

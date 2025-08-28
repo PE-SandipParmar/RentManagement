@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.FileProviders;
 using RentManagement.Data;
 using RentManagement.Models;
 using RentPaymentSystem.Repositories;
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 // Register services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
+builder.Services.AddScoped<ILeaseDocumentRepository, LeaseDocumentRepository>();
 
 
 // Register Dapper and Repository
@@ -100,7 +102,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "Content")),
+    RequestPath = "/Content"
+});
 app.UseRouting();
 
 // Security headers

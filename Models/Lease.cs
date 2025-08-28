@@ -41,7 +41,7 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Lease End Date is required.")]
         [DataType(DataType.Date)]
         public DateTime? EndDate { get; set; }
-        [Range(1, double.MaxValue, ErrorMessage = "Rent Recovery Element.")]
+        //[Range(1, double.MaxValue, ErrorMessage = "Rent Recovery Element.")]
 
         public int? RentRecoveryElementId { get; set; }
 
@@ -57,7 +57,7 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Brokerage Amount is required.")]
         public decimal? BrokerageAmount { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "License Fee Recovery Element is required.")]
+        //[Range(1, int.MaxValue, ErrorMessage = "License Fee Recovery Element is required.")]
         public int? LicenseFeeRecoveryElementId { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "Stamp Duty must be a positive number.")]
@@ -68,8 +68,8 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "License Fee Amount is required.")]
         public decimal? LicenseFeeAmount { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Payment Term is required.")]
-        public int PaymentTermId { get; set; }
+        //[Range(1, int.MaxValue, ErrorMessage = "Payment Term is required.")]
+        public int? PaymentTermId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Payable On or Before is required.")]
         public int PayableOnOrBeforeId { get; set; }

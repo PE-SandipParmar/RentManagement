@@ -426,7 +426,7 @@
                             <span class="text-red-600 text-sm" data-validation="PerquisiteType"></span>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">% of Perquisite Applicable <span class="text-red-500">*</span></label>
                             <select name="PerquisiteApplicablePercentId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
                                 <option value="0">Select</option>
                                 @foreach (var item in ViewBag.PerquisitePercents)
@@ -542,7 +542,7 @@
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
                                        placeholder="Enter monthly rent payable"
                                        title=""
-                                       required />
+                                       required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <i class="ri-information-line text-gray-400 text-sm" id="rentInfoIcon" style="display: none;"></i>
                                 </div>
@@ -554,31 +554,31 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery <span class="text-red-500">*</span></label>
-                            <input type="number" name="AdditionalRentRecovery" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <input type="number" name="AdditionalRentRecovery" step="0.01" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
                             <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Rent Deposit <span class="text-red-500">*</span></label>
-                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <input type="number" name="RentDeposit" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                             <span class="text-red-600 text-sm" data-validation="RentDeposit"></span>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Brokerage Amount <span class="text-red-500">*</span></label>
-                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <input type="number" name="BrokerageAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                             <span class="text-red-600 text-sm" data-validation="BrokerageAmount"></span>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Stamp Duty <span class="text-red-500">*</span></label>
-                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <input type="number" name="StampDuty" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                             <span class="text-red-600 text-sm" data-validation="StampDuty"></span>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500">*</span></label>
-                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Term <span class="text-red-500"></span></label>
+                            <select name="PaymentTermId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
                                 <option value="0">Select</option>
                                 @foreach (var item in ViewBag.PaymentTerms)
                                 {
@@ -633,11 +633,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount <span class="text-red-500">*</span></label>
-                            <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                            <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                             <span class="text-red-600 text-sm" data-validation="LicenseFeeAmount"></span>
                         </div>
                     </div>
-
                     <!-- Miscellaneous -->
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Remarks</h3>
 
@@ -646,6 +645,47 @@
                         <textarea name="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
                         <span class="text-red-600 text-sm" data-validation="Narration"></span>
                     </div>
+                    <!-- Add this section after the "Miscellaneous" section and before the closing form tag -->
+                    <!-- Reference Documents Section -->
+                 @*    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Reference Documents</h3>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Lease Agreement Document</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors" id="documentDropZone">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="leaseDocumentUpload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
+                                            <span>Upload a file</span>
+                                            <input id="leaseDocumentUpload" name="leaseDocument" type="file" class="sr-only" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">
+                                        PDF, DOC, DOCX, JPG, PNG up to 10MB each
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="text-red-600 text-sm" data-validation="LeaseDocument"></span>
+
+                            <!-- File List -->
+                            <div id="uploadedFilesList" class="mt-3 space-y-2" style="display: none;">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Uploaded Documents:</label>
+                                <div id="fileListContainer" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Upload Progress -->
+                    <div id="uploadProgress" class="mt-4" style="display: none;">
+                        <div class="bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="uploadStatus" class="text-sm text-gray-600 mt-1">Uploading...</p>
+                    </div> *@
                 </form>
             </div>
 
@@ -727,6 +767,10 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        let uploadedFiles = [];
+        let maxFileSize = 10 * 1024 * 1024; // 10MB
+        let allowedFileTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png'];
+
         // Global variables
         let currentPage = @Model.CurrentPage;
         let pageSize = @Model.PageSize;
@@ -739,6 +783,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
             initializeSelect2();
+         // initializeDocumentUploadListeners();
         });
 
         function initializeSelect2() {
@@ -748,7 +793,9 @@
                 width: '100%',
                 dropdownParent: $('#leaseDrawer')
             });
+            setDateLimitations();
         }
+
         function initializeEventListeners() {
     // Search functionality
     document.getElementById('searchInput').addEventListener('keypress', function (e) {
@@ -756,7 +803,7 @@
             searchLeases();
         }
     });
-
+           
     // Select all checkbox
     document.getElementById('selectAll').addEventListener('change', function () {
         const checkboxes = document.querySelectorAll('.lease-checkbox');
@@ -793,6 +840,24 @@
             }
             $(this).addClass('border-red-500');
         }
+    });
+}
+function initializeDocumentUploadListeners() {
+    const fileInput = document.getElementById('leaseDocumentUpload');
+    const dropZone = document.getElementById('documentDropZone');
+
+    // File input change event
+    fileInput.addEventListener('change', handleFileSelect);
+           // document.getElementById('fileInput').addEventListener('change', handleFileSelect)
+    // Drag and drop events
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('dragleave', handleDragLeave);
+    dropZone.addEventListener('drop', handleFileDrop);
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
     });
 }
 
@@ -1201,68 +1266,220 @@ function updateRentInputPlaceholder() {
 
     // Rest of existing validation code remains the same...
     const requiredFields = [
-        { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
-        { name: 'RefNo', message: 'Lease Reference Number is required', displayName: 'Lease Reference Number' },
-        { name: 'EmployeeId', message: 'Employee Name is required', displayName: 'Employee Name' },
-        { name: 'RefDate', message: 'Reference Date is required', displayName: 'Reference Date' },
-        { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
-        { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
-        { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
-        { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
-        { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
-        { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
-        { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
-        { name: 'Narration', message: 'Remarks is required', displayName: 'Narration' }
-    ];
+                { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
+                { name: 'RefNo', message: 'Lease Reference Number is required', displayName: 'Lease Reference Number' },
+                { name: 'EmployeeId', message: 'Employee Name is required', displayName: 'Employee Name' },
+                { name: 'RefDate', message: 'Reference Date is required', displayName: 'Reference Date' },
+                { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
+                { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
+                { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+                { name: 'AdditionalRentRecovery', message: 'Additional Rent Recovery is required', displayName: 'Additional Rent Recovery' },
+                { name: 'RentDeposit', message: 'Rent Deposit is required', displayName: 'Rent Deposit' },
+                { name: 'BrokerageAmount', message: 'Brokerage Amount is required', displayName: 'Brokerage Amount' },
+                { name: 'StampDuty', message: 'Stamp Duty is required', displayName: 'Stamp Duty' },
+                { name: 'LicenseFeeAmount', message: 'License Fee Amount is required', displayName: 'License Fee Amount' },
+                { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
+                { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
+               // { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
+                { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
+                { name: 'Narration', message: 'Remarks is required', displayName: 'Narration' }
 
-    requiredFields.forEach(field => {
-        const element = document.querySelector(`[name="${field.name}"]`);
-        const value = element.value;
+            ];
 
-        if (!value || value === '0' || value === '') {
-            const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
-            if (errorSpan) {
-                errorSpan.textContent = field.message;
-                element.classList.add('border-red-500');
+            requiredFields.forEach(field => {
+                const element = document.querySelector(`[name="${field.name}"]`);
+                const value = element.value;
+
+                // For numeric fields, also check if the value is 0 or empty string
+                if (!value || value === '0' || value === '' || (parseFloat(value) === 0 && ['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit', 'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(field.name))) {
+                    const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = field.message;
+                        element.classList.add('border-red-500');
+                    }
+                    errors.push(field.displayName + ' is required');
+                    isValid = false;
+                }
+            });
+
+            // Additional numeric validation for financial fields
+            const numericFields = ['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit', 'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'];
+
+            numericFields.forEach(fieldName => {
+                const element = document.querySelector(`[name="${fieldName}"]`);
+                const value = parseFloat(element.value);
+
+                if (!isNaN(value) && value < 0) {
+                    const errorSpan = document.querySelector(`[data-validation="${fieldName}"]`);
+                    if (errorSpan) {
+                        errorSpan.textContent = `${fieldName.replace(/([A-Z])/g, ' $1').trim()} cannot be negative`;
+                        element.classList.add('border-red-500');
+                    }
+                    errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').trim()} cannot be negative`);
+                    isValid = false;
+                }
+            });
+
+            // Date validation
+            const fromDate = new Date(document.querySelector('[name="FromDate"]').value);
+            const endDate = new Date(document.querySelector('[name="EndDate"]').value);
+
+            if (fromDate && endDate && fromDate > endDate) {
+                const errorSpan = document.querySelector('[data-validation="EndDate"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'End Date must be after From Date';
+                    document.querySelector('[name="EndDate"]').classList.add('border-red-500');
+                }
+                errors.push('End Date must be after From Date');
+                isValid = false;
             }
-            errors.push(field.displayName + ' is required');
-            isValid = false;
-        }
-    });
 
-    // Date validation
-    const fromDate = new Date(document.querySelector('[name="FromDate"]').value);
-    const endDate = new Date(document.querySelector('[name="EndDate"]').value);
+            // Narration length validation
+            const narration = document.querySelector('[name="Narration"]').value;
+            if (narration && narration.length > 200) {
+                const errorSpan = document.querySelector('[data-validation="Narration"]');
+                if (errorSpan) {
+                    errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
+                    document.querySelector('[name="Narration"]').classList.add('border-red-500');
+                }
+                errors.push('Remarks cannot be longer than 200 characters');
+                isValid = false;
+            }
 
-    if (fromDate && endDate && fromDate > endDate) {
-        const errorSpan = document.querySelector('[data-validation="EndDate"]');
-        if (errorSpan) {
-            errorSpan.textContent = 'End Date must be after From Date';
-            document.querySelector('[name="EndDate"]').classList.add('border-red-500');
-        }
-        errors.push('End Date must be after From Date');
-        isValid = false;
-    }
-
-    // Narration length validation
-    const narration = document.querySelector('[name="Narration"]').value;
-    if (narration && narration.length > 200) {
-        const errorSpan = document.querySelector('[data-validation="Narration"]');
-        if (errorSpan) {
-            errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
-            document.querySelector('[name="Narration"]').classList.add('border-red-500');
-        }
-        errors.push('Remarks cannot be longer than 200 characters');
-        isValid = false;
-    }
-
-    // Show validation summary if there are errors
-    if (!isValid && errors.length > 0) {
-        showDrawerAlert('error', 'Please correct the following errors:', errors);
-    }
+            // Show validation summary if there are errors
+            if (!isValid && errors.length > 0) {
+                showDrawerAlert('error', 'Please correct the following errors:', errors);
+            }
 
     return isValid;
-}
+        }// Add this JavaScript code to your existing script section in Index.cshtml
+
+        // Get today's date in YYYY-MM-DD format for date input max attribute
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Set max date attributes when drawer opens
+        function setDateLimitations() {
+            const todayDate = getTodayDate();
+
+            // Set max attribute for date inputs to prevent future date selection
+            const refDateInput = document.querySelector('[name="RefDate"]');
+            const fromDateInput = document.querySelector('[name="FromDate"]');
+
+            if (refDateInput) {
+                refDateInput.setAttribute('max', todayDate);
+            }
+
+            if (fromDateInput) {
+                fromDateInput.setAttribute('max', todayDate);
+            }
+        }
+
+        // Validate individual date field
+        function validateDateField(input, fieldName, displayName) {
+            const selectedDate = new Date(input.value);
+            const today = new Date();
+
+            // Reset time part for accurate comparison
+            today.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
+
+            const errorSpan = document.querySelector(`[data-validation="${fieldName}"]`);
+
+            // Clear previous error
+            if (errorSpan) {
+                errorSpan.textContent = '';
+            }
+            input.classList.remove('border-red-500');
+
+            // Check if date is in the future
+            if (selectedDate > today) {
+                const errorMessage = `${displayName} cannot be a future date`;
+                if (errorSpan) {
+                    errorSpan.textContent = errorMessage;
+                }
+                input.classList.add('border-red-500');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Enhanced date validation function
+        function validateDatesNotFuture() {
+            let isValid = true;
+            
+            const refDateInput = document.querySelector('[name="RefDate"]');
+            const fromDateInput = document.querySelector('[name="FromDate"]');
+
+            // Validate Reference Date
+            if (refDateInput && refDateInput.value) {
+                if (!validateDateField(refDateInput, 'RefDate', 'Lease Reference Date')) {
+                    isValid = false;
+                }
+            }
+
+            // Validate From Date
+            if (fromDateInput && fromDateInput.value) {
+                if (!validateDateField(fromDateInput, 'FromDate', 'Lease From Date')) {
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+        function openDrawerWithDateLimits() {
+            const drawer = document.getElementById('leaseDrawer');
+            const panel = document.getElementById('drawerPanel');
+            drawer.classList.remove('hidden');
+
+            setTimeout(() => {
+                panel.classList.remove('translate-x-full');
+
+                // Set date limitations
+                setDateLimitations();
+
+                // Add validation listeners
+                addDateValidationListeners();
+
+                // Focus on first input
+                const firstInput = document.querySelector('#leaseForm input[type="text"], #leaseForm input[type="number"], #leaseForm select');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 10);
+        }
+
+        // Add event listeners for real-time validation
+        function addDateValidationListeners() {
+            const refDateInput = document.querySelector('[name="RefDate"]');
+            const fromDateInput = document.querySelector('[name="FromDate"]');
+
+            if (refDateInput) {
+                refDateInput.addEventListener('change', function () {
+                    validateDateField(this, 'RefDate', 'Lease Reference Date');
+                });
+
+                refDateInput.addEventListener('blur', function () {
+                    validateDateField(this, 'RefDate', 'Lease Reference Date');
+                });
+            }
+
+            if (fromDateInput) {
+                fromDateInput.addEventListener('change', function () {
+                    validateDateField(this, 'FromDate', 'Lease From Date');
+                });
+
+                fromDateInput.addEventListener('blur', function () {
+                    validateDateField(this, 'FromDate', 'Lease From Date');
+                });
+            }
+        }
         function validateForm1() {
             let isValid = true;
             let errors = [];
@@ -1280,7 +1497,7 @@ function updateRentInputPlaceholder() {
                 { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
                 { name: 'FromDate', message: 'From Date is required', displayName: 'From Date' },
                 { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
-                { name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
+                //{ name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
                 { name: 'PayableOnOrBeforeId', message: 'Payable On or Before is required', displayName: 'Payable On or Before' },
                 { name: 'Narration', message: 'Remarks is required', displayName: 'Narration' }
             ];
@@ -2065,6 +2282,26 @@ function validateMonthlyRentAgainstHRA() {
     </script>
 
     <style>
+        #uploadProgress {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .progress-bar-animation {
+            transition: width 0.3s ease-out;
+        }
+
+        /* File type icons */
+        .file-icon-pdf {
+            color: #dc2626;
+        }
+
+        .file-icon-doc {
+            color: #2563eb;
+        }
+
+        .file-icon-image {
+            color: #059669;
+        }
         .select2-container--default .select2-selection--single {
             height: 42px;
             border: 1px solid #d1d5db;

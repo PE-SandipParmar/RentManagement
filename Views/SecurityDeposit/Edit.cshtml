@@ -297,13 +297,13 @@
                         employeeSalary = data.salary;
                         maxSecurityDeposit = employeeSalary * 2;
 
-                        $('#employeeSalaryInfo').show().html(
-                            `Monthly Salary: ₹${employeeSalary.toLocaleString()}`
-                        );
+                        // $('#employeeSalaryInfo').show().html(
+                        //     `Monthly Salary: ₹${employeeSalary.toLocaleString()}`
+                        // );
 
-                        $('#maxAmountInfo').show().html(
-                            `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
-                        );
+                        // $('#maxAmountInfo').show().html(
+                        //     `Maximum Security Deposit: ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
+                        // );
 
                         validateAmount();
                     }
@@ -400,13 +400,13 @@
                 return false;
             }
 
-            if (maxSecurityDeposit > 0 && amount > maxSecurityDeposit) {
-                amountInput.addClass('validation-error');
-                validation.addClass('error-message').text(
-                    `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
-                );
-                return false;
-            }
+            // if (maxSecurityDeposit > 0 && amount > maxSecurityDeposit) {
+            //     amountInput.addClass('validation-error');
+            //     validation.addClass('error-message').text(
+            //         `Amount cannot exceed ₹${maxSecurityDeposit.toLocaleString()} (2 × Monthly Salary)`
+            //     );
+            //     return false;
+            // }
 
             // Valid amount
             amountInput.addClass('validation-success');

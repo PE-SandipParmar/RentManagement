@@ -49,16 +49,16 @@ namespace RentManagement.Controllers
             }
 
             // Validate amount against employee salary
-            if (deposit.EmployeeId > 0 && deposit.Amount > 0)
-            {
-                var employeeSalary = await _securityDepositRepository.GetEmployeeSalaryAsync(deposit.EmployeeId);
-                var maxAllowedAmount = employeeSalary * 2;
+            //if (deposit.EmployeeId > 0 && deposit.Amount > 0)
+            //{
+            //    var employeeSalary = await _securityDepositRepository.GetEmployeeSalaryAsync(deposit.EmployeeId);
+            //    var maxAllowedAmount = employeeSalary * 2;
 
-                if (deposit.Amount > maxAllowedAmount)
-                {
-                    ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (HRA * 2 of ₹{employeeSalary:N2})");
-                }
-            }
+            //    if (deposit.Amount > maxAllowedAmount)
+            //    {
+            //        ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (HRA * 2 of ₹{employeeSalary:N2})");
+            //    }
+            //}
 
             // Validate positive amount
             if (deposit.Amount <= 0)
@@ -126,16 +126,16 @@ namespace RentManagement.Controllers
             }
 
             // Validate amount against employee salary
-            if (deposit.EmployeeId > 0 && deposit.Amount > 0)
-            {
-                var employeeSalary = await _securityDepositRepository.GetEmployeeSalaryAsync(deposit.EmployeeId);
-                var maxAllowedAmount = employeeSalary * 2;
+            //if (deposit.EmployeeId > 0 && deposit.Amount > 0)
+            //{
+            //    var employeeSalary = await _securityDepositRepository.GetEmployeeSalaryAsync(deposit.EmployeeId);
+            //    var maxAllowedAmount = employeeSalary * 2;
 
-                if (deposit.Amount > maxAllowedAmount)
-                {
-                    ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (2 × Monthly Salary of ₹{employeeSalary:N2})");
-                }
-            }
+            //    if (deposit.Amount > maxAllowedAmount)
+            //    {
+            //        ModelState.AddModelError("Amount", $"Security deposit cannot exceed ₹{maxAllowedAmount:N2} (2 × Monthly Salary of ₹{employeeSalary:N2})");
+            //    }
+            //}
 
             // Validate positive amount
             if (deposit.Amount <= 0)

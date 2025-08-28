@@ -23,8 +23,8 @@ namespace RentManagement.Models
         [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Aadhar number is required.")]
-        [Aadhar(ErrorMessage = "Please enter a valid 12-digit Aadhar number.")]
+        //[Required(ErrorMessage = "Aadhar number is required.")]
+        //[Aadhar(ErrorMessage = "Please enter a valid 12-digit Aadhar number.")]
         public string? Aadhar { get; set; }
 
         [Required(ErrorMessage = "PAN is required.")]

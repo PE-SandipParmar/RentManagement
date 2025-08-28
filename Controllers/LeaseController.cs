@@ -3,19 +3,29 @@ using Microsoft.AspNetCore.Authorization;
 using RentManagement.Data;
 using RentManagement.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Hosting;
 
 namespace RentManagement.Controllers
 {
     [Authorize]
     public class LeaseController : Controller
     {
-        private readonly ILeaseRepository _leaseRepository;
-        private readonly ILogger<LeaseController> _logger;
 
-        public LeaseController(ILeaseRepository leaseRepository, ILogger<LeaseController> logger)
+        private readonly ILeaseRepository _leaseRepository;
+        private readonly ILeaseDocumentRepository _leaseDocumentRepository;
+        private readonly ILogger<LeaseController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public LeaseController(
+            ILeaseRepository leaseRepository,
+            ILeaseDocumentRepository leaseDocumentRepository,
+            ILogger<LeaseController> logger,
+            IWebHostEnvironment webHostEnvironment)
         {
             _leaseRepository = leaseRepository;
+            _leaseDocumentRepository = leaseDocumentRepository;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Lease
@@ -452,7 +462,7 @@ namespace RentManagement.Controllers
 
                 if (leaseId > 0)
                 {
-                    return Json(new { success = true, message = message });
+                    return Json(new { success = true, message = message, leaseId = leaseId });
                 }
                 else
                 {
@@ -802,8 +812,191 @@ namespace RentManagement.Controllers
         {
             return User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "Unknown User";
         }
-    }
 
+        [HttpPost]
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> UploadLeaseDocuments(int leaseId, List<IFormFile> documents)
+        {
+            try
+            {
+                if (documents == null || !documents.Any())
+                {
+                    return Json(new { success = false, message = "No documents provided" });
+                }
+
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png" };
+                var maxFileSize = 10 * 1024 * 1024; // 10MB
+                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "Content", "LeaseDocuments", "uploads", "leases", leaseId.ToString());
+
+                // Create directory if it doesn't exist
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var uploadedFiles = new List<object>();
+                var currentUserId = GetCurrentUserId();
+
+                foreach (var file in documents)
+                {
+                    // Validate file
+                    if (file.Length == 0)
+                        continue;
+
+                    if (file.Length > maxFileSize)
+                    {
+                        return Json(new { success = false, message = $"File {file.FileName} exceeds maximum size of 10MB" });
+                    }
+
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        return Json(new { success = false, message = $"File {file.FileName} has invalid format. Allowed: {string.Join(", ", allowedExtensions)}" });
+                    }
+
+                    // Generate unique filename
+                    var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(uploadPath, uniqueFileName);
+
+                    // Save file
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    // Save file information to database using repository
+                    var leaseDocument = new LeaseDocument
+                    {
+                        LeaseId = leaseId,
+                        FileName = file.FileName,
+                        UniqueFileName = uniqueFileName,
+                        FilePath = $"/Content/LeaseDocuments/uploads/leases/{leaseId}/{uniqueFileName}",
+                        FileSize = file.Length,
+                        ContentType = file.ContentType,
+                        UploadedAt = DateTime.Now,
+                        UploadedBy = currentUserId
+                    };
+
+                    var documentId = await _leaseDocumentRepository.AddLeaseDocumentAsync(leaseDocument);
+
+                    if (documentId > 0)
+                    {
+                        uploadedFiles.Add(new
+                        {
+                            id = documentId,
+                            fileName = file.FileName,
+                            size = file.Length,
+                            path = leaseDocument.FilePath,
+                            uploadedAt = leaseDocument.UploadedAt
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Successfully uploaded {uploadedFiles.Count} document(s)",
+                    files = uploadedFiles
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while uploading documents for lease ID: {LeaseId}", leaseId);
+                return Json(new { success = false, message = "An error occurred while uploading documents: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeaseDocuments(int leaseId)
+        {
+            try
+            {
+                var documents = await _leaseDocumentRepository.GetLeaseDocumentsByLeaseIdAsync(leaseId);
+
+                var documentList = documents.Select(d => new
+                {
+                    id = d.Id,
+                    fileName = d.FileName,
+                    fileSize = d.FileSize,
+                    uploadedAt = d.UploadedAt,
+                    filePath = d.FilePath,
+                    uploadedBy = d.UploadedBy
+                }).ToList();
+
+                return Json(new { success = true, documents = documentList });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching documents for lease ID: {LeaseId}", leaseId);
+                return Json(new { success = false, message = "An error occurred while fetching documents." });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadLeaseDocument(int documentId)
+        {
+            try
+            {
+                var document = await _leaseDocumentRepository.GetLeaseDocumentByIdAsync(documentId);
+                if (document == null)
+                {
+                    return NotFound("Document not found");
+                }
+
+                var filePath = Path.Combine(_webHostEnvironment.WebRootPath, document.FilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound("File not found on server");
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                return File(fileBytes, document.ContentType, document.FileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while downloading document with ID: {DocumentId}", documentId);
+                return BadRequest("Error downloading file: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> DeleteLeaseDocument(int documentId)
+        {
+            try
+            {
+                var document = await _leaseDocumentRepository.GetLeaseDocumentByIdAsync(documentId);
+                if (document == null)
+                {
+                    return Json(new { success = false, message = "Document not found." });
+                }
+
+                // Delete physical file
+                var filePath = Path.Combine(_webHostEnvironment.WebRootPath, document.FilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                // Delete from database
+                var success = await _leaseDocumentRepository.DeleteLeaseDocumentAsync(documentId);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Document deleted successfully." });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to delete document from database." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting document with ID: {DocumentId}", documentId);
+                return Json(new { success = false, message = "An error occurred while deleting the document." });
+            }
+        }
+    }
     // Request models for AJAX operations
     public class LeaseCreateRequest
     {
