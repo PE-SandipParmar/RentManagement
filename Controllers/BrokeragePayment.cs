@@ -140,7 +140,7 @@ namespace RentManagement.Controllers
             try
             {
                 // Validate input parameters
-                if (employeeId <= 0 || leaseId <= 0)
+                    if (employeeId <= 0 || leaseId <= 0)
                 {
                     return Json(new
                     {
@@ -188,17 +188,17 @@ namespace RentManagement.Controllers
                 var maxAllowed = Math.Max(employeeSalary, leaseMaxBrokerage);
 
                 // Check if brokerage amount exceeds the limit
-                if (brokerageAmount > maxAllowed)
-                {
-                    return Json(new
-                    {
-                        isValid = false,
-                        errorMessage = $" ₹{brokerageAmount:N2} this brokerage amount should not exceed the lease brokerage maximum amount of ₹{maxAllowed:N2}.",
-                        employeeSalary = employeeSalary,
-                        leaseMaxBrokerage = leaseMaxBrokerage,
-                        maxAllowed = maxAllowed
-                    });
-                }
+                //if (brokerageAmount > maxAllowed)
+                //{
+                //    return Json(new
+                //    {
+                //        isValid = false,
+                //        errorMessage = $" ₹{brokerageAmount:N2} this brokerage amount should not exceed the lease brokerage maximum amount of ₹{maxAllowed:N2}.",
+                //        employeeSalary = employeeSalary,
+                //        leaseMaxBrokerage = leaseMaxBrokerage,
+                //        maxAllowed = maxAllowed
+                //    });
+                //}
 
                 // Check for existing brokerage payment (one-time payment rule)
                 var existingPayment = await _BrokeragePaymentRepository.CheckExistingBrokerageAsync(employeeId, leaseId);
@@ -223,7 +223,8 @@ namespace RentManagement.Controllers
                     employeeSalary = employeeSalary,
                     leaseMaxBrokerage = leaseMaxBrokerage,
                     maxAllowed = maxAllowed,
-                    message = $"Valid brokerage amount within limit of ₹{maxAllowed:N2}"
+                    message = $"Valid brokerage amount"
+                    //message = $"Valid brokerage amount within limit of ₹{maxAllowed:N2}"
                 });
             }
             catch (Exception ex)
@@ -259,15 +260,15 @@ namespace RentManagement.Controllers
                 var maxAllowed = Math.Max(employeeSalary, leaseMaxBrokerage);
 
                 // Check if brokerage amount exceeds limit
-                if (payment.BrokerageAmount > maxAllowed)
-                {
-                    return new ValidationResult
-                    {
-                        IsValid = false,
-                        ErrorMessage = $"Brokerage amount (₹{payment.BrokerageAmount:N2}) exceeds maximum allowed (₹{maxAllowed:N2}). " +
-                                     $"Maximum is based on Employee Salary: ₹{employeeSalary:N2} or Lease Max: ₹{leaseMaxBrokerage:N2}"
-                    };
-                }
+                //if (payment.BrokerageAmount > maxAllowed)
+                //{
+                //    return new ValidationResult
+                //    {
+                //        IsValid = false,
+                //        ErrorMessage = $"Brokerage amount (₹{payment.BrokerageAmount:N2}) exceeds maximum allowed (₹{maxAllowed:N2}). " +
+                //                     $"Maximum is based on Employee Salary: ₹{employeeSalary:N2} or Lease Max: ₹{leaseMaxBrokerage:N2}"
+                //    };
+                //}
 
                 // Check for existing brokerage payment
                 var existingPayment = await _BrokeragePaymentRepository.CheckExistingBrokerageAsync(payment.EmployeeId, payment.LeaseId);

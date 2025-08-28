@@ -30,7 +30,7 @@ namespace RentManagement.Models
 
         [Range(0, 100, ErrorMessage = "TDS Rate must be between 0 and 100.")]
         [Display(Name = "TDS Rate (%)")]
-        public decimal TDSRate { get; set; } = 0;
+        public decimal? TDSRate { get; set; } = 0;
 
         [Range(0, double.MaxValue, ErrorMessage = "TDS Amount must be positive.")]
         [Display(Name = "TDS Amount")]
@@ -60,7 +60,7 @@ namespace RentManagement.Models
         public string TransactionReference { get; set; } = string.Empty;
 
         [StringLength(500)]
-        public string Remark { get; set; } = string.Empty;
+        public string? Remark { get; set; } = string.Empty;
 
         [DataType(DataType.DateTime)]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
