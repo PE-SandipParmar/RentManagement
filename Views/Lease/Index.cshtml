@@ -646,46 +646,55 @@
                         <span class="text-red-600 text-sm" data-validation="Narration"></span>
                     </div>
                     <!-- Add this section after the "Miscellaneous" section and before the closing form tag -->
-                    <!-- Reference Documents Section -->
-                 @*    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Reference Documents</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Document Upload</h3>
 
-                    <div class="grid grid-cols-1 gap-6">
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Lease Agreement Document</label>
-                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors" id="documentDropZone">
-                                <div class="space-y-1 text-center">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <div class="flex text-sm text-gray-600">
-                                        <label for="leaseDocumentUpload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
-                                            <span>Upload a file</span>
-                                            <input id="leaseDocumentUpload" name="leaseDocument" type="file" class="sr-only" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Lease Documents</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6" id="documentDropZone">
+                                <div class="text-center">
+                                    <i class="ri-upload-cloud-2-line text-4xl text-gray-400 mb-2"></i>
+                                    <div class="text-sm text-gray-600">
+                                        <label for="leaseDocumentUpload" class="cursor-pointer font-medium text-primary hover:text-primary/80">
+                                            Click to upload
                                         </label>
-                                        <p class="pl-1">or drag and drop</p>
+                                        <span> or drag and drop</span>
                                     </div>
-                                    <p class="text-xs text-gray-500">
-                                        PDF, DOC, DOCX, JPG, PNG up to 10MB each
-                                    </p>
+                                    <p class="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, JPG, PNG up to 10MB each</p>
+                                </div>
+                                <input type="file"
+                                       id="leaseDocumentUpload"
+                                       name="documents"
+                                       multiple
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                       class="hidden" />
+                            </div>
+
+                            <!-- Upload Progress -->
+                            <div id="uploadProgress" class="hidden mt-4">
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div class="flex items-center">
+                                        <i class="ri-upload-line text-blue-500 mr-2"></i>
+                                        <span class="text-sm text-blue-700">Uploading files...</span>
+                                    </div>
+                                    <div class="w-full bg-blue-200 rounded-full h-2 mt-2">
+                                        <div class="bg-blue-600 h-2 rounded-full progress-bar-animation" id="progressBar" style="width: 0%"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <span class="text-red-600 text-sm" data-validation="LeaseDocument"></span>
 
-                            <!-- File List -->
-                            <div id="uploadedFilesList" class="mt-3 space-y-2" style="display: none;">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Uploaded Documents:</label>
-                                <div id="fileListContainer" class="space-y-2"></div>
+                            <!-- Uploaded Files List -->
+                            <div id="uploadedFilesList" class="mt-4 space-y-2">
+                                <!-- Uploaded files will be displayed here -->
+                            </div>
+
+                            <!-- Existing Files (Edit Mode) -->
+                            <div id="existingFilesList" class="mt-4 space-y-2" style="display: none;">
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">Existing Documents</h4>
+                                <!-- Existing files will be displayed here during edit -->
                             </div>
                         </div>
                     </div>
-
-                    <!-- Document Upload Progress -->
-                    <div id="uploadProgress" class="mt-4" style="display: none;">
-                        <div class="bg-gray-200 rounded-full h-2">
-                            <div id="progressBar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <p id="uploadStatus" class="text-sm text-gray-600 mt-1">Uploading...</p>
-                    </div> *@
                 </form>
             </div>
 
@@ -748,7 +757,7 @@
                         <span id="detailsLeaseRef" class="font-medium text-gray-700"></span>
                     </div>
                     <div class="flex space-x-3">
-                        <button onclick="editFromDetails()" id="editFromDetailsBtn" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                        <button onclick="editFromDetails()" style="display:none" id="editFromDetailsBtn" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 transition-colors">
                             <i class="ri-edit-line mr-2"></i>
                             Edit Lease
                         </button>
@@ -768,6 +777,8 @@
 
     <script>
         let uploadedFiles = [];
+        let existingFiles = [];
+        let deletedFileIds = [];
         let maxFileSize = 10 * 1024 * 1024; // 10MB
         let allowedFileTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/jpg', 'image/png'];
 
@@ -783,7 +794,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             initializeEventListeners();
             initializeSelect2();
-         // initializeDocumentUploadListeners();
+         initializeDocumentUploadListeners();
         });
 
         function initializeSelect2() {
@@ -842,24 +853,228 @@
         }
     });
 }
-function initializeDocumentUploadListeners() {
-    const fileInput = document.getElementById('leaseDocumentUpload');
-    const dropZone = document.getElementById('documentDropZone');
+// function initializeDocumentUploadListeners() {
+//     const fileInput = document.getElementById('leaseDocumentUpload');
+//     const dropZone = document.getElementById('documentDropZone');
 
-    // File input change event
-    fileInput.addEventListener('change', handleFileSelect);
-           // document.getElementById('fileInput').addEventListener('change', handleFileSelect)
-    // Drag and drop events
-    dropZone.addEventListener('dragover', handleDragOver);
-    dropZone.addEventListener('dragleave', handleDragLeave);
-    dropZone.addEventListener('drop', handleFileDrop);
+//     // File input change event
+//     fileInput.addEventListener('change', handleFileSelect);
+//            // document.getElementById('fileInput').addEventListener('change', handleFileSelect)
+//     // Drag and drop events
+//     dropZone.addEventListener('dragover', handleDragOver);
+//     dropZone.addEventListener('dragleave', handleDragLeave);
+//     dropZone.addEventListener('drop', handleFileDrop);
 
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
-}
+//     // Prevent default drag behaviors
+//     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+//         dropZone.addEventListener(eventName, preventDefaults, false);
+//         document.body.addEventListener(eventName, preventDefaults, false);
+//     });
+// }
+        function initializeDocumentUploadListeners() {
+            const fileInput = document.getElementById('leaseDocumentUpload');
+            const dropZone = document.getElementById('documentDropZone');
+
+            // File input change event
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop events
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleFileDrop);
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDragOver(e) {
+            e.dataTransfer.dropEffect = 'copy';
+            document.getElementById('documentDropZone').classList.add('border-blue-400', 'bg-blue-50');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('documentDropZone').classList.remove('border-blue-400', 'bg-blue-50');
+        }
+
+        function handleFileDrop(e) {
+            const files = e.dataTransfer.files;
+            document.getElementById('documentDropZone').classList.remove('border-blue-400', 'bg-blue-50');
+            processFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (validateFile(file)) {
+                    addFileToUploadList(file);
+                }
+            }
+
+            // Clear the file input
+            document.getElementById('leaseDocumentUpload').value = '';
+        }
+
+        function validateFile(file) {
+            // Check file size
+            if (file.size > maxFileSize) {
+                showAlert('error', `File "${file.name}" is too large. Maximum size is 10MB.`);
+                return false;
+            }
+
+            // Check file type
+            if (!allowedFileTypes.includes(file.type)) {
+                showAlert('error', `File "${file.name}" has an invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed.`);
+                return false;
+            }
+
+            // Check if file already exists in upload list
+            if (uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                showAlert('error', `File "${file.name}" is already selected for upload.`);
+                return false;
+            }
+
+            return true;
+        }
+
+        function addFileToUploadList(file) {
+            const fileId = Date.now() + Math.random();
+            const fileObj = {
+                id: fileId,
+                file: file,
+                name: file.name,
+                size: file.size,
+                type: file.type
+            };
+
+            uploadedFiles.push(fileObj);
+            displayUploadedFile(fileObj);
+        }
+
+        function displayUploadedFile(fileObj) {
+            const filesList = document.getElementById('uploadedFilesList');
+            const fileIcon = getFileIcon(fileObj.type);
+            const fileSize = formatFileSize(fileObj.size);
+
+            const fileElement = document.createElement('div');
+            fileElement.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200';
+            fileElement.id = `file-${fileObj.id}`;
+
+            fileElement.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <i class="${fileIcon} text-xl"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">${fileObj.name}</p>
+                                <p class="text-xs text-gray-500">${fileSize}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="ri-upload-line mr-1"></i>
+                                Ready to upload
+                            </span>
+                            <button type="button" onclick="removeFileFromUploadList('${fileObj.id}')"
+                                    class="text-red-500 hover:text-red-700 p-1" title="Remove file">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    `;
+
+            filesList.appendChild(fileElement);
+        }
+
+        function displayExistingFile(fileObj) {
+            const filesList = document.getElementById('existingFilesList');
+            const fileIcon = getFileIcon(fileObj.contentType || fileObj.type);
+            const fileSize = formatFileSize(fileObj.fileSize || fileObj.size);
+
+            const fileElement = document.createElement('div');
+            fileElement.className = 'flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200';
+            fileElement.id = `existing-file-${fileObj.id}`;
+
+            fileElement.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <i class="${fileIcon} text-xl"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">${fileObj.fileName || fileObj.name}</p>
+                                <p class="text-xs text-gray-500">${fileSize} • Uploaded: ${formatDate(fileObj.uploadedDate || fileObj.createdAt)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="@Url.Action("DownloadFile")?fileId=${fileObj.id}"
+                               class="text-blue-600 hover:text-blue-800 p-1" title="Download file">
+                                <i class="ri-download-line"></i>
+                            </a>
+                            <button type="button" onclick="removeExistingFile('${fileObj.id}')"
+                                    class="text-red-500 hover:text-red-700 p-1" title="Delete file">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    `;
+
+            filesList.appendChild(fileElement);
+        }
+
+        function removeFileFromUploadList(fileId) {
+            uploadedFiles = uploadedFiles.filter(f => f.id != fileId);
+            document.getElementById(`file-${fileId}`).remove();
+
+            if (uploadedFiles.length === 0) {
+                document.getElementById('uploadedFilesList').innerHTML = '';
+            }
+        }
+
+        function removeExistingFile(fileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                deletedFileIds.push(fileId);
+                document.getElementById(`existing-file-${fileId}`).remove();
+                existingFiles = existingFiles.filter(f => f.id != fileId);
+            }
+        }
+
+        function getFileIcon(fileType) {
+            if (fileType.includes('pdf')) {
+                return 'ri-file-pdf-line text-red-500';
+            } else if (fileType.includes('word') || fileType.includes('document')) {
+                return 'ri-file-word-line text-blue-500';
+            } else if (fileType.includes('image')) {
+                return 'ri-image-line text-green-500';
+            }
+            return 'ri-file-line text-gray-500';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showUploadProgress(show) {
+            const progressDiv = document.getElementById('uploadProgress');
+            if (show) {
+                progressDiv.classList.remove('hidden');
+            } else {
+                progressDiv.classList.add('hidden');
+            }
+        }
+
+        function updateUploadProgress(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
 
 // Add this new function to fetch employee HRA
 function fetchEmployeeHRA(employeeId) {
@@ -1039,6 +1254,15 @@ function updateRentInputPlaceholder() {
             clearValidationErrors();
             clearDrawerAlert();
             $('.searchable-dropdown').val(null).trigger('change');
+
+            // Reset file upload
+            uploadedFiles = [];
+            existingFiles = [];
+            deletedFileIds = [];
+            document.getElementById('uploadedFilesList').innerHTML = '';
+            document.getElementById('existingFilesList').style.display = 'none';
+            document.getElementById('existingFilesList').innerHTML = '<h4 class="text-sm font-medium text-gray-700 mb-2">Existing Documents</h4>';
+
             openDrawer();
         }
 
@@ -1048,29 +1272,72 @@ function updateRentInputPlaceholder() {
             document.getElementById('saveButtonText').textContent = 'Update Lease';
             clearValidationErrors();
             clearDrawerAlert();
+            // Reset file upload arrays
+            uploadedFiles = [];
+            deletedFileIds = [];
+            document.getElementById('uploadedFilesList').innerHTML = '';
 
             // Show loading state in drawer
             showDrawerAlert('warning', 'Loading...', 'Please wait while we load the lease details.');
 
-            // Load lease data
-            fetch(`@Url.Action("GetLeaseDetails")?id=${id}`)
-                .then(response => response.json())
-                .then(result => {
-                    console.log('Lease details response:', result); // Debug log
-                    if (result.success) {
+            Promise.all([
+                fetch(`@Url.Action("GetLeaseDetails")?id=${id}`).then(response => response.json()),
+                fetch(`@Url.Action("GetLeaseDocuments")?leaseId=${id}`).then(response => response.json())
+            ])
+                .then(([leaseResult, filesResult]) => {
+                    if (leaseResult.success) {
                         clearDrawerAlert();
-                        populateForm(result.data);
+                        populateForm(leaseResult.data);
+
+                        // Handle files
+                        if (filesResult.success && filesResult.documents && filesResult.documents.length > 0) {
+                            existingFiles = filesResult.documents;
+                            displayExistingFiles(existingFiles);
+                        } else {
+                            existingFiles = [];
+                            document.getElementById('existingFilesList').style.display = 'none';
+                        }
+
                         openDrawer();
                     } else {
-                        showDrawerAlert('error', 'Failed to load lease', result.message || 'Unable to load lease details. Please try again.');
+                        showDrawerAlert('error', 'Failed to load lease', leaseResult.message || 'Unable to load lease details. Please try again.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
                 });
-        }
+            // Load lease data
+        //     fetch(`@Url.Action("GetLeaseDetails")?id=${id}`)
+        //         .then(response => response.json())
+        //         .then(result => {
+        //             console.log('Lease details response:', result); // Debug log
+        //             if (result.success) {
+        //                 clearDrawerAlert();
+        //                 populateForm(result.data);
+        //                 openDrawer();
+        //             } else {
+        //                 showDrawerAlert('error', 'Failed to load lease', result.message || 'Unable to load lease details. Please try again.');
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error('Error:', error);
+        //             showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+        //         });
+         }
+        function displayExistingFiles(files) {
+            const existingFilesList = document.getElementById('existingFilesList');
+            existingFilesList.innerHTML = '<h4 class="text-sm font-medium text-gray-700 mb-2">Existing Documents</h4>';
 
+            if (files && files.length > 0) {
+                files.forEach(file => {
+                    displayExistingFile(file);
+                });
+                existingFilesList.style.display = 'block';
+            } else {
+                existingFilesList.style.display = 'none';
+            }
+        }
         function openDrawer() {
             const drawer = document.getElementById('leaseDrawer');
             const panel = document.getElementById('drawerPanel');
@@ -1095,10 +1362,91 @@ function updateRentInputPlaceholder() {
                 clearDrawerAlert();
                 document.getElementById('leaseForm').reset();
                 $('.searchable-dropdown').val(null).trigger('change');
+
+
             }, 300);
         }
-
         function populateForm(data) {
+            console.log('Populating form with data:', data);
+
+            document.getElementById('leaseId').value = data.id || data.Id || 0;
+
+            const perquisiteType = data.perquisiteType || data.PerquisiteType || 'Non-Government';
+            const perquisiteRadio = document.querySelector(`input[name="PerquisiteType"][value="${perquisiteType}"]`);
+            if (perquisiteRadio) perquisiteRadio.checked = true;
+
+            const fieldMappings = {
+                'RefNo': ['refNo', 'RefNo'],
+                'MonthlyRentPayable': ['monthlyRentPayable', 'MonthlyRentPayable'],
+                'AdditionalRentRecovery': ['additionalRentRecovery', 'AdditionalRentRecovery'],
+                'RentDeposit': ['rentDeposit', 'RentDeposit'],
+                'BrokerageAmount': ['brokerageAmount', 'BrokerageAmount'],
+                'StampDuty': ['stampDuty', 'StampDuty'],
+                'LicenseFeeAmount': ['licenseFeeAmount', 'LicenseFeeAmount'],
+                'Narration': ['narration', 'Narration']
+            };
+
+            Object.keys(fieldMappings).forEach(fieldName => {
+                const element = document.querySelector(`[name="${fieldName}"]`);
+                if (element) {
+                    let value = null;
+                    for (const prop of fieldMappings[fieldName]) {
+                        if (data[prop] !== undefined) {
+                            value = data[prop];
+                            break;
+                        }
+                    }
+                    element.value = value || '';
+                }
+            });
+
+            const dateFieldMappings = {
+                'RefDate': ['refDate', 'RefDate'],
+                'FromDate': ['fromDate', 'FromDate'],
+                'EndDate': ['endDate', 'EndDate']
+            };
+
+            Object.keys(dateFieldMappings).forEach(fieldName => {
+                const element = document.querySelector(`[name="${fieldName}"]`);
+                if (element) {
+                    let value = null;
+                    for (const prop of dateFieldMappings[fieldName]) {
+                        if (data[prop]) {
+                            value = data[prop];
+                            break;
+                        }
+                    }
+                    if (value) {
+                        element.value = value.split('T')[0];
+                    }
+                }
+            });
+
+            const selectFieldMappings = {
+                'LeaseTypeId': ['leaseTypeId', 'LeaseTypeId'],
+                'EmployeeId': ['employeeId', 'EmployeeId'],
+                'PerquisiteApplicablePercentId': ['perquisiteApplicablePercentId', 'PerquisiteApplicablePercentId'],
+                'VendorId': ['vendorId', 'VendorId'],
+                'RentRecoveryElementId': ['rentRecoveryElementId', 'RentRecoveryElementId'],
+                'LicenseFeeRecoveryElementId': ['licenseFeeRecoveryElementId', 'LicenseFeeRecoveryElementId'],
+                'PaymentTermId': ['paymentTermId', 'PaymentTermId'],
+                'PayableOnOrBeforeId': ['payableOnOrBeforeId', 'PayableOnOrBeforeId']
+            };
+
+            Object.keys(selectFieldMappings).forEach(fieldName => {
+                let value = null;
+                for (const prop of selectFieldMappings[fieldName]) {
+                    if (data[prop] !== undefined && data[prop] !== null) {
+                        value = data[prop];
+                        break;
+                    }
+                }
+                if (value) {
+                    $(`select[name="${fieldName}"]`).val(value).trigger('change');
+                }
+            });
+        }
+        function populateForm1(data) {
             console.log('Populating form with data:', data); // Debug log
             
             // Set hidden ID - handle both Id and id
@@ -1187,8 +1535,96 @@ function updateRentInputPlaceholder() {
                 }
             });
         }
+        async function saveLease() {
+            clearDrawerAlert();
+            clearValidationErrors();
 
-        function saveLease() {
+            if (!validateForm()) {
+                document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                return;
+            }
+
+            const formData = new FormData();
+            const data = {};
+
+            // Collect form data
+            const form = document.getElementById('leaseForm');
+            const formDataObj = new FormData(form);
+
+            formDataObj.forEach((value, key) => {
+                if (key.endsWith('Id') && value) {
+                    data[key] = parseInt(value) || 0;
+                } else if (['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit',
+                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(key)) {
+                    data[key] = parseFloat(value) || 0;
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            data.Id = parseInt(document.getElementById('leaseId').value) || 0;
+
+            // Add file handling data
+            data.DeletedFileIds = deletedFileIds;
+
+            // Add form data to FormData object
+            Object.keys(data).forEach(key => {
+                if (key === 'DeletedFileIds') {
+                    data[key].forEach(id => formData.append('DeletedFileIds', id));
+                } else {
+                    formData.append(key, data[key]);
+                }
+            });
+
+            // Add uploaded files
+            uploadedFiles.forEach((fileObj, index) => {
+                formData.append('documents', fileObj.file);
+            });
+
+            const url = data.Id === 0 ? '@Url.Action("CreateAjaxWithFiles")' : '@Url.Action("UpdateAjaxWithFiles")';
+
+            const saveButton = document.getElementById('saveButton');
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Saving...';
+
+            // Show upload progress if files are being uploaded
+            if (uploadedFiles.length > 0) {
+                showUploadProgress(true);
+                updateUploadProgress(0);
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', result.message);
+                    closeDrawer();
+                    loadLeases();
+                } else {
+                    if (result.errors) {
+                        displayValidationErrors(result.errors);
+                    } else {
+                        showDrawerAlert('error', 'Failed to save lease', result.message || 'An error occurred while saving the lease. Please check your input and try again.');
+                    }
+                    document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showDrawerAlert('error', 'Connection Error', 'Unable to connect to the server. Please check your connection and try again.');
+                document.querySelector('#drawerPanel .overflow-y-auto').scrollTop = 0;
+            } finally {
+                saveButton.disabled = false;
+                saveButton.innerHTML = `<span id="saveButtonText">${data.Id === 0 ? 'Create' : 'Update'} Lease</span>`;
+                showUploadProgress(false);
+            }
+        }
+
+        function saveLease12() {
             clearDrawerAlert();
             clearValidationErrors();
 
@@ -1675,6 +2111,37 @@ function updateRentInputPlaceholder() {
             showDetailsLoading(true);
             openDetailsSlideover();
 
+            // Load lease details and files
+            Promise.all([
+                fetch(`@Url.Action("GetLeaseDetails")?id=${id}`).then(response => response.json()),
+                fetch(`@Url.Action("GetLeaseDocuments")?leaseId=${id}`).then(response => response.json())
+            ])
+            .then(([leaseResult, filesResult]) => {
+                if (leaseResult.success) {
+                    const detailsWithFiles = {
+                            ...leaseResult.documents,
+                            files: filesResult.success ? filesResult.documents : []
+                    };
+                        displayDetails(leaseResult.data, detailsWithFiles);
+                    showDetailsLoading(false);
+                } else {
+                    showAlert('error', leaseResult.message || 'Failed to load lease details');
+                    closeDetailsSlideover();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading details:', error);
+                showAlert('error', 'An error occurred while loading lease details');
+                closeDetailsSlideover();
+            });
+        }
+
+     
+        function viewDetails12(id) {
+            currentLeaseId = id;
+            showDetailsLoading(true);
+            openDetailsSlideover();
+
             fetch(`@Url.Action("GetLeaseDetails")?id=${id}`)
                 .then(response => {
                     if (!response.ok) {
@@ -1685,7 +2152,7 @@ function updateRentInputPlaceholder() {
                 .then(result => {
                     console.log('View details response:', result); // Debug log
                     if (result.success) {
-                        displayDetails(result.data);
+                        displayDetails(result.data,null);
                         showDetailsLoading(false);
                     } else {
                         showAlert('error', result.message || 'Failed to load lease details');
@@ -1746,7 +2213,7 @@ function updateRentInputPlaceholder() {
             }
         }
 
-        function displayDetails(data) {
+        function displayDetails(data,dataFile) {
             const content = document.getElementById('detailsContent');
 
             // Store the lease ID for edit functionality - handle both id and Id
@@ -1796,6 +2263,56 @@ function updateRentInputPlaceholder() {
                     break;
                 default:
                     statusBadge = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"><span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>' + statusText + '</span>';
+            }
+            const files = dataFile.files || [];
+            let filesSection = '';
+
+            if (files.length > 0) {
+                const fileCards = files.map(file => {
+                    const iconInfo = getFileIcon(file.fileName || file.FileName || file.name, file.fileType || file.contentType);
+                    const fileName = file.fileName || file.FileName || file.name || 'Unknown';
+                    const fileSize = file.fileSize || file.size || 0;
+                    const uploadDate = file.uploadDate || file.createdAt || file.CreatedAt;
+                    const fileId = file.id || file.Id || file.fileId;
+
+                    return `
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                            <div class="flex-shrink-0 mr-3">
+                                <i class="${iconInfo.icon}" style="color: ${iconInfo.color}; font-size: 1.5em;"></i>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                                <p class="text-xs text-gray-500">
+                                    ${formatFileSize(fileSize)}
+                                    ${uploadDate ? ` • ${formatDate(uploadDate)}` : ''}
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0 ml-3">
+                                <button onclick="downloadFile('${fileId}', '${fileName}')"
+                                        class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                        title="Download file">
+                                    <i class="fas fa-download mr-1"></i>
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                filesSection = `
+                    <!-- Documents Section -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Uploaded Documents</h3>
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full">
+                                ${files.length} file${files.length !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                        <div class="space-y-2">
+                            ${fileCards}
+                        </div>
+                    </div>
+                `;
             }
 
             content.innerHTML = `
@@ -1943,21 +2460,23 @@ function updateRentInputPlaceholder() {
                         <p class="text-sm text-gray-700 whitespace-pre-wrap">${getValue(data, 'narration', 'Narration')}</p>
                     </div>
                 </div>
+                         
                 ` : ''}
-
-                <!-- Metadata Section -->
+                         ${filesSection}
+                        <!-- Metadata Section -->
                 <div class="pt-4 border-t border-gray-200">
                     <dl class="grid grid-cols-2 gap-4 text-xs">
                         <div>
-                            <dt class="text-gray-500">Created:</dt>
+                                    <dt class="text-gray-500" style='float: left;'>Created:</dt>
                             <dd class="text-gray-700">${formatDateTime(getValue(data, 'createdAt', 'CreatedAt'))}</dd>
                         </div>
                         <div>
-                            <dt class="text-gray-500">Last Modified:</dt>
+                                    <dt class="text-gray-500"  style='float: left;'>Last Modified:</dt>
                             <dd class="text-gray-700">${formatDateTime(getValue(data, 'modifiedAt', 'ModifiedAt'))}</dd>
                         </div>
                     </dl>
                 </div>
+                       
             `;
         }
 
@@ -1972,7 +2491,26 @@ function updateRentInputPlaceholder() {
             currentPage = 1;
             loadLeases();
         }
+        function downloadFile(fileId, fileName) {
+            try {
+                // Create a download URL - adjust this based on your backend API
+                const downloadUrl = `@Url.Action("DownloadLeaseDocument")?documentId=${fileId}`;
 
+                // Create a temporary link element
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = fileName;
+                link.style.display = 'none';
+
+                // Append to body, click, and remove
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                showAlert('error', 'Failed to download file');
+            }
+        }
         function loadLeases() {
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;

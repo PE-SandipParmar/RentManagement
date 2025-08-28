@@ -777,7 +777,46 @@ namespace RentManagement.Controllers
                 return Json(new { success = false, message = "An error occurred while loading leases." });
             }
         }
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> CreateAjaxWithFiles(LeaseCreateRequest request, List<IFormFile> documents)
+        {
+            // Create lease first (same as your existing CreateAjax)
+            var leaseResponse = await CreateAjax(request) as JsonResult;
+            var result = leaseResponse?.Value as dynamic;
 
+            if (result != null && result.success && result.leaseId != null && documents?.Any() == true)
+            {
+                // Upload documents immediately after lease creation
+                await UploadLeaseDocuments((int)result.leaseId, documents);
+            }
+
+            return leaseResponse!;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = Roles.AdminOrEmployee)]
+        public async Task<IActionResult> UpdateAjaxWithFiles(LeaseUpdateRequest request, List<IFormFile> documents)
+        {
+            var leaseResponse = await UpdateAjax(request) as JsonResult;
+            var result = leaseResponse?.Value as dynamic;
+
+            if (result != null && result.success && request.Id > 0)
+            {
+                if (request.DeletedFileIds.Count() > 0) {
+                    for (int i = 0; i < request.DeletedFileIds.Count(); i++)
+                    {
+                        DeleteLeaseDocument(Convert.ToInt32(request.DeletedFileIds[i].ToString()));
+                    }
+                }
+             }
+            if (result != null && result.success && request.Id > 0 && documents?.Any() == true)
+            {
+                await UploadLeaseDocuments(request.Id, documents);
+            }
+
+            return leaseResponse!;
+        }
         // Helper methods
         private async Task LoadViewBagData()
         {
@@ -814,7 +853,6 @@ namespace RentManagement.Controllers
         }
 
         [HttpPost]
-        [HttpPost]
         [Authorize(Roles = Roles.AdminOrEmployee)]
         public async Task<IActionResult> UploadLeaseDocuments(int leaseId, List<IFormFile> documents)
         {
@@ -827,7 +865,7 @@ namespace RentManagement.Controllers
 
                 var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png" };
                 var maxFileSize = 10 * 1024 * 1024; // 10MB
-                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "Content", "LeaseDocuments", "uploads", "leases", leaseId.ToString());
+                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "Content", "LeaseDocuments", leaseId.ToString());
 
                 // Create directory if it doesn't exist
                 if (!Directory.Exists(uploadPath))
@@ -871,13 +909,13 @@ namespace RentManagement.Controllers
                         LeaseId = leaseId,
                         FileName = file.FileName,
                         UniqueFileName = uniqueFileName,
-                        FilePath = $"/Content/LeaseDocuments/uploads/leases/{leaseId}/{uniqueFileName}",
+                        FilePath = $"/Content/LeaseDocuments/{leaseId}/{uniqueFileName}",
                         FileSize = file.Length,
                         ContentType = file.ContentType,
                         UploadedAt = DateTime.Now,
                         UploadedBy = currentUserId
                     };
-
+                
                     var documentId = await _leaseDocumentRepository.AddLeaseDocumentAsync(leaseDocument);
 
                     if (documentId > 0)
@@ -921,6 +959,8 @@ namespace RentManagement.Controllers
                     fileSize = d.FileSize,
                     uploadedAt = d.UploadedAt,
                     filePath = d.FilePath,
+                    UniqueFileName = d.UniqueFileName,
+                    ContentType = d.ContentType,
                     uploadedBy = d.UploadedBy
                 }).ToList();
 
@@ -1026,6 +1066,8 @@ namespace RentManagement.Controllers
     public class LeaseUpdateRequest : LeaseCreateRequest
     {
         public int Id { get; set; }
+       
+        public List<string> DeletedFileIds { get; set; } = new List<string>();
     }
 
     public class LeaseRejectionRequest
