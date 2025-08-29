@@ -6,8 +6,11 @@ namespace RentManagement.Data
     {
         // Existing methods
         Task<IEnumerable<Vendor>> GetAllVendorsAsync();
+        Task<IEnumerable<Vendor>> GetAllVendorsWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
+        Task<int> GetAllVendorsWithApprovalStatusCountAsync(string searchTerm, string statusFilter);
         Task<Vendor?> GetVendorByIdAsync(int id);
         Task<Vendor?> GetVendorByCodeAsync(string vendorCode);
+        Task<string> GetNextVendorCodeAsync();
         Task<int> AddVendorAsync(Vendor vendor);
         Task<bool> UpdateVendorAsync(Vendor vendor);
         Task<bool> DeleteVendorAsync(int id);

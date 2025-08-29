@@ -294,12 +294,12 @@
                     leaseMaxBrokerage = response.leaseMaxBrokerage || 0;
                 },
                 error: function () {
-                    $("#brokerageValidation").html(`
-                                <span class="text-orange-600">
-                                    <i class="ri-warning-line"></i> Unable to validate. Please check manually.
-                                </span>
-                            `).show();
-                    $("#submitBtn").prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
+                    // $("#brokerageValidation").html(`
+                    //             <span class="text-orange-600">
+                    //                 <i class="ri-warning-line"></i> Unable to validate. Please check manually.
+                    //             </span>
+                    //         `).show();
+                    // $("#submitBtn").prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
                 }
             });
         }

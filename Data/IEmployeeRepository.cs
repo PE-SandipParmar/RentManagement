@@ -9,6 +9,7 @@ namespace RentManagement.Data
         Task<IEnumerable<Employee>> GetAllEmployeesDropdownAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task<bool> EmailExistsAsync(string email, int? excludeId = null);
+        Task<bool> AadharExistsAsync(string aadhar, int? excludeId = null);
         Task<int> CreateEmployeeAsync(Employee employee);
         Task<bool> UpdateEmployeeAsync(Employee employee);
         Task<bool> DeleteEmployeeAsync(int id);

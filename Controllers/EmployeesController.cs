@@ -670,7 +670,13 @@ namespace RentManagement.Controllers
         {
             try
             {
-                return Json(new { isUnique = true });
+                if (string.IsNullOrEmpty(aadhar))
+                {
+                    return Json(new { isUnique = true });
+                }
+
+                var exists = await _employeeRepository.AadharExistsAsync(aadhar, employeeId);
+                return Json(new { isUnique = !exists });
             }
             catch (Exception ex)
             {
@@ -720,6 +726,27 @@ namespace RentManagement.Controllers
 
         private async Task ValidateEmployeeBusinessRules(Employee employee)
         {
+            // Validate Aadhar number if provided
+            if (!string.IsNullOrEmpty(employee.Aadhar))
+            {
+                // Check if Aadhar already exists (for create)
+                if (employee.Id == null || employee.Id == 0)
+                {
+                    if (await _employeeRepository.AadharExistsAsync(employee.Aadhar))
+                    {
+                        ModelState.AddModelError("Aadhar", "This Aadhar number is already registered with another employee.");
+                    }
+                }
+                else
+                {
+                    // Check if Aadhar already exists (for update, exclude current employee)
+                    if (await _employeeRepository.AadharExistsAsync(employee.Aadhar, employee.Id))
+                    {
+                        ModelState.AddModelError("Aadhar", "This Aadhar number is already registered with another employee.");
+                    }
+                }
+            }
+
             // Validate age (minimum 18 years)
             if (employee.DateOfBirth.HasValue)
             {

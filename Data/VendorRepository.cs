@@ -28,6 +28,60 @@ namespace RentManagement.Data
             return await connection.QueryAsync<Vendor>("sp_GetAllVendors", commandType: CommandType.StoredProcedure);
         }
 
+        public async Task<IEnumerable<Vendor>> GetAllVendorsWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        {
+            using var connection = CreateConnection();
+            
+            var offset = (pageNumber - 1) * pageSize;
+            
+            var sql = @"
+                SELECT 
+                    v.*,
+                    CASE 
+                        WHEN v.ApprovalStatus = 1 THEN 'Pending'
+                        WHEN v.ApprovalStatus = 2 THEN 'Approved'
+                        WHEN v.ApprovalStatus = 3 THEN 'Rejected'
+                        ELSE 'Unknown'
+                    END as ApprovalStatusText
+                FROM Vendors v
+                WHERE v.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR v.VendorName LIKE '%' + @SearchTerm + '%' OR v.VendorCode LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR v.Status = @StatusFilter)
+                ORDER BY v.CreatedDate DESC
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? "",
+                Offset = offset,
+                PageSize = pageSize
+            };
+
+            return await connection.QueryAsync<Vendor>(sql, parameters);
+        }
+
+        public async Task<int> GetAllVendorsWithApprovalStatusCountAsync(string searchTerm, string statusFilter)
+        {
+            using var connection = CreateConnection();
+            
+            var sql = @"
+                SELECT COUNT(*)
+                FROM Vendors v
+                WHERE v.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR v.VendorName LIKE '%' + @SearchTerm + '%' OR v.VendorCode LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR v.Status = @StatusFilter)";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? ""
+            };
+
+            return await connection.QuerySingleAsync<int>(sql, parameters);
+        }
+
         public async Task<Vendor?> GetVendorByIdAsync(int id)
         {
             using var connection = CreateConnection();
@@ -43,13 +97,45 @@ namespace RentManagement.Data
             return await connection.QueryFirstOrDefaultAsync<Vendor>(sql, parameters);
         }
 
+        public async Task<string> GetNextVendorCodeAsync()
+        {
+            using var connection = CreateConnection();
+            
+            // Get the highest vendor code number
+            var sql = @"
+                SELECT TOP 1 VendorCode 
+                FROM Vendors 
+                WHERE VendorCode LIKE 'OWN%' 
+                AND IsActiveRecord = 1 
+                ORDER BY CAST(SUBSTRING(VendorCode, 4, LEN(VendorCode) - 4) AS INT) DESC";
+            
+            var lastCode = await connection.QueryFirstOrDefaultAsync<string>(sql);
+            
+            if (string.IsNullOrEmpty(lastCode))
+            {
+                // If no existing codes, start with VEN001
+                return "OWN0001";
+            }
+            
+            // Extract the number part and increment
+            var numberPart = lastCode.Substring(3); // Remove "VEN" prefix
+            if (int.TryParse(numberPart, out int lastNumber))
+            {
+                var nextNumber = lastNumber + 1;
+                return $"OWN{nextNumber:D4}"; // Format as 3 digits with leading zeros
+            }
+            
+            // Fallback if parsing fails
+            return "OWN0001";
+        }
+
         public async Task<int> AddVendorAsync(Vendor vendor)
         {
             using var connection = CreateConnection();
 
             var sql = @"
                 INSERT INTO Vendors (
-                    VendorCode, VendorName, PANNumber, MobileNumber, AlternateNumber,
+                    VendorCode, VendorName, PANNumber, GSTNumber, MobileNumber, AlternateNumber,
                     EmailId, Address, AccountHolderName, BankName, BranchName,
                     AccountNumber, IFSCCode, PropertyAddress, TotalRentAmount,
                     LinkedEmployees, Status, ApprovalStatus, MakerUserId, MakerUserName,
@@ -57,7 +143,7 @@ namespace RentManagement.Data
                     RejectionReason, IsActiveRecord, CreatedDate, UpdatedDate
                 )
                 VALUES (
-                    @VendorCode, @VendorName, @PANNumber, @MobileNumber, @AlternateNumber,
+                    @VendorCode, @VendorName, @PANNumber, @GSTNumber, @MobileNumber, @AlternateNumber,
                     @EmailId, @Address, @AccountHolderName, @BankName, @BranchName,
                     @AccountNumber, @IFSCCode, @PropertyAddress, @TotalRentAmount,
                     @LinkedEmployees, @Status, @ApprovalStatus, @MakerUserId, @MakerUserName,
@@ -71,6 +157,7 @@ namespace RentManagement.Data
                 VendorCode = vendor.VendorCode,
                 VendorName = vendor.VendorName,
                 PANNumber = vendor.PANNumber,
+                GSTNumber = vendor.GSTNumber,
                 MobileNumber = vendor.MobileNumber,
                 AlternateNumber = vendor.AlternateNumber,
                 EmailId = vendor.EmailId,
@@ -109,6 +196,7 @@ namespace RentManagement.Data
                     VendorCode = @VendorCode,
                     VendorName = @VendorName,
                     PANNumber = @PANNumber,
+                    GSTNumber = @GSTNumber,
                     MobileNumber = @MobileNumber,
                     AlternateNumber = @AlternateNumber,
                     EmailId = @EmailId,
@@ -140,6 +228,7 @@ namespace RentManagement.Data
                 VendorCode = vendor.VendorCode,
                 VendorName = vendor.VendorName,
                 PANNumber = vendor.PANNumber,
+                GSTNumber = vendor.GSTNumber,
                 MobileNumber = vendor.MobileNumber,
                 AlternateNumber = vendor.AlternateNumber,
                 EmailId = vendor.EmailId,

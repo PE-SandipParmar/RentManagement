@@ -21,6 +21,13 @@ namespace RentManagement.Models
         [StringLength(10, MinimumLength = 10, ErrorMessage = "PAN Number must be 10 characters")]
         public string PANNumber { get; set; } = string.Empty;
 
+        [Display(Name = "GST Number")]
+        [RegularExpression(@"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[A-Z0-9]$",ErrorMessage = "Invalid GST Number format. Format: 22AAAAA0000A1Z5")]  
+        //[StringLength(15, MinimumLength = 15, ErrorMessage = "GST Number must be 15 characters")]
+
+
+        public string? GSTNumber { get; set; }
+
         [Required(ErrorMessage = "Mobile Number is required")]
         [Display(Name = "Mobile Number")]
         [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Mobile Number must be 10 digits")]

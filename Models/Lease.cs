@@ -45,23 +45,23 @@ namespace RentManagement.Models
 
         public int? RentRecoveryElementId { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Rent Deposit must be a positive number.")]
-        [Required(ErrorMessage = "Rent Deposit is required.")]
+        //[Range(0, double.MaxValue, ErrorMessage = "Rent Deposit must be a positive number.")]
+        //[Required(ErrorMessage = "Rent Deposit is required.")]
         public decimal? RentDeposit { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Additional Rent Recovery must be a positive number.")]
-        [Required(ErrorMessage = "Additional Rent Recovery is required.")]
+        //[Range(0, double.MaxValue, ErrorMessage = "Additional Rent Recovery must be a positive number.")]
+        //[Required(ErrorMessage = "Additional Rent Recovery is required.")]
         public decimal? AdditionalRentRecovery { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Brokerage Amount must be a positive number.")]
-        [Required(ErrorMessage = "Brokerage Amount is required.")]
+        //[Range(0, double.MaxValue, ErrorMessage = "Brokerage Amount must be a positive number.")]
+        //[Required(ErrorMessage = "Brokerage Amount is required.")]
         public decimal? BrokerageAmount { get; set; }
 
         //[Range(1, int.MaxValue, ErrorMessage = "License Fee Recovery Element is required.")]
         public int? LicenseFeeRecoveryElementId { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Stamp Duty must be a positive number.")]
-        [Required(ErrorMessage = "Stamp Duty is required.")]
+        //[Range(0, double.MaxValue, ErrorMessage = "Stamp Duty must be a positive number.")]
+        //[Required(ErrorMessage = "Stamp Duty is required.")]
         public decimal? StampDuty { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "License Fee Amount must be a positive number.")]

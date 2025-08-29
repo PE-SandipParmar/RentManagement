@@ -77,6 +77,21 @@ namespace RentManagement.Data
             );
         }
 
+        public async Task<bool> AadharExistsAsync(string aadhar, int? excludeId = null)
+        {
+            using var connection = CreateConnection();
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@Aadhar", aadhar);
+            parameters.Add("@excludeId", excludeId);
+
+            return await connection.ExecuteScalarAsync<bool>(
+                "CheckEmployeesAadharExists",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
         public async Task<int> CreateEmployeeAsync(Employee employee)
         {
             using var connection = CreateConnection();

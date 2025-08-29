@@ -1165,6 +1165,14 @@
             }
         });
 
+        // Email validation with uniqueness check
+        $('#email').on('blur', function () {
+            const email = this.value.trim();
+            if (email) {
+                validateEmailUniqueness(email);
+            }
+        });
+
         // Enhanced PAN validation - exact format validation
         $('#pan').on('input', function () {
             let value = this.value.toUpperCase();
@@ -1222,6 +1230,44 @@
         $('#departmentId, #designationId, #gender').on('select2:clear', function () {
             $(this).val('').trigger('change');
             clearFieldError(this.id);
+        });
+    }
+
+    // Function to validate Aadhar uniqueness
+    function validateAadharUniqueness(aadhar) {
+        const employeeId = $('#id').val() || 0;
+        
+        fetch(`/Employee/ValidateAadhar?aadhar=${encodeURIComponent(aadhar)}&employeeId=${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.isUnique) {
+                    showFieldError('aadhar', 'This Aadhar number is already registered with another employee.');
+                } else {
+                    clearFieldError('aadhar');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating Aadhar:', error);
+                // Don't show error to user, just log it
+            });
+    }
+
+    // Function to validate Email uniqueness
+    function validateEmailUniqueness(email) {
+        const employeeId = $('#id').val() || 0;
+        
+        fetch(`/Employee/ValidateEmail?email=${encodeURIComponent(email)}&employeeId=${employeeId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.isUnique) {
+                    showFieldError('email', 'This email address is already registered with another employee.');
+                } else {
+                    clearFieldError('email');
+                }
+            })
+            .catch(error => {
+                console.error('Error validating Email:', error);
+                // Don't show error to user, just log it
         });
     }
     function validateHouseRentAllowance() {

@@ -104,14 +104,19 @@ namespace RentManagement.Controllers
                 // Load different data based on user role and filter
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
-                    // Set default approval status filter to show Approved by default
+                    // Set default approval status filter to show All Status by default
                     if (string.IsNullOrEmpty(approvalStatusFilter))
                     {
-                        approvalStatusFilter = "Pending";
-                        viewModel.ApprovalStatusFilter = "Pending";
+                        approvalStatusFilter = "All Status";
+                        viewModel.ApprovalStatusFilter = "All Status";
                     }
 
-                    if (approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Approved")
                     {
                         viewModel.Vendors = (await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
                         viewModel.TotalRecords = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
@@ -132,14 +137,19 @@ namespace RentManagement.Controllers
                 }
                 else
                 {
-                    // Makers - Show approved by default, but allow viewing pending/rejected
+                    // Makers - Show All Status by default, but allow viewing all statuses
                     if (string.IsNullOrEmpty(approvalStatusFilter))
                     {
-                        approvalStatusFilter = "Pending";
-                        viewModel.ApprovalStatusFilter = "Pending";
+                        approvalStatusFilter = "All Status";
+                        viewModel.ApprovalStatusFilter = "All Status";
                     }
 
-                    if (approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status")
+                    {
+                        viewModel.Vendors = (await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Approved")
                     {
                         viewModel.Vendors = (await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
                         viewModel.TotalRecords = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
@@ -216,6 +226,7 @@ namespace RentManagement.Controllers
                         UpdatedDate = vendor.UpdatedDate,
                         // Use the property names that JavaScript expects
                         panNumber = vendor.PANNumber,
+                        gstNumber = vendor.GSTNumber,
                         ifscCode = vendor.IFSCCode
                     }
                 });
@@ -239,18 +250,15 @@ namespace RentManagement.Controllers
                 var userId = GetCurrentUserId();
                 var userName = GetCurrentUserName();
 
-                // Check for duplicate vendor code
-                var existingVendor = await _vendorRepository.GetVendorByCodeAsync(request.VendorCode);
-                if (existingVendor != null)
-                {
-                    return Json(new { success = false, message = "Vendor code already exists. Please use a different vendor code." });
-                }
+                // Auto-generate vendor code
+                var vendorCode = await _vendorRepository.GetNextVendorCodeAsync();
 
                 var vendor = new Vendor
                 {
-                    VendorCode = request.VendorCode,
+                    VendorCode = vendorCode,
                     VendorName = request.VendorName,
                     PANNumber = request.PanNumber,
+                    GSTNumber = request.GstNumber,
                     MobileNumber = request.MobileNumber,
                     AlternateNumber = request.AlternateNumber,
                     EmailId = request.EmailId,
@@ -335,17 +343,11 @@ namespace RentManagement.Controllers
                     return Json(new { success = false, message = "This vendor has pending approval changes. Please wait for approval before making new changes." });
                 }
 
-                // Check for duplicate vendor code (excluding current vendor)
-                var existingVendor = await _vendorRepository.GetVendorByCodeAsync(request.VendorCode);
-                if (existingVendor != null && existingVendor.Id != request.Id)
-                {
-                    return Json(new { success = false, message = "Vendor code already exists. Please use a different vendor code." });
-                }
-
-                // Update vendor properties
-                vendor.VendorCode = request.VendorCode;
+                // Update vendor properties (vendor code cannot be changed)
+                vendor.VendorCode = vendor.VendorCode; // Keep existing vendor code
                 vendor.VendorName = request.VendorName;
                 vendor.PANNumber = request.PanNumber;
+                vendor.GSTNumber = request.GstNumber;
                 vendor.MobileNumber = request.MobileNumber;
                 vendor.AlternateNumber = request.AlternateNumber;
                 vendor.EmailId = request.EmailId;
@@ -524,7 +526,12 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
 
         if (userRole == UserRole.Checker || userRole == UserRole.Admin)
         {
-            if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+            if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
+            {
+                vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+            }
+            else if (approvalStatusFilter == "Approved")
             {
                 vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
                 totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
@@ -541,13 +548,18 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
             }
             else
             {
-                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
-                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
             }
         }
         else // Maker role
         {
-            if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+            if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
+            {
+                vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+            }
+            else if (approvalStatusFilter == "Approved")
             {
                 vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
                 totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
@@ -566,8 +578,8 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
             }
             else
             {
-                vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
-                totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
             }
         }
 
@@ -594,7 +606,10 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                 v.ApprovalDate,
                 v.RejectionReason,
                 v.CreatedDate,
-                v.UpdatedDate
+                v.UpdatedDate,
+                v.GSTNumber,
+                v.AccountNumber,
+
             }).ToList(),
             pagination = new
             {
@@ -624,7 +639,12 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
 
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
+                    {
+                        vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Approved")
                     {
                         vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
                         totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
@@ -641,14 +661,37 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                     }
                     else
                     {
-                        vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                        vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                 }
                 else
                 {
-                    vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
-                    totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                    if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
+                    {
+                        vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        vendors = await _vendorRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize);
+                        totalCount = await _vendorRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        vendors = await _vendorRepository.GetRejectedVendorsAsync(searchTerm, page, pageSize);
+                        totalCount = await _vendorRepository.GetRejectedVendorCountAsync(searchTerm);
+                    }
+                    else
+                    {
+                        vendors = await _vendorRepository.GetAllVendorsWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
                 }
 
                 var result = new
@@ -674,7 +717,11 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                         v.ApprovalDate,
                         v.RejectionReason,
                         v.CreatedDate,
-                        v.UpdatedDate
+                        v.UpdatedDate,
+                        v.GSTNumber,
+
+
+                v.AccountNumber,
                     }).ToList(),
                     pagination = new
                     {
@@ -691,6 +738,22 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
             {
                 _logger.LogError(ex, "Error occurred while fetching vendors");
                 return Json(new { success = false, message = "An error occurred while loading vendors." });
+            }
+        }
+
+        // AJAX: Get next vendor code
+        [HttpGet]
+        public async Task<IActionResult> GetNextVendorCode()
+        {
+            try
+            {
+                var nextCode = await _vendorRepository.GetNextVendorCodeAsync();
+                return Json(new { success = true, vendorCode = nextCode });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while generating vendor code");
+                return Json(new { success = false, message = "An error occurred while generating vendor code." });
             }
         }
 
@@ -737,9 +800,9 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
     // Request models for AJAX operations
     public class VendorCreateRequest
     {
-        public string VendorCode { get; set; } = string.Empty;
         public string VendorName { get; set; } = string.Empty;
         public string PanNumber { get; set; } = string.Empty;
+        public string? GstNumber { get; set; }
         public string MobileNumber { get; set; } = string.Empty;
         public string? AlternateNumber { get; set; }
         public string EmailId { get; set; } = string.Empty;
@@ -755,9 +818,25 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
         public string Status { get; set; } = "Active";
     }
 
-    public class VendorUpdateRequest : VendorCreateRequest
+    public class VendorUpdateRequest
     {
         public int Id { get; set; }
+        public string VendorName { get; set; } = string.Empty;
+        public string PanNumber { get; set; } = string.Empty;
+        public string? GstNumber { get; set; }
+        public string MobileNumber { get; set; } = string.Empty;
+        public string? AlternateNumber { get; set; }
+        public string EmailId { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string AccountHolderName { get; set; } = string.Empty;
+        public string BankName { get; set; } = string.Empty;
+        public string BranchName { get; set; } = string.Empty;
+        public string AccountNumber { get; set; } = string.Empty;
+        public string IfscCode { get; set; } = string.Empty;
+        public string PropertyAddress { get; set; } = string.Empty;
+        public decimal TotalRentAmount { get; set; }
+        public List<string>? LinkedEmployees { get; set; }
+        public string Status { get; set; } = "Active";
     }
 
     public class VendorRejectionRequest
