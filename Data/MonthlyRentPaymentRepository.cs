@@ -104,7 +104,7 @@ namespace RentManagement.Data
         }
 
         // New method to get all payments with filters
-        public async Task<IEnumerable<MonthlyRentPayment>> GetAllPaymentsAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        public async Task<IEnumerable<MonthlyRentPayment>> GetAllPaymentsAsync(string searchTerm, string statusFilter, string financialYearFilter, int pageNumber, int pageSize)
         {
             using var connection = CreateConnection();
 
@@ -119,6 +119,11 @@ namespace RentManagement.Data
                            OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%')
                            OR MakerUserName LIKE '%' + @SearchTerm + '%')
                     AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)
+                    AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                             AND MONTH(PaymentMonth) >= 4)
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                             AND MONTH(PaymentMonth) < 4))
                 ) AS p
                 LEFT JOIN Employees e ON p.EmployeeId = e.Id
                 LEFT JOIN Vendors v ON p.VendorId = v.Id
@@ -130,6 +135,7 @@ namespace RentManagement.Data
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
                 StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter,
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
@@ -137,7 +143,7 @@ namespace RentManagement.Data
             return await connection.QueryAsync<MonthlyRentPayment>(sql, parameters);
         }
 
-        public async Task<int> GetAllPaymentsCountAsync(string searchTerm, string statusFilter)
+        public async Task<int> GetAllPaymentsCountAsync(string searchTerm, string statusFilter, string financialYearFilter)
         {
             using var connection = CreateConnection();
 
@@ -149,12 +155,18 @@ namespace RentManagement.Data
                        OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = p.EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                        OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = p.VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%')
                        OR MakerUserName LIKE '%' + @SearchTerm + '%')
-                AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)";
+                AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)
+                AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                         AND MONTH(PaymentMonth) >= 4)
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                         AND MONTH(PaymentMonth) < 4))";
 
             var parameters = new
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
-                StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter
+                StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter
             };
 
             return await connection.QuerySingleAsync<int>(sql, parameters);
@@ -378,7 +390,7 @@ namespace RentManagement.Data
 
         #region Approval Workflow Methods
 
-        public async Task<IEnumerable<MonthlyRentPayment>> GetApprovedPaymentsAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        public async Task<IEnumerable<MonthlyRentPayment>> GetApprovedPaymentsAsync(string searchTerm, string statusFilter, string financialYearFilter, int pageNumber, int pageSize)
         {
             using var connection = CreateConnection();
 
@@ -392,6 +404,11 @@ namespace RentManagement.Data
                            OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                            OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%'))
                     AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)
+                    AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                             AND MONTH(PaymentMonth) >= 4)
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                             AND MONTH(PaymentMonth) < 4))
                 ) AS p
                 LEFT JOIN Employees e ON p.EmployeeId = e.Id
                 LEFT JOIN Vendors v ON p.VendorId = v.Id
@@ -403,6 +420,7 @@ namespace RentManagement.Data
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
                 StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter,
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
@@ -410,7 +428,7 @@ namespace RentManagement.Data
             return await connection.QueryAsync<MonthlyRentPayment>(sql, parameters);
         }
 
-        public async Task<int> GetApprovedPaymentCountAsync(string searchTerm, string statusFilter)
+        public async Task<int> GetApprovedPaymentCountAsync(string searchTerm, string statusFilter, string financialYearFilter)
         {
             using var connection = CreateConnection();
 
@@ -421,18 +439,24 @@ namespace RentManagement.Data
                 AND (@SearchTerm IS NULL OR @SearchTerm = '' 
                        OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = p.EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                        OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = p.VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%'))
-                AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)";
+                AND (@StatusFilter IS NULL OR @StatusFilter = '' OR PaymentStatus = @StatusFilter)
+                AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                         AND MONTH(PaymentMonth) >= 4)
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                         AND MONTH(PaymentMonth) < 4))";
 
             var parameters = new
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
-                StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter
+                StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter
             };
 
             return await connection.QuerySingleAsync<int>(sql, parameters);
         }
 
-        public async Task<IEnumerable<MonthlyRentPayment>> GetPendingApprovalsAsync(string searchTerm, int pageNumber, int pageSize)
+        public async Task<IEnumerable<MonthlyRentPayment>> GetPendingApprovalsAsync(string searchTerm, string financialYearFilter, int pageNumber, int pageSize)
         {
             using var connection = CreateConnection();
 
@@ -446,6 +470,11 @@ namespace RentManagement.Data
                            OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                            OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%')
                            OR MakerUserName LIKE '%' + @SearchTerm + '%')
+                    AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                             AND MONTH(PaymentMonth) >= 4)
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                             AND MONTH(PaymentMonth) < 4))
                 ) AS p
                 LEFT JOIN Employees e ON p.EmployeeId = e.Id
                 LEFT JOIN Vendors v ON p.VendorId = v.Id
@@ -456,6 +485,7 @@ namespace RentManagement.Data
             var parameters = new
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter,
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
@@ -463,7 +493,7 @@ namespace RentManagement.Data
             return await connection.QueryAsync<MonthlyRentPayment>(sql, parameters);
         }
 
-        public async Task<int> GetPendingApprovalCountAsync(string searchTerm)
+        public async Task<int> GetPendingApprovalCountAsync(string searchTerm, string financialYearFilter)
         {
             using var connection = CreateConnection();
 
@@ -474,17 +504,23 @@ namespace RentManagement.Data
                 AND (@SearchTerm IS NULL OR @SearchTerm = '' 
                        OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = p.EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                        OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = p.VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%')
-                       OR MakerUserName LIKE '%' + @SearchTerm + '%')";
+                       OR MakerUserName LIKE '%' + @SearchTerm + '%')
+                AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                         AND MONTH(PaymentMonth) >= 4)
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                         AND MONTH(PaymentMonth) < 4))";
 
             var parameters = new
             {
-                SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm
+                SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter
             };
 
             return await connection.QuerySingleAsync<int>(sql, parameters);
         }
 
-        public async Task<IEnumerable<MonthlyRentPayment>> GetRejectedPaymentsAsync(string searchTerm, int pageNumber, int pageSize)
+        public async Task<IEnumerable<MonthlyRentPayment>> GetRejectedPaymentsAsync(string searchTerm, string financialYearFilter, int pageNumber, int pageSize)
         {
             using var connection = CreateConnection();
 
@@ -497,6 +533,11 @@ namespace RentManagement.Data
                     AND (@SearchTerm IS NULL OR @SearchTerm = '' 
                            OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
                            OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%'))
+                    AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                             AND MONTH(PaymentMonth) >= 4)
+                         OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                             AND MONTH(PaymentMonth) < 4))
                 ) AS p
                 LEFT JOIN Employees e ON p.EmployeeId = e.Id
                 LEFT JOIN Vendors v ON p.VendorId = v.Id
@@ -507,6 +548,7 @@ namespace RentManagement.Data
             var parameters = new
             {
                 SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter,
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
@@ -514,7 +556,7 @@ namespace RentManagement.Data
             return await connection.QueryAsync<MonthlyRentPayment>(sql, parameters);
         }
 
-        public async Task<int> GetRejectedPaymentCountAsync(string searchTerm)
+        public async Task<int> GetRejectedPaymentCountAsync(string searchTerm, string financialYearFilter)
         {
             using var connection = CreateConnection();
 
@@ -524,11 +566,17 @@ namespace RentManagement.Data
                 WHERE ApprovalStatus = 3 AND IsActiveRecord = 1
                 AND (@SearchTerm IS NULL OR @SearchTerm = '' 
                        OR EXISTS (SELECT 1 FROM Employees e WHERE e.Id = p.EmployeeId AND e.Name LIKE '%' + @SearchTerm + '%')
-                       OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = p.VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%'))";
+                       OR EXISTS (SELECT 1 FROM Vendors v WHERE v.Id = p.VendorId AND v.VendorName LIKE '%' + @SearchTerm + '%'))
+                AND (@FinancialYearFilter IS NULL OR @FinancialYearFilter = '' 
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) 
+                         AND MONTH(PaymentMonth) >= 4)
+                     OR (YEAR(PaymentMonth) = CAST(LEFT(@FinancialYearFilter, 4) AS INT) + 1 
+                         AND MONTH(PaymentMonth) < 4))";
 
             var parameters = new
             {
-                SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm
+                SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+                FinancialYearFilter = string.IsNullOrEmpty(financialYearFilter) ? null : financialYearFilter
             };
 
             return await connection.QuerySingleAsync<int>(sql, parameters);

@@ -322,20 +322,20 @@
                                     @(employee.IsActive ? "Active" : "Inactive")
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
-                                {
-                                    <span class="status-badge status-pending">Pending</span>
-                                }
-                                else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
-                                {
-                                    <span class="status-badge status-approved">Approved</span>
-                                }
-                                else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
-                                {
-                                    <span class="status-badge status-rejected">Rejected</span>
-                                }
-                            </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                    {
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    }
+                                </td>
                             @if (isChecker)
                             {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.MakerUserName</td>
@@ -941,31 +941,31 @@
             let actionButtons = '';
 
             // Approval status column for all users
-            let statusClass = '';
-            let statusText = '';
+                let statusClass = '';
+                let statusText = '';
 
-            switch (employee.approvalStatus) {
-                case 1:
-                    statusClass = 'status-pending';
-                    statusText = 'Pending';
-                    break;
-                case 2:
-                    statusClass = 'status-approved';
-                    statusText = 'Approved';
-                    break;
-                case 3:
-                    statusClass = 'status-rejected';
-                    statusText = 'Rejected';
-                    break;
-                default:
-                    statusClass = 'status-pending';
-                    statusText = 'Unknown';
-            }
+                switch (employee.approvalStatus) {
+                    case 1:
+                        statusClass = 'status-pending';
+                        statusText = 'Pending';
+                        break;
+                    case 2:
+                        statusClass = 'status-approved';
+                        statusText = 'Approved';
+                        break;
+                    case 3:
+                        statusClass = 'status-rejected';
+                        statusText = 'Rejected';
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = 'Unknown';
+                }
 
-            approvalStatusCell = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </td>`;
+                approvalStatusCell = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>`;
 
             if (isChecker) {
                 makerCell = `

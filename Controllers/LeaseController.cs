@@ -170,6 +170,7 @@ namespace RentManagement.Controllers
                         PerquisiteApplicablePercentId = lease.PerquisiteApplicablePercentId,
                         VendorId = lease.VendorId,
                         MonthlyRentPayable = lease.MonthlyRentPayable,
+                        RentAmount = lease.RentAmount,
                         FromDate = lease.FromDate?.ToString("yyyy-MM-dd"),
                         EndDate = lease.EndDate?.ToString("yyyy-MM-dd"),
                         RentRecoveryElementId = lease.RentRecoveryElementId,
@@ -179,6 +180,7 @@ namespace RentManagement.Controllers
                         LicenseFeeRecoveryElementId = lease.LicenseFeeRecoveryElementId,
                         StampDuty = lease.StampDuty,
                         LicenseFeeAmount = lease.LicenseFeeAmount,
+                        MaintenancePayment = lease.MaintenancePayment,
                         PaymentTermId = lease.PaymentTermId,
                         PayableOnOrBeforeId = lease.PayableOnOrBeforeId,
                         Narration = lease.Narration,
@@ -241,6 +243,7 @@ namespace RentManagement.Controllers
                     PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId,
                     VendorId = request.VendorId,
                     MonthlyRentPayable = request.MonthlyRentPayable,
+                    RentAmount = request.RentAmount,
                     FromDate = request.FromDate,
                     EndDate = request.EndDate,
                     RentRecoveryElementId = request.RentRecoveryElementId,
@@ -343,6 +346,7 @@ namespace RentManagement.Controllers
                 lease.PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId;
                 lease.VendorId = request.VendorId;
                 lease.MonthlyRentPayable = request.MonthlyRentPayable;
+                lease.RentAmount = request.RentAmount;
                 lease.FromDate = request.FromDate;
                 lease.EndDate = request.EndDate;
                 lease.RentRecoveryElementId = request.RentRecoveryElementId;
@@ -409,19 +413,32 @@ namespace RentManagement.Controllers
                 var userId = GetCurrentUserId();
                 var userName = GetCurrentUserName();
 
-                // Validate Monthly Rent against Employee HRA
+                // Calculate Rent Amount and Additional Rent Recovery based on Monthly Rent Payable and HRA limit
                 var employeeHRA = await _leaseRepository.GetEmployeeHRAAsync(request.EmployeeId);
                 if (employeeHRA.HasValue && request.MonthlyRentPayable.HasValue)
                 {
                     var maxAllowedRent = employeeHRA.Value * 2;
-                    if (request.MonthlyRentPayable.Value > maxAllowedRent)
+                    var monthlyRentPayable = request.MonthlyRentPayable.Value;
+                    
+                    // Calculate Rent Amount and Additional Rent Recovery
+                    if (monthlyRentPayable > maxAllowedRent)
                     {
-                        return Json(new
-                        {
-                            success = false,
-                            message = $"Monthly Rent Payable (₹{request.MonthlyRentPayable.Value:N2}) cannot exceed Employee HRA × 2 (₹{maxAllowedRent:N2})"
-                        });
+                        // If Monthly Rent Payable exceeds HRA limit, split it
+                        request.RentAmount = maxAllowedRent;
+                        request.AdditionalRentRecovery = monthlyRentPayable - maxAllowedRent;
                     }
+                    else
+                    {
+                        // If Monthly Rent Payable is within HRA limit, set Rent Amount to Monthly Rent Payable
+                        request.RentAmount = monthlyRentPayable;
+                        request.AdditionalRentRecovery = 0;
+                    }
+                }
+                else if (request.MonthlyRentPayable.HasValue)
+                {
+                    // If no HRA limit, set Rent Amount to Monthly Rent Payable
+                    request.RentAmount = request.MonthlyRentPayable.Value;
+                    request.AdditionalRentRecovery = 0;
                 }
 
                 // Check for duplicate lease reference number
@@ -443,6 +460,7 @@ namespace RentManagement.Controllers
                     PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId,
                     VendorId = request.VendorId,
                     MonthlyRentPayable = request.MonthlyRentPayable,
+                    RentAmount = request.RentAmount,
                     FromDate = request.FromDate,
                     EndDate = request.EndDate,
                     RentRecoveryElementId = request.RentRecoveryElementId,
@@ -452,6 +470,7 @@ namespace RentManagement.Controllers
                     LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId,
                     StampDuty = request.StampDuty,
                     LicenseFeeAmount = request.LicenseFeeAmount,
+                    MaintenancePayment = request.MaintenancePayment,
                     PaymentTermId = request.PaymentTermId,
                     PayableOnOrBeforeId = request.PayableOnOrBeforeId,
                     Narration = request.Narration,
@@ -528,19 +547,32 @@ namespace RentManagement.Controllers
                     return Json(new { success = false, message = "This lease has pending approval changes. Please wait for approval before making new changes." });
                 }
 
-                // Validate Monthly Rent against Employee HRA
+                // Calculate Rent Amount and Additional Rent Recovery based on Monthly Rent Payable and HRA limit
                 var employeeHRA = await _leaseRepository.GetEmployeeHRAAsync(request.EmployeeId);
                 if (employeeHRA.HasValue && request.MonthlyRentPayable.HasValue)
                 {
                     var maxAllowedRent = employeeHRA.Value * 2;
-                    if (request.MonthlyRentPayable.Value > maxAllowedRent)
+                    var monthlyRentPayable = request.MonthlyRentPayable.Value;
+                    
+                    // Calculate Rent Amount and Additional Rent Recovery
+                    if (monthlyRentPayable > maxAllowedRent)
                     {
-                        return Json(new
-                        {
-                            success = false,
-                            message = $"Monthly Rent Payable (₹{request.MonthlyRentPayable.Value:N2}) cannot exceed Employee HRA × 2 (₹{maxAllowedRent:N2})"
-                        });
+                        // If Monthly Rent Payable exceeds HRA limit, split it
+                        request.RentAmount = maxAllowedRent;
+                        request.AdditionalRentRecovery = monthlyRentPayable - maxAllowedRent;
                     }
+                    else
+                    {
+                        // If Monthly Rent Payable is within HRA limit, set Rent Amount to Monthly Rent Payable
+                        request.RentAmount = monthlyRentPayable;
+                        request.AdditionalRentRecovery = 0;
+                    }
+                }
+                else if (request.MonthlyRentPayable.HasValue)
+                {
+                    // If no HRA limit, set Rent Amount to Monthly Rent Payable
+                    request.RentAmount = request.MonthlyRentPayable.Value;
+                    request.AdditionalRentRecovery = 0;
                 }
 
                 // Check for duplicate lease reference number (excluding current lease)
@@ -561,6 +593,7 @@ namespace RentManagement.Controllers
                 lease.PerquisiteApplicablePercentId = request.PerquisiteApplicablePercentId;
                 lease.VendorId = request.VendorId;
                 lease.MonthlyRentPayable = request.MonthlyRentPayable;
+                lease.RentAmount = request.RentAmount;
                 lease.FromDate = request.FromDate;
                 lease.EndDate = request.EndDate;
                 lease.RentRecoveryElementId = request.RentRecoveryElementId;
@@ -570,6 +603,7 @@ namespace RentManagement.Controllers
                 lease.LicenseFeeRecoveryElementId = request.LicenseFeeRecoveryElementId;
                 lease.StampDuty = request.StampDuty;
                 lease.LicenseFeeAmount = request.LicenseFeeAmount;
+                lease.MaintenancePayment = request.MaintenancePayment;
                 lease.PaymentTermId = request.PaymentTermId;
                 lease.PayableOnOrBeforeId = request.PayableOnOrBeforeId;
                 lease.Narration = request.Narration;
@@ -779,6 +813,9 @@ namespace RentManagement.Controllers
                         l.EmployeeName,
                         l.VendorName,
                         l.MonthlyRentPayable,
+                        l.RentAmount,
+                        l.AdditionalRentRecovery,
+                        l.MaintenancePayment,
                         FromDate = l.FromDate?.ToString("yyyy-MM-dd"),
                         EndDate = l.EndDate?.ToString("yyyy-MM-dd"),
                         l.Status,
@@ -1083,6 +1120,7 @@ namespace RentManagement.Controllers
         public int PerquisiteApplicablePercentId { get; set; }
         public int VendorId { get; set; }
         public decimal? MonthlyRentPayable { get; set; }
+        public decimal? RentAmount { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int? RentRecoveryElementId { get; set; }
@@ -1092,6 +1130,7 @@ namespace RentManagement.Controllers
         public int? LicenseFeeRecoveryElementId { get; set; }
         public decimal? StampDuty { get; set; }
         public decimal? LicenseFeeAmount { get; set; }
+        public decimal? MaintenancePayment { get; set; }
         public int PaymentTermId { get; set; }
         public int PayableOnOrBeforeId { get; set; }
         public string Narration { get; set; } = string.Empty;

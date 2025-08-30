@@ -34,6 +34,10 @@ namespace RentManagement.Models
         [Required(ErrorMessage = "Monthly Rent Payable is required.")]
         public decimal? MonthlyRentPayable { get; set; }
 
+        [Range(0, double.MaxValue, ErrorMessage = "Rent Amount must be a positive number.")]
+        [Required(ErrorMessage = "Rent Amount is required.")]
+        public decimal? RentAmount { get; set; }
+
         [Required(ErrorMessage = "Lease Start Date is required.")]
         [DataType(DataType.Date)]
         public DateTime? FromDate { get; set; }
@@ -67,6 +71,9 @@ namespace RentManagement.Models
         [Range(0, double.MaxValue, ErrorMessage = "License Fee Amount must be a positive number.")]
         [Required(ErrorMessage = "License Fee Amount is required.")]
         public decimal? LicenseFeeAmount { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessage = "Maintenance Payment must be a positive number.")]
+        public decimal? MaintenancePayment { get; set; }
 
         //[Range(1, int.MaxValue, ErrorMessage = "Payment Term is required.")]
         public int? PaymentTermId { get; set; }

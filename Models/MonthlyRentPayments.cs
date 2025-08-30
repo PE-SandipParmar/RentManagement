@@ -128,6 +128,7 @@ namespace RentManagement.Models
         public string SearchTerm { get; set; } = string.Empty;
         public string StatusFilter { get; set; } = string.Empty;
         public string ApprovalStatusFilter { get; set; } = string.Empty;
+        public string FinancialYearFilter { get; set; } = string.Empty;
         public int CurrentPage { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public int TotalRecords { get; set; }

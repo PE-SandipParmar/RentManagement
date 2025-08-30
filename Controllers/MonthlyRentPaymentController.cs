@@ -30,7 +30,7 @@ namespace RentManagement.Controllers
         }
 
         // GET: MonthlyRentPayment - Fixed with proper filtering
-        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "All", int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "All Status", string financialYearFilter = "", int page = 1, int pageSize = 10)
         {
             try
             {
@@ -42,6 +42,7 @@ namespace RentManagement.Controllers
                     SearchTerm = searchTerm,
                     StatusFilter = statusFilter,
                     ApprovalStatusFilter = approvalStatusFilter,
+                    FinancialYearFilter = financialYearFilter,
                     CurrentPage = page,
                     PageSize = pageSize,
                     CurrentUserRole = userRole,
@@ -49,32 +50,32 @@ namespace RentManagement.Controllers
                 };
 
                 // Load data based on approval status filter
-                if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "All")
+                if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "All Status")
                 {
                     // Get all payments with filters
-                    viewModel.Payments = (await _repository.GetAllPaymentsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
-                    viewModel.TotalRecords = await _repository.GetAllPaymentsCountAsync(searchTerm, statusFilter);
+                    viewModel.Payments = (await _repository.GetAllPaymentsAsync(searchTerm, statusFilter, financialYearFilter, page, pageSize)).ToList();
+                    viewModel.TotalRecords = await _repository.GetAllPaymentsCountAsync(searchTerm, statusFilter, financialYearFilter);
                 }
                 else if (approvalStatusFilter == "Approved")
                 {
-                    viewModel.Payments = (await _repository.GetApprovedPaymentsAsync(searchTerm, statusFilter, page, pageSize)).ToList();
-                    viewModel.TotalRecords = await _repository.GetApprovedPaymentCountAsync(searchTerm, statusFilter);
+                    viewModel.Payments = (await _repository.GetApprovedPaymentsAsync(searchTerm, statusFilter, financialYearFilter, page, pageSize)).ToList();
+                    viewModel.TotalRecords = await _repository.GetApprovedPaymentCountAsync(searchTerm, statusFilter, financialYearFilter);
                 }
                 else if (approvalStatusFilter == "Pending")
                 {
-                    viewModel.Payments = (await _repository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
-                    viewModel.TotalRecords = await _repository.GetPendingApprovalCountAsync(searchTerm);
+                    viewModel.Payments = (await _repository.GetPendingApprovalsAsync(searchTerm, financialYearFilter, page, pageSize)).ToList();
+                    viewModel.TotalRecords = await _repository.GetPendingApprovalCountAsync(searchTerm, financialYearFilter);
                 }
                 else if (approvalStatusFilter == "Rejected")
                 {
-                    viewModel.Payments = (await _repository.GetRejectedPaymentsAsync(searchTerm, page, pageSize)).ToList();
-                    viewModel.TotalRecords = await _repository.GetRejectedPaymentCountAsync(searchTerm);
+                    viewModel.Payments = (await _repository.GetRejectedPaymentsAsync(searchTerm, financialYearFilter, page, pageSize)).ToList();
+                    viewModel.TotalRecords = await _repository.GetRejectedPaymentCountAsync(searchTerm, financialYearFilter);
                 }
 
                 // Load pending approvals for approval section (for checkers)
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
-                    viewModel.PendingApprovals = (await _repository.GetPendingApprovalsAsync("", 1, 5)).ToList();
+                    viewModel.PendingApprovals = (await _repository.GetPendingApprovalsAsync("", financialYearFilter, 1, 5)).ToList();
                 }
 
                 // Load dropdowns

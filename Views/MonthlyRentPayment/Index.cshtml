@@ -160,10 +160,18 @@
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
 
-            <!-- Approval Status Filter - Updated with All option -->
+            <!-- Approval Status Filter - Updated with All Status option -->
             <div class="relative">
                 <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
-                    @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                    @if (Model.ApprovalStatusFilter == "All Status" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                    {
+                        <option value="All Status" selected>All Status</option>
+                    }
+                    else
+                    {
+                        <option value="All Status">All Status</option>
+                    }
+                    @if (Model.ApprovalStatusFilter == "Pending")
                     {
                         <option value="Pending" selected>Pending</option>
                     }
@@ -179,7 +187,6 @@
                     {
                         <option value="Approved">Approved</option>
                     }
-
                     @if (Model.ApprovalStatusFilter == "Rejected")
                     {
                         <option value="Rejected" selected>Rejected</option>
@@ -187,6 +194,35 @@
                     else
                     {
                         <option value="Rejected">Rejected</option>
+                    }
+                </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
+
+            <!-- Financial Year Filter -->
+            <div class="relative">
+                <select id="financialYearFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Financial Years</option>
+                    @{
+                        var currentYear = DateTime.Now.Year;
+                        var currentMonth = DateTime.Now.Month;
+                        var financialYearStart = currentMonth >= 4 ? currentYear : currentYear - 1;
+                        
+                        for (int i = 0; i < 5; i++)
+                        {
+                            var fyYear = financialYearStart - i;
+                            var fyText = $"{fyYear}-{fyYear + 1}";
+                            var isSelected = Model.FinancialYearFilter == fyText;
+                            
+                            if (isSelected)
+                            {
+                                <option value="@fyText" selected>@fyText</option>
+                            }
+                            else
+                            {
+                                <option value="@fyText">@fyText</option>
+                            }
+                        }
                     }
                 </select>
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -387,6 +423,7 @@
             document.getElementById('approvalStatusFilter').value = 'Pending';
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = '';
+            document.getElementById('financialYearFilter').value = '';
             currentPage = 1;
             searchPayments();
         }
@@ -396,11 +433,13 @@
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;
             const approvalStatusFilter = document.getElementById('approvalStatusFilter').value;
+            const financialYearFilter = document.getElementById('financialYearFilter').value;
             
             const params = new URLSearchParams({
                 searchTerm: searchTerm,
                 statusFilter: statusFilter,
                 approvalStatusFilter: approvalStatusFilter,
+                financialYearFilter: financialYearFilter,
                 page: currentPage,
                 pageSize: pageSize
             });
@@ -530,6 +569,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Set page size from model
             document.getElementById('pageSize').value = '@Model.PageSize';
+            
+            // Set financial year filter from model
+            document.getElementById('financialYearFilter').value = '@Model.FinancialYearFilter';
             
             // Search on enter key
             document.getElementById('searchInput').addEventListener('keypress', function(e) {

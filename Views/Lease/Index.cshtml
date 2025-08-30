@@ -127,8 +127,8 @@
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
             <!-- Approval Status Filter (All Users) -->
-            <div class="relative">
-                <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                <div class="relative">
+                    <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
                     @if (Model.ApprovalStatusFilter == "All Status" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
                     {
                         <option value="All Status" selected>All Status</option>
@@ -138,33 +138,33 @@
                         <option value="All Status">All Status</option>
                     }
                     @if (Model.ApprovalStatusFilter == "Pending")
-                    {
-                        <option value="Pending" selected>Pending</option>
-                    }
-                    else
-                    {
-                        <option value="Pending">Pending</option>
-                    }
-                    @if (Model.ApprovalStatusFilter == "Approved")
-                    {
-                        <option value="Approved" selected>Approved</option>
-                    }
-                    else
-                    {
-                        <option value="Approved">Approved</option>
-                    }
+                        {
+                            <option value="Pending" selected>Pending</option>
+                        }
+                        else
+                        {
+                            <option value="Pending">Pending</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Approved")
+                        {
+                            <option value="Approved" selected>Approved</option>
+                        }
+                        else
+                        {
+                            <option value="Approved">Approved</option>
+                        }
 
-                    @if (Model.ApprovalStatusFilter == "Rejected")
-                    {
-                        <option value="Rejected" selected>Rejected</option>
-                    }
-                    else
-                    {
-                        <option value="Rejected">Rejected</option>
-                    }
-                </select>
-                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-            </div>
+                        @if (Model.ApprovalStatusFilter == "Rejected")
+                        {
+                            <option value="Rejected" selected>Rejected</option>
+                        }
+                        else
+                        {
+                            <option value="Rejected">Rejected</option>
+                        }
+                    </select>
+                    <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
             <!-- Page Size Selection -->
             @*    <div class="relative">
 
@@ -205,6 +205,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Rent</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rent Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Additional Rent Recovery</th>
+                       
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Status</th>
@@ -227,6 +230,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.EmployeeName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.VendorName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@lease.MonthlyRentPayable</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@lease.RentAmount</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@lease.AdditionalRentRecovery</td>
+                          
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if (lease.FromDate.HasValue && lease.EndDate.HasValue)
                                 {
@@ -242,20 +248,20 @@
                                     @lease.Status
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
-                                {
-                                    <span class="status-badge status-pending">Pending</span>
-                                }
-                                else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
-                                {
-                                    <span class="status-badge status-approved">Approved</span>
-                                }
-                                else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
-                                {
-                                    <span class="status-badge status-rejected">Rejected</span>
-                                }
-                            </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                    {
+                                        <span class="status-badge status-pending">Pending</span>
+                                    }
+                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                    {
+                                        <span class="status-badge status-approved">Approved</span>
+                                    }
+                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                    {
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                    }
+                                </td>
                             @if (isChecker)
                             {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.MakerUserName</td>
@@ -535,7 +541,7 @@
                     </div>
                     *@<!-- Update the Monthly Rent Payable field in Index.cshtml -->
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Monthly Rent Payable <span class="text-red-500">*</span>
@@ -547,20 +553,58 @@
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
                                        placeholder="Enter monthly rent payable"
                                        title=""
-                                       required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                                       required 
+                                       onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                       oninput="calculateRentAmounts()" />
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <i class="ri-information-line text-gray-400 text-sm" id="rentInfoIcon" style="display: none;"></i>
                                 </div>
                             </div>
                             <span class="text-red-600 text-sm" data-validation="MonthlyRentPayable"></span>
-                            <div class="text-xs text-gray-500 mt-1" id="rentHelpText" style="display: none;">
-                                Maximum allowed rent is 2 times the employee's HRA amount
+                            <div class="text-xs text-gray-500 mt-1" id="rentHelpText">
+                                Rent Amount and Additional Rent Recovery will be calculated automatically based on HRA limits
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Rent Amount <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number"
+                                       name="RentAmount"
+                                       step="0.01"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md pr-10 bg-gray-50"
+                                       placeholder="Calculated automatically"
+                                       title=""
+                                       required 
+                                       readonly />
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="ri-calculator-line text-gray-400 text-sm"></i>
+                                </div>
+                            </div>
+                            <span class="text-red-600 text-sm" data-validation="RentAmount"></span>
+                            <div class="text-xs text-gray-500 mt-1" id="rentAmountHelpText">
+                                Automatically calculated based on Monthly Rent Payable and HRA limits
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rent Recovery </label>
-                            <input type="number" id="AdditionalRentRecovery" name="AdditionalRentRecovery" step="0.01" onkeypress="return event.charCode >= 48 && event.charCode <= 57" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                            <div class="relative">
+                                <input type="number" 
+                                       id="AdditionalRentRecovery" 
+                                       name="AdditionalRentRecovery" 
+                                       step="0.01" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" 
+                                       placeholder="Calculated automatically"
+                                       readonly />
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i class="ri-calculator-line text-gray-400 text-sm"></i>
+                                </div>
+                            </div>
                             <span class="text-red-600 text-sm" data-validation="AdditionalRentRecovery"></span>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Automatically calculated as Monthly Rent Payable - Rent Amount
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -608,9 +652,9 @@
 
 
                     <!-- Rent Recovery Section -->
-                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Rent Recovery</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2" style="display:none">Rent Recovery</h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display:none">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Rent Recovery Element</label>
                             <select name="RentRecoveryElementId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -640,6 +684,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">License Fee Amount <span class="text-red-500">*</span></label>
                             <input type="number" name="LicenseFeeAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" required onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
                             <span class="text-red-600 text-sm" data-validation="LicenseFeeAmount"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Maintenance Payment</label>
+                            <input type="number" name="MaintenancePayment" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md" onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+                            <span class="text-red-600 text-sm" data-validation="MaintenancePayment"></span>
                         </div>
                     </div>
                     <!-- Miscellaneous -->
@@ -794,6 +843,8 @@
         let deleteLeaseId = 0;
         let currentUserRole = '@Model.CurrentUserRole';
         let isChecker = @(isChecker ? "true" : "false");
+        let currentEmployeeHRA = null;
+        let maxAllowedRent = null;
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function () {
@@ -890,9 +941,9 @@
             // });
 
 
-            $(document).on('input', 'input[name="MonthlyRentPayable"]', function () {
+            $(document).on('input', 'input[name="RentAmount"]', function () {
                 const monthlyRent = parseFloat($(this).val()) || 0;
-                const errorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+                const errorSpan = document.querySelector('[data-validation="RentAmount"]');
 
                 // Clear previous error
                 if (errorSpan) {
@@ -1159,22 +1210,62 @@
         // Add this new function to update rent input placeholder
         function updateRentInputPlaceholder() {
             const rentInput = document.querySelector('input[name="MonthlyRentPayable"]');
-            const errorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+            const rentAmountInput = document.querySelector('input[name="RentAmount"]');
+            const rentErrorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+            const rentAmountErrorSpan = document.querySelector('[data-validation="RentAmount"]');
 
+            // if (rentInput) {
+            //     if (maxAllowedRent) {
+            //         if (rentErrorSpan) {
+            //             rentErrorSpan.textContent = `Max allowed: ₹${maxAllowedRent.toLocaleString('en-IN')} (HRA × 2).`;
+            //         }
+            //     } else {
+            //         if (rentErrorSpan) {
+            //            // rentErrorSpan.textContent = `Enter monthly rent payable.`;
+            //         }
+            //     }
+            // }
 
-            if (rentInput) {
+            if (rentAmountInput) {
                 if (maxAllowedRent) {
-                    if (errorSpan) {
-                        errorSpan.textContent = `Max allowed: ₹${maxAllowedRent.toLocaleString('en-IN')} (HRA × 2).`;
+                    if (rentAmountErrorSpan) {
+                        rentAmountErrorSpan.textContent = `Max allowed: ₹${maxAllowedRent.toLocaleString('en-IN')} (HRA × 2).`;
                     }
-                    //     rentInput.placeholder = `Max allowed: ₹${maxAllowedRent.toLocaleString('en-IN')} (HRA × 2)`;
-                    //     rentInput.title = `Employee HRA: ₹${currentEmployeeHRA.toLocaleString('en-IN')}, Maximum allowed rent: ₹${maxAllowedRent.toLocaleString('en-IN')}`;
                 } else {
-                    if (errorSpan) {
-                       // errorSpan.textContent = `Enter monthly rent payable.`;
+                    if (rentAmountErrorSpan) {
+                       // rentAmountErrorSpan.textContent = `Enter rent amount.`;
                     }
-
                 }
+            }
+        }
+
+        // Function to calculate Rent Amount and Additional Rent Recovery based on Monthly Rent Payable
+        function calculateRentAmounts() {
+            const monthlyRentPayableInput = document.querySelector('input[name="MonthlyRentPayable"]');
+            const rentAmountInput = document.querySelector('input[name="RentAmount"]');
+            const additionalRentRecoveryInput = document.querySelector('input[name="AdditionalRentRecovery"]');
+            
+            if (!monthlyRentPayableInput || !rentAmountInput || !additionalRentRecoveryInput) {
+                return;
+            }
+
+            const monthlyRentPayable = parseFloat(monthlyRentPayableInput.value) || 0;
+            
+            if (monthlyRentPayable <= 0) {
+                rentAmountInput.value = '';
+                additionalRentRecoveryInput.value = '';
+                return;
+            }
+
+            // If we have HRA limit, use it; otherwise, set Rent Amount equal to Monthly Rent Payable
+            if (maxAllowedRent && monthlyRentPayable > maxAllowedRent) {
+                // If Monthly Rent Payable exceeds HRA limit, split it
+                rentAmountInput.value = maxAllowedRent.toFixed(2);
+                additionalRentRecoveryInput.value = (monthlyRentPayable - maxAllowedRent).toFixed(2);
+            } else {
+                // If Monthly Rent Payable is within HRA limit or no HRA limit, set Rent Amount to Monthly Rent Payable
+                rentAmountInput.value = monthlyRentPayable.toFixed(2);
+                additionalRentRecoveryInput.value = '0.00';
             }
         }
         function initializeEventListeners1() {
@@ -1431,6 +1522,7 @@
         }
         function populateForm(data) {
             console.log('Populating form with data:', data);
+            console.log('MaintenancePayment value:', data.maintenancePayment || data.MaintenancePayment);
 
             document.getElementById('leaseId').value = data.id || data.Id || 0;
 
@@ -1441,11 +1533,13 @@
             const fieldMappings = {
                 'RefNo': ['refNo', 'RefNo'],
                 'MonthlyRentPayable': ['monthlyRentPayable', 'MonthlyRentPayable'],
+                'RentAmount': ['rentAmount', 'RentAmount'],
                 'AdditionalRentRecovery': ['additionalRentRecovery', 'AdditionalRentRecovery'],
                 'RentDeposit': ['rentDeposit', 'RentDeposit'],
                 'BrokerageAmount': ['brokerageAmount', 'BrokerageAmount'],
                 'StampDuty': ['stampDuty', 'StampDuty'],
                 'LicenseFeeAmount': ['licenseFeeAmount', 'LicenseFeeAmount'],
+                'MaintenancePayment': ['maintenancePayment', 'MaintenancePayment'],
                 'Narration': ['narration', 'Narration']
             };
 
@@ -1462,6 +1556,24 @@
                     element.value = value || '';
                 }
             });
+
+            // For editing, populate RentAmount and AdditionalRentRecovery directly from data first
+            // Only recalculate if MonthlyRentPayable is changed by user
+            const rentAmountElement = document.querySelector('input[name="RentAmount"]');
+            const additionalRentRecoveryElement = document.querySelector('input[name="AdditionalRentRecovery"]');
+            
+            if (rentAmountElement && additionalRentRecoveryElement) {
+                // Set the actual values from database
+                const rentAmount = data.rentAmount || data.RentAmount;
+                const additionalRentRecovery = data.additionalRentRecovery || data.AdditionalRentRecovery;
+                
+                if (rentAmount !== undefined) {
+                    rentAmountElement.value = rentAmount;
+                }
+                if (additionalRentRecovery !== undefined) {
+                    additionalRentRecoveryElement.value = additionalRentRecovery;
+                }
+            }
 
             const dateFieldMappings = {
                 'RefDate': ['refDate', 'RefDate'],
@@ -1506,6 +1618,11 @@
                 }
                 if (value) {
                     $(`select[name="${fieldName}"]`).val(value).trigger('change');
+                    
+                    // If this is the EmployeeId field, fetch the employee HRA
+                    if (fieldName === 'EmployeeId') {
+                        fetchEmployeeHRA(value);
+                    }
                 }
             });
         }
@@ -1524,11 +1641,13 @@
             const fieldMappings = {
                 'RefNo': ['refNo', 'RefNo'],
                 'MonthlyRentPayable': ['monthlyRentPayable', 'MonthlyRentPayable'],
+                'RentAmount': ['rentAmount', 'RentAmount'],
                 'AdditionalRentRecovery': ['additionalRentRecovery', 'AdditionalRentRecovery'],
                 'RentDeposit': ['rentDeposit', 'RentDeposit'],
                 'BrokerageAmount': ['brokerageAmount', 'BrokerageAmount'],
                 'StampDuty': ['stampDuty', 'StampDuty'],
                 'LicenseFeeAmount': ['licenseFeeAmount', 'LicenseFeeAmount'],
+                'MaintenancePayment': ['maintenancePayment', 'MaintenancePayment'],
                 'Narration': ['narration', 'Narration']
             };
 
@@ -1547,6 +1666,26 @@
                     console.log(`Setting ${fieldName} to:`, value); // Debug log
                 }
             });
+
+            // For editing, populate RentAmount and AdditionalRentRecovery directly from data first
+            // Only recalculate if MonthlyRentPayable is changed by user
+            const rentAmountElement = document.querySelector('input[name="RentAmount"]');
+            const additionalRentRecoveryElement = document.querySelector('input[name="AdditionalRentRecovery"]');
+            
+            if (rentAmountElement && additionalRentRecoveryElement) {
+                // Set the actual values from database
+                const rentAmount = data.rentAmount || data.RentAmount;
+                const additionalRentRecovery = data.additionalRentRecovery || data.AdditionalRentRecovery;
+                
+                if (rentAmount !== undefined) {
+                    rentAmountElement.value = rentAmount;
+                    console.log(`Setting RentAmount to:`, rentAmount); // Debug log
+                }
+                if (additionalRentRecovery !== undefined) {
+                    additionalRentRecoveryElement.value = additionalRentRecovery;
+                    console.log(`Setting AdditionalRentRecovery to:`, additionalRentRecovery); // Debug log
+                }
+            }
 
             // Set date fields with both camelCase and PascalCase support
             const dateFieldMappings = {
@@ -1595,6 +1734,11 @@
                 if (value) {
                     console.log(`Setting select ${fieldName} to:`, value); // Debug log
                     $(`select[name="${fieldName}"]`).val(value).trigger('change');
+                    
+                    // If this is the EmployeeId field, fetch the employee HRA
+                    if (fieldName === 'EmployeeId') {
+                        fetchEmployeeHRA(value);
+                    }
                 }
             });
         }
@@ -1618,7 +1762,7 @@
                 if (key.endsWith('Id') && value) {
                     data[key] = parseInt(value) || 0;
                 } else if (['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit',
-                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(key)) {
+                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount', 'MaintenancePayment'].includes(key)) {
                     data[key] = parseFloat(value) || 0;
                 } else {
                     data[key] = value;
@@ -1703,7 +1847,7 @@
                 if (key.endsWith('Id') && value) {
                     data[key] = parseInt(value) || 0;
                 } else if (['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit',
-                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'].includes(key)) {
+                    'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount', 'MaintenancePayment'].includes(key)) {
                     data[key] = parseFloat(value) || 0;
                 } else {
                     data[key] = value;
@@ -1757,12 +1901,6 @@
             clearValidationErrors();
             clearDrawerAlert();
 
-            // Validate Monthly Rent against HRA first
-            if (!validateMonthlyRentAgainstHRA()) {
-                errors.push(`Monthly Rent cannot exceed Employee HRA × 2 (₹${maxAllowedRent ? maxAllowedRent.toLocaleString('en-IN') : 'N/A'})`);
-                isValid = false;
-            }
-
             // Rest of existing validation code remains the same...
             const requiredFields = [
                 { name: 'LeaseTypeId', message: 'Lease Type is required', displayName: 'Lease Type' },
@@ -1772,6 +1910,7 @@
                 { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
                 { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
                 { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+                { name: 'RentAmount', message: 'Rent Amount is required', displayName: 'Rent Amount' },
                 // { name: 'AdditionalRentRecovery', message: 'Additional Rent Recovery is required', displayName: 'Additional Rent Recovery' },
                 // { name: 'RentDeposit', message: 'Rent Deposit is required', displayName: 'Rent Deposit' },
                 //  { name: 'BrokerageAmount', message: 'Brokerage Amount is required', displayName: 'Brokerage Amount' },
@@ -1790,7 +1929,7 @@
                 const value = element.value;
 
                 // For numeric fields, also check if the value is 0 or empty string
-                if (!value || value === '0' || value === '' || (parseFloat(value) === 0 && ['MonthlyRentPayable', 'LicenseFeeAmount'].includes(field.name))) {
+                if (!value || value === '0' || value === '' || (parseFloat(value) === 0 && ['MonthlyRentPayable', 'RentAmount', 'LicenseFeeAmount'].includes(field.name))) {
                     const errorSpan = document.querySelector(`[data-validation="${field.name}"]`);
                     if (errorSpan) {
                         errorSpan.textContent = field.message;
@@ -1802,7 +1941,7 @@
             });
 
             // Additional numeric validation for financial fields
-            const numericFields = ['MonthlyRentPayable', 'AdditionalRentRecovery', 'RentDeposit', 'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount'];
+            const numericFields = ['MonthlyRentPayable', 'RentAmount', 'AdditionalRentRecovery', 'RentDeposit', 'BrokerageAmount', 'StampDuty', 'LicenseFeeAmount', 'MaintenancePayment'];
 
             numericFields.forEach(fieldName => {
                 const element = document.querySelector(`[name="${fieldName}"]`);
@@ -1994,6 +2133,7 @@
                 { name: 'PerquisiteApplicablePercentId', message: '% of Perquisite Applicable is required', displayName: '% of Perquisite Applicable' },
                 { name: 'VendorId', message: 'Owner Name is required', displayName: 'Owner Name' },
                 { name: 'MonthlyRentPayable', message: 'Monthly Rent Payable is required', displayName: 'Monthly Rent Payable' },
+                { name: 'RentAmount', message: 'Rent Amount is required', displayName: 'Rent Amount' },
                 { name: 'FromDate', message: 'Start Date is required', displayName: 'Start Date' },
                 { name: 'EndDate', message: 'End Date is required', displayName: 'End Date' },
                 //{ name: 'PaymentTermId', message: 'Payment Term is required', displayName: 'Payment Term' },
@@ -2463,6 +2603,10 @@
                                             <dd class="text-sm text-gray-900 font-semibold">${formatCurrency(getValue(data, 'monthlyRentPayable', 'MonthlyRentPayable'))}</dd>
                                         </div>
                                         <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <dt class="text-sm font-medium text-gray-500">Rent Amount</dt>
+                                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'rentAmount', 'RentAmount'))}</dd>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
                                             <dt class="text-sm font-medium text-gray-500">Rent Deposit</dt>
                                             <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'rentDeposit', 'RentDeposit'))}</dd>
                                         </div>
@@ -2473,6 +2617,10 @@
                                         <div class="flex justify-between py-2 border-b border-gray-100">
                                             <dt class="text-sm font-medium text-gray-500">License Fee Amount</dt>
                                             <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'licenseFeeAmount', 'LicenseFeeAmount'))}</dd>
+                                        </div>
+                                        <div class="flex justify-between py-2 border-b border-gray-100">
+                                            <dt class="text-sm font-medium text-gray-500">Maintenance Payment</dt>
+                                            <dd class="text-sm text-gray-900">${formatCurrency(getValue(data, 'maintenancePayment', 'MaintenancePayment'))}</dd>
                                         </div>
                                         <div class="flex justify-between py-2 border-b border-gray-100">
                                             <dt class="text-sm font-medium text-gray-500">Brokerage Amount</dt>
@@ -2486,7 +2634,7 @@
                                 </div>
 
                                 <!-- Recovery Elements Section -->
-                                <div class="mb-6">
+                                        <div class="mb-6" style="display:none">
                                     <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recovery Elements</h3>
                                     <dl class="grid grid-cols-1 gap-4">
                                         <div class="flex justify-between py-2 border-b border-gray-100">
@@ -2589,7 +2737,7 @@
 
             // Show loading indicator
             const tbody = document.getElementById('leaseTableBody');
-            const colspan = isChecker ? 10 : 9; // Adjust colspan based on role (added approval status column for all users)
+            const colspan = isChecker ? 12 : 11; // Adjust colspan based on role (added Additional Rent Recovery column + Rent Amount column + approval status column for all users)
             tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading leases...</td></tr>`;
 
             fetch(`@Url.Action("GetLeases")?${params}`)
@@ -2624,7 +2772,7 @@
             tbody.innerHTML = '';
 
             if (!leases || leases.length === 0) {
-                const colspan = isChecker ? 10 : 9; // Adjust colspan based on role (added approval status column for all users)
+                const colspan = isChecker ? 13 : 12; // Adjust colspan based on role (added Maintenance Payment column)
                 tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No leases found</td></tr>`;
                 return;
             }
@@ -2635,35 +2783,35 @@
                 let actionButtons = '';
 
                 // Approval status column for all users
-                let statusClass = '';
-                let statusText = '';
+                    let statusClass = '';
+                    let statusText = '';
 
-                switch (lease.approvalStatus) {
-                    case 1:
-                        statusClass = 'status-pending';
-                        statusText = 'Pending';
-                        break;
-                    case 2:
-                        statusClass = 'status-approved';
-                        statusText = 'Approved';
-                        break;
-                    case 3:
-                        statusClass = 'status-rejected';
-                        statusText = 'Rejected';
-                        break;
-                    default:
-                        statusClass = 'status-pending';
-                        statusText = 'Unknown';
-                }
+                    switch (lease.approvalStatus) {
+                        case 1:
+                            statusClass = 'status-pending';
+                            statusText = 'Pending';
+                            break;
+                        case 2:
+                            statusClass = 'status-approved';
+                            statusText = 'Approved';
+                            break;
+                        case 3:
+                            statusClass = 'status-rejected';
+                            statusText = 'Rejected';
+                            break;
+                        default:
+                            statusClass = 'status-pending';
+                            statusText = 'Unknown';
+                    }
 
-                approvalStatusCell = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </td>`;
+                    approvalStatusCell = `
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="status-badge ${statusClass}">${statusText}</span>
+                                        </td>`;
 
                 if (isChecker) {
                     makerCell = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.makerUserName || '-'}</td>`;
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.makerUserName || '-'}</td>`;
 
                     // Action buttons for checkers
                     if (lease.approvalStatus === 1) { // Pending
@@ -2735,6 +2883,9 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.employeeName || ''}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.vendorName || ''}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${lease.monthlyRentPayable || '0'}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${lease.rentAmount || '0'}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${lease.additionalRentRecovery || '0'}</td>
+                                       
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${period}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="status-badge ${getStatusClass(lease.status)}">
@@ -2875,16 +3026,14 @@
                 maximumFractionDigits: 2
             }).format(amount);
         }
-        let currentEmployeeHRA = null;
-        let maxAllowedRent = null;
 
         // Add this function after the existing JavaScript functions
         function validateMonthlyRentAgainstHRA() {
-            const monthlyRentInput = document.querySelector('[name="MonthlyRentPayable"]');
+            const monthlyRentInput = document.querySelector('[name="RentAmount"]');
             const monthlyRent = parseFloat(monthlyRentInput.value) || 0;
 
             if (maxAllowedRent && monthlyRent > maxAllowedRent) {
-                const errorSpan = document.querySelector('[data-validation="MonthlyRentPayable"]');
+                const errorSpan = document.querySelector('[data-validation="RentAmount"]');
                 if (errorSpan) {
                     errorSpan.textContent = `Monthly Rent cannot exceed Employee HRA × 2 (₹${maxAllowedRent.toLocaleString('en-IN')})`;
                     monthlyRentInput.classList.add('border-red-500');

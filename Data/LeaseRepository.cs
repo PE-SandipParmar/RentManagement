@@ -71,6 +71,7 @@ namespace RentManagement.Data
             parameters.Add("@PerquisiteApplicablePercentId", lease.PerquisiteApplicablePercentId);
             parameters.Add("@VendorId", lease.VendorId);
             parameters.Add("@MonthlyRentPayable", lease.MonthlyRentPayable);
+            parameters.Add("@RentAmount", lease.RentAmount);
             parameters.Add("@FromDate", lease.FromDate);
             parameters.Add("@EndDate", lease.EndDate);
             parameters.Add("@RentRecoveryElementId", lease.RentRecoveryElementId);
@@ -80,6 +81,7 @@ namespace RentManagement.Data
             parameters.Add("@LicenseFeeRecoveryElementId", lease.LicenseFeeRecoveryElementId);
             parameters.Add("@StampDuty", lease.StampDuty);
             parameters.Add("@LicenseFeeAmount", lease.LicenseFeeAmount);
+            parameters.Add("@MaintenancePayment", lease.MaintenancePayment);
             parameters.Add("@PaymentTermId", lease.PaymentTermId);
             parameters.Add("@PayableOnOrBeforeId", lease.PayableOnOrBeforeId);
             parameters.Add("@Narration", lease.Narration);
@@ -119,6 +121,7 @@ namespace RentManagement.Data
             parameters.Add("@PerquisiteApplicablePercentId", lease.PerquisiteApplicablePercentId);
             parameters.Add("@VendorId", lease.VendorId);
             parameters.Add("@MonthlyRentPayable", lease.MonthlyRentPayable);
+            parameters.Add("@RentAmount", lease.RentAmount);
             parameters.Add("@FromDate", lease.FromDate);
             parameters.Add("@EndDate", lease.EndDate);
             parameters.Add("@RentRecoveryElementId", lease.RentRecoveryElementId);
@@ -128,6 +131,7 @@ namespace RentManagement.Data
             parameters.Add("@LicenseFeeRecoveryElementId", lease.LicenseFeeRecoveryElementId);
             parameters.Add("@StampDuty", lease.StampDuty);
             parameters.Add("@LicenseFeeAmount", lease.LicenseFeeAmount);
+            parameters.Add("@MaintenancePayment", lease.MaintenancePayment);
             parameters.Add("@PaymentTermId", lease.PaymentTermId);
             parameters.Add("@PayableOnOrBeforeId", lease.PayableOnOrBeforeId);
             parameters.Add("@Narration", lease.Narration);
@@ -306,6 +310,7 @@ namespace RentManagement.Data
             parameters.Add("@PerquisiteApplicablePercentId", lease.PerquisiteApplicablePercentId);
             parameters.Add("@VendorId", lease.VendorId);
             parameters.Add("@MonthlyRentPayable", lease.MonthlyRentPayable);
+            parameters.Add("@RentAmount", lease.RentAmount);
             parameters.Add("@FromDate", lease.FromDate);
             parameters.Add("@EndDate", lease.EndDate);
             parameters.Add("@RentRecoveryElementId", lease.RentRecoveryElementId);
@@ -315,6 +320,7 @@ namespace RentManagement.Data
             parameters.Add("@LicenseFeeRecoveryElementId", lease.LicenseFeeRecoveryElementId);
             parameters.Add("@StampDuty", lease.StampDuty);
             parameters.Add("@LicenseFeeAmount", lease.LicenseFeeAmount);
+            parameters.Add("@MaintenancePayment", lease.MaintenancePayment);
             parameters.Add("@PaymentTermId", lease.PaymentTermId);
             parameters.Add("@PayableOnOrBeforeId", lease.PayableOnOrBeforeId);
             parameters.Add("@Narration", lease.Narration);
@@ -348,6 +354,7 @@ namespace RentManagement.Data
             parameters.Add("@PerquisiteApplicablePercentId", lease.PerquisiteApplicablePercentId);
             parameters.Add("@VendorId", lease.VendorId);
             parameters.Add("@MonthlyRentPayable", lease.MonthlyRentPayable);
+            parameters.Add("@RentAmount", lease.RentAmount);
             parameters.Add("@FromDate", lease.FromDate);
             parameters.Add("@EndDate", lease.EndDate);
             parameters.Add("@RentRecoveryElementId", lease.RentRecoveryElementId);
@@ -357,6 +364,7 @@ namespace RentManagement.Data
             parameters.Add("@LicenseFeeRecoveryElementId", lease.LicenseFeeRecoveryElementId);
             parameters.Add("@StampDuty", lease.StampDuty);
             parameters.Add("@LicenseFeeAmount", lease.LicenseFeeAmount);
+            parameters.Add("@MaintenancePayment", lease.MaintenancePayment);
             parameters.Add("@PaymentTermId", lease.PaymentTermId);
             parameters.Add("@PayableOnOrBeforeId", lease.PayableOnOrBeforeId);
             parameters.Add("@Narration", lease.Narration);

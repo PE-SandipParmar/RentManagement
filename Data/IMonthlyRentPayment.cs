@@ -17,8 +17,8 @@ namespace RentManagement.Data
         Task<bool> DeleteAsync(int id);
 
         // Get all payments with filters (NEW METHODS)
-        Task<IEnumerable<MonthlyRentPayment>> GetAllPaymentsAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
-        Task<int> GetAllPaymentsCountAsync(string searchTerm, string statusFilter);
+        Task<IEnumerable<MonthlyRentPayment>> GetAllPaymentsAsync(string searchTerm, string statusFilter, string financialYearFilter, int pageNumber, int pageSize);
+        Task<int> GetAllPaymentsCountAsync(string searchTerm, string statusFilter, string financialYearFilter);
 
         // Dropdown data methods
         Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();
@@ -30,12 +30,12 @@ namespace RentManagement.Data
         Task ToggleActiveStatus(int? Id);
 
         // Approval Workflow methods
-        Task<IEnumerable<MonthlyRentPayment>> GetApprovedPaymentsAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
-        Task<int> GetApprovedPaymentCountAsync(string searchTerm, string statusFilter);
-        Task<IEnumerable<MonthlyRentPayment>> GetPendingApprovalsAsync(string searchTerm, int pageNumber, int pageSize);
-        Task<int> GetPendingApprovalCountAsync(string searchTerm);
-        Task<IEnumerable<MonthlyRentPayment>> GetRejectedPaymentsAsync(string searchTerm, int pageNumber, int pageSize);
-        Task<int> GetRejectedPaymentCountAsync(string searchTerm);
+        Task<IEnumerable<MonthlyRentPayment>> GetApprovedPaymentsAsync(string searchTerm, string statusFilter, string financialYearFilter, int pageNumber, int pageSize);
+        Task<int> GetApprovedPaymentCountAsync(string searchTerm, string statusFilter, string financialYearFilter);
+        Task<IEnumerable<MonthlyRentPayment>> GetPendingApprovalsAsync(string searchTerm, string financialYearFilter, int pageNumber, int pageSize);
+        Task<int> GetPendingApprovalCountAsync(string searchTerm, string financialYearFilter);
+        Task<IEnumerable<MonthlyRentPayment>> GetRejectedPaymentsAsync(string searchTerm, string financialYearFilter, int pageNumber, int pageSize);
+        Task<int> GetRejectedPaymentCountAsync(string searchTerm, string financialYearFilter);
         Task<bool> ApprovePaymentAsync(int id, string checkerUserId, string checkerUserName);
         Task<bool> RejectPaymentAsync(int id, string checkerUserId, string checkerUserName, string rejectionReason);
         Task<int> AddPaymentForApprovalAsync(MonthlyRentPayment payment, string makerUserId, string makerUserName, MakerAction action);

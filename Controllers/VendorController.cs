@@ -673,9 +673,9 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                         totalCount = await _vendorRepository.GetAllVendorsWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Approved")
-                    {
-                        vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
+                {
+                    vendors = await _vendorRepository.GetApprovedVendorsAsync(searchTerm, statusFilter, page, pageSize);
+                    totalCount = await _vendorRepository.GetApprovedVendorCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Pending")
                     {
