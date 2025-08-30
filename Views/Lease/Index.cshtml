@@ -126,40 +126,45 @@
                 </select>
                 <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
             </div>
-            <!-- Approval Status Filter (Checker Only) -->
-            @if (isChecker || isMaker)
-            {
-                <div class="relative">
-                    <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
-                        @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
-                        {
-                            <option value="Pending" selected>Pending</option>
-                        }
-                        else
-                        {
-                            <option value="Pending">Pending</option>
-                        }
-                        @if (Model.ApprovalStatusFilter == "Approved")
-                        {
-                            <option value="Approved" selected>Approved</option>
-                        }
-                        else
-                        {
-                            <option value="Approved">Approved</option>
-                        }
+            <!-- Approval Status Filter (All Users) -->
+            <div class="relative">
+                <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    @if (Model.ApprovalStatusFilter == "All Status" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                    {
+                        <option value="All Status" selected>All Status</option>
+                    }
+                    else
+                    {
+                        <option value="All Status">All Status</option>
+                    }
+                    @if (Model.ApprovalStatusFilter == "Pending")
+                    {
+                        <option value="Pending" selected>Pending</option>
+                    }
+                    else
+                    {
+                        <option value="Pending">Pending</option>
+                    }
+                    @if (Model.ApprovalStatusFilter == "Approved")
+                    {
+                        <option value="Approved" selected>Approved</option>
+                    }
+                    else
+                    {
+                        <option value="Approved">Approved</option>
+                    }
 
-                        @if (Model.ApprovalStatusFilter == "Rejected")
-                        {
-                            <option value="Rejected" selected>Rejected</option>
-                        }
-                        else
-                        {
-                            <option value="Rejected">Rejected</option>
-                        }
-                    </select>
-                    <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-                </div>
-            }
+                    @if (Model.ApprovalStatusFilter == "Rejected")
+                    {
+                        <option value="Rejected" selected>Rejected</option>
+                    }
+                    else
+                    {
+                        <option value="Rejected">Rejected</option>
+                    }
+                </select>
+                <i class="ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
             <!-- Page Size Selection -->
             @*    <div class="relative">
 
@@ -202,9 +207,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Rent</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Status</th>
                         @if (isChecker)
                         {
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker</th>
                         }
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -237,22 +242,22 @@
                                     @lease.Status
                                 </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                {
+                                    <span class="status-badge status-pending">Pending</span>
+                                }
+                                else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                {
+                                    <span class="status-badge status-approved">Approved</span>
+                                }
+                                else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                {
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                }
+                            </td>
                             @if (isChecker)
                             {
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
-                                    {
-                                        <span class="status-badge status-pending">Pending</span>
-                                    }
-                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
-                                    {
-                                        <span class="status-badge status-approved">Approved</span>
-                                    }
-                                    else if (lease.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
-                                    {
-                                        <span class="status-badge status-rejected">Rejected</span>
-                                    }
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@lease.MakerUserName</td>
                             }
                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -795,6 +800,9 @@
             initializeEventListeners();
             initializeSelect2();
             initializeDocumentUploadListeners();
+            
+            // Initialize pagination with server-side data
+            initializePaginationWithServerData();
         });
 
         function initializeSelect2() {
@@ -1188,15 +1196,14 @@
 
         // Approval workflow functions
         function showAllPendingApprovals() {
-            document.getElementById('approvalStatusFilter').value = 'Pending';
-            //document.getElementById('approvalStatusFilter').value = 'Pending';
+            document.getElementById('approvalStatusFilter').value = 'All Status';
 
-            // Clear search term and status filter to show all pending items
+            // Clear search term and status filter to show all items
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = '';
 
-            // Set page size to a large number to show all pending approvals
-            // Or you can set it to the total pending count if available
+            // Set page size to a large number to show all approvals
+            // Or you can set it to the total count if available
             const originalPageSize = pageSize;
             pageSize = 100; // Set to a large number or use Model.TotalRecords if available
 
@@ -2582,7 +2589,7 @@
 
             // Show loading indicator
             const tbody = document.getElementById('leaseTableBody');
-            const colspan = isChecker ? 11 : 9;
+            const colspan = isChecker ? 10 : 9; // Adjust colspan based on role (added approval status column for all users)
             tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading leases...</td></tr>`;
 
             fetch(`@Url.Action("GetLeases")?${params}`)
@@ -2617,7 +2624,7 @@
             tbody.innerHTML = '';
 
             if (!leases || leases.length === 0) {
-                const colspan = isChecker ? 11 : 9;
+                const colspan = isChecker ? 10 : 9; // Adjust colspan based on role (added approval status column for all users)
                 tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No leases found</td></tr>`;
                 return;
             }
@@ -2627,36 +2634,36 @@
                 let makerCell = '';
                 let actionButtons = '';
 
+                // Approval status column for all users
+                let statusClass = '';
+                let statusText = '';
+
+                switch (lease.approvalStatus) {
+                    case 1:
+                        statusClass = 'status-pending';
+                        statusText = 'Pending';
+                        break;
+                    case 2:
+                        statusClass = 'status-approved';
+                        statusText = 'Approved';
+                        break;
+                    case 3:
+                        statusClass = 'status-rejected';
+                        statusText = 'Rejected';
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = 'Unknown';
+                }
+
+                approvalStatusCell = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>`;
+
                 if (isChecker) {
-                    // Approval status column
-                    let statusClass = '';
-                    let statusText = '';
-
-                    switch (lease.approvalStatus) {
-                        case 1:
-                            statusClass = 'status-pending';
-                            statusText = 'Pending';
-                            break;
-                        case 2:
-                            statusClass = 'status-approved';
-                            statusText = 'Approved';
-                            break;
-                        case 3:
-                            statusClass = 'status-rejected';
-                            statusText = 'Rejected';
-                            break;
-                        default:
-                            statusClass = 'status-pending';
-                            statusText = 'Unknown';
-                    }
-
-                    approvalStatusCell = `
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="status-badge ${statusClass}">${statusText}</span>
-                                        </td>`;
-
                     makerCell = `
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.makerUserName || '-'}</td>`;
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lease.makerUserName || '-'}</td>`;
 
                     // Action buttons for checkers
                     if (lease.approvalStatus === 1) { // Pending
@@ -2758,6 +2765,20 @@
                 default:
                     return 'status-active';
             }
+        }
+
+        function initializePaginationWithServerData() {
+            const totalRecords = @Model.TotalRecords;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            
+            const pagination = {
+                currentPage: currentPage,
+                pageSize: pageSize,
+                totalRecords: totalRecords,
+                totalPages: totalPages
+            };
+            
+            updatePagination(pagination);
         }
 
         function updatePagination(pagination) {

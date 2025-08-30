@@ -40,9 +40,19 @@ namespace RentManagement.Controllers
                 // Load different data based on user role and filter
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
-                    // Checkers and Admins see approved employees by default
+                    // Set default approval status filter to show All Status by default
+                    if (string.IsNullOrEmpty(approvalStatusFilter))
+                    {
+                        approvalStatusFilter = "All Status";
+                        viewModel.ApprovalStatusFilter = "All Status";
+                    }
 
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Pending")
+                    if (approvalStatusFilter == "All Status")
+                    {
+                        viewModel.Employees = (await _employeeRepository.GetAllEmployeesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _employeeRepository.GetAllEmployeesWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
                     {
                         viewModel.Employees = (await _employeeRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
                         viewModel.TotalRecords = await _employeeRepository.GetPendingApprovalCountAsync(searchTerm);
@@ -94,15 +104,20 @@ namespace RentManagement.Controllers
 
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
                     {
-                        employees = await _employeeRepository.GetApprovedEmployeesAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _employeeRepository.GetApprovedEmployeeCountAsync(searchTerm, statusFilter);
+                        employees = await _employeeRepository.GetAllEmployeesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _employeeRepository.GetAllEmployeesWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Pending")
                     {
                         employees = await _employeeRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize);
                         totalCount = await _employeeRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        employees = await _employeeRepository.GetApprovedEmployeesAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _employeeRepository.GetApprovedEmployeeCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Rejected")
                     {
@@ -111,8 +126,8 @@ namespace RentManagement.Controllers
                     }
                     else
                     {
-                        employees = await _employeeRepository.GetApprovedEmployeesAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _employeeRepository.GetApprovedEmployeeCountAsync(searchTerm, statusFilter);
+                        employees = await _employeeRepository.GetAllEmployeesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _employeeRepository.GetAllEmployeesWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                 }
                 else

@@ -547,5 +547,76 @@ namespace RentManagement.Data
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Lease>> GetAllLeasesWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        {
+            using var connection = CreateConnection();
+            
+            var offset = (pageNumber - 1) * pageSize;
+            
+            var sql = @"
+                SELECT 
+                    l.*,
+                    lt.Name as LeaseTypeName,
+                    e.Name as EmployeeName,
+                    v.VendorName,
+                    pap.Percentage as PerquisiteApplicablePercent,
+                    rre.Name as RentRecoveryElementName,
+                    lfre.Name as LicenseFeeRecoveryElementName,
+                    pt.Name as PaymentTermName,
+                    pob.Name as PayableOnOrBeforeName,
+                    CASE 
+                        WHEN l.ApprovalStatus = 1 THEN 'Pending'
+                        WHEN l.ApprovalStatus = 2 THEN 'Approved'
+                        WHEN l.ApprovalStatus = 3 THEN 'Rejected'
+                        ELSE 'Unknown'
+                    END as ApprovalStatusText
+                FROM Leases l
+                LEFT JOIN LeaseTypes lt ON l.LeaseTypeId = lt.Id
+                LEFT JOIN Employees e ON l.EmployeeId = e.Id
+                LEFT JOIN Vendors v ON l.VendorId = v.Id
+                LEFT JOIN PerquisiteApplicablePercents pap ON l.PerquisiteApplicablePercentId = pap.Id
+                LEFT JOIN RentRecoveryElements rre ON l.RentRecoveryElementId = rre.Id
+                LEFT JOIN LicenseFeeRecoveryElements lfre ON l.LicenseFeeRecoveryElementId = lfre.Id
+                LEFT JOIN PaymentTerms pt ON l.PaymentTermId = pt.Id
+                LEFT JOIN PayableOnOrBeforeOptions pob ON l.PayableOnOrBeforeId = pob.Id
+                WHERE l.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR l.RefNo LIKE '%' + @SearchTerm + '%' OR e.Name LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR l.Status = @StatusFilter)
+                ORDER BY l.CreatedAt DESC
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? "",
+                Offset = offset,
+                PageSize = pageSize
+            };
+
+            return await connection.QueryAsync<Lease>(sql, parameters);
+        }
+
+        public async Task<int> GetAllLeasesWithApprovalStatusCountAsync(string searchTerm, string statusFilter)
+        {
+            using var connection = CreateConnection();
+            
+            var sql = @"
+                SELECT COUNT(*)
+                FROM Leases l
+                LEFT JOIN Employees e ON l.EmployeeId = e.Id
+                WHERE l.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR l.RefNo LIKE '%' + @SearchTerm + '%' OR e.Name LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR l.Status = @StatusFilter)";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? ""
+            };
+
+            return await connection.QuerySingleAsync<int>(sql, parameters);
+        }
     }
 }

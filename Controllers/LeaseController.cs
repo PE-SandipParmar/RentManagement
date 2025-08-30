@@ -49,19 +49,30 @@ namespace RentManagement.Controllers
                 // Load dropdown data
                 await LoadViewBagData();
 
+                // Set default approval status filter to show All Status by default for all users
+                if (string.IsNullOrEmpty(approvalStatusFilter))
+                {
+                    approvalStatusFilter = "All Status";
+                    viewModel.ApprovalStatusFilter = "All Status";
+                }
+
                 // Load different data based on user role and filter
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin)
                 {
-                    // Checkers and Admins see approved leases by default
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status")
                     {
-                        viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
-                        viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                        viewModel.Leases = (await _leaseRepository.GetAllLeasesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetAllLeasesWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Pending")
                     {
                         viewModel.Leases = (await _leaseRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
                         viewModel.TotalRecords = await _leaseRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Rejected")
                     {
@@ -74,9 +85,27 @@ namespace RentManagement.Controllers
                 }
                 else
                 {
-                    // Makers see only approved leases (they can't approve their own changes)
-                    viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
-                    viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                    // Makers can also see all data by default, but with limited actions
+                    if (approvalStatusFilter == "All Status")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetAllLeasesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetAllLeasesWithApprovalStatusCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Pending")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                    }
+                    else if (approvalStatusFilter == "Rejected")
+                    {
+                        viewModel.Leases = (await _leaseRepository.GetRejectedLeasesAsync(searchTerm, page, pageSize)).ToList();
+                        viewModel.TotalRecords = await _leaseRepository.GetRejectedLeaseCountAsync(searchTerm);
+                    }
                 }
 
                 return View(viewModel);
@@ -707,15 +736,20 @@ namespace RentManagement.Controllers
 
                 if (userRole == UserRole.Checker || userRole == UserRole.Admin || userRole == UserRole.Maker)
                 {
-                    if (string.IsNullOrEmpty(approvalStatusFilter) || approvalStatusFilter == "Approved")
+                    if (approvalStatusFilter == "All Status" || string.IsNullOrEmpty(approvalStatusFilter))
                     {
-                        leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                        leases = await _leaseRepository.GetAllLeasesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _leaseRepository.GetAllLeasesWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Pending")
                     {
                         leases = await _leaseRepository.GetPendingApprovalsAsync(searchTerm, page, pageSize);
                         totalCount = await _leaseRepository.GetPendingApprovalCountAsync(searchTerm);
+                    }
+                    else if (approvalStatusFilter == "Approved")
+                    {
+                        leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
                     }
                     else if (approvalStatusFilter == "Rejected")
                     {
@@ -724,8 +758,8 @@ namespace RentManagement.Controllers
                     }
                     else
                     {
-                        leases = await _leaseRepository.GetApprovedLeasesAsync(searchTerm, statusFilter, page, pageSize);
-                        totalCount = await _leaseRepository.GetApprovedLeaseCountAsync(searchTerm, statusFilter);
+                        leases = await _leaseRepository.GetAllLeasesWithApprovalStatusAsync(searchTerm, statusFilter, page, pageSize);
+                        totalCount = await _leaseRepository.GetAllLeasesWithApprovalStatusCountAsync(searchTerm, statusFilter);
                     }
                 }
                 else

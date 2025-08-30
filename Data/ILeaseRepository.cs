@@ -25,6 +25,8 @@ namespace RentManagement.Data
         Task<int> GetPendingApprovalCountAsync(string searchTerm);
         Task<IEnumerable<Lease>> GetRejectedLeasesAsync(string searchTerm, int page, int pageSize);
         Task<int> GetRejectedLeaseCountAsync(string searchTerm);
+        Task<IEnumerable<Lease>> GetAllLeasesWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
+        Task<int> GetAllLeasesWithApprovalStatusCountAsync(string searchTerm, string statusFilter);
         Task<int> AddLeaseForApprovalAsync(Lease lease, string makerUserId, string makerUserName, MakerAction action);
         Task<bool> UpdateLeaseForApprovalAsync(Lease lease, string makerUserId, string makerUserName);
         Task<bool> DeleteLeaseForApprovalAsync(int id, string makerUserId, string makerUserName);

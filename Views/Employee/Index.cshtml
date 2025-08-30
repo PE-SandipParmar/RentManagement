@@ -227,7 +227,15 @@
             {
                 <div class="relative">
                     <select id="approvalStatusFilter" class="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-transparent">
-                        @if (Model.ApprovalStatusFilter == "Pending" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                        @if (Model.ApprovalStatusFilter == "All Status" || string.IsNullOrEmpty(Model.ApprovalStatusFilter))
+                        {
+                            <option value="All Status" selected>All Status</option>
+                        }
+                        else
+                        {
+                            <option value="All Status">All Status</option>
+                        }
+                        @if (Model.ApprovalStatusFilter == "Pending")
                         {
                             <option value="Pending" selected>Pending</option>
                         }
@@ -286,9 +294,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Salary</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Status</th>
                         @if (isChecker)
                         {
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker</th>
                         }
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -314,22 +322,22 @@
                                     @(employee.IsActive ? "Active" : "Inactive")
                                 </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
+                                {
+                                    <span class="status-badge status-pending">Pending</span>
+                                }
+                                else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
+                                {
+                                    <span class="status-badge status-approved">Approved</span>
+                                }
+                                else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
+                                {
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                }
+                            </td>
                             @if (isChecker)
                             {
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Pending)
-                                    {
-                                        <span class="status-badge status-pending">Pending</span>
-                                    }
-                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Approved)
-                                    {
-                                        <span class="status-badge status-approved">Approved</span>
-                                    }
-                                    else if (employee.ApprovalStatus == RentManagement.Models.ApprovalStatus.Rejected)
-                                    {
-                                        <span class="status-badge status-rejected">Rejected</span>
-                                    }
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@employee.MakerUserName</td>
                             }
                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -874,7 +882,7 @@
 
         // Show loading indicator
         const tbody = document.getElementById('employeeTableBody');
-        const colspan = isChecker ? 10 : 8;
+        const colspan = isChecker ? 9 : 8; // Adjust colspan based on role (added approval status column for all users)
         tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading employees...</td></tr>`;
 
         fetch(`@Url.Action("GetEmployees")?${params}`)
@@ -922,7 +930,7 @@
         console.log('Updating table with employees:', employees);
 
         if (!employees || employees.length === 0) {
-            const colspan = isChecker ? 10 : 8; // Adjust colspan based on role
+            const colspan = isChecker ? 9 : 8; // Adjust colspan based on role (added approval status column for all users)
             tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No employees found</td></tr>`;
             return;
         }
@@ -932,34 +940,34 @@
             let makerCell = '';
             let actionButtons = '';
 
+            // Approval status column for all users
+            let statusClass = '';
+            let statusText = '';
+
+            switch (employee.approvalStatus) {
+                case 1:
+                    statusClass = 'status-pending';
+                    statusText = 'Pending';
+                    break;
+                case 2:
+                    statusClass = 'status-approved';
+                    statusText = 'Approved';
+                    break;
+                case 3:
+                    statusClass = 'status-rejected';
+                    statusText = 'Rejected';
+                    break;
+                default:
+                    statusClass = 'status-pending';
+                    statusText = 'Unknown';
+            }
+
+            approvalStatusCell = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>`;
+
             if (isChecker) {
-                // Approval status column
-                let statusClass = '';
-                let statusText = '';
-
-                switch (employee.approvalStatus) {
-                    case 1:
-                        statusClass = 'status-pending';
-                        statusText = 'Pending';
-                        break;
-                    case 2:
-                        statusClass = 'status-approved';
-                        statusText = 'Approved';
-                        break;
-                    case 3:
-                        statusClass = 'status-rejected';
-                        statusText = 'Rejected';
-                        break;
-                    default:
-                        statusClass = 'status-pending';
-                        statusText = 'Unknown';
-                }
-
-                approvalStatusCell = `
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                        </td>`;
-
                 makerCell = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employee.makerUserName || '-'}</td>`;
 
@@ -1064,15 +1072,14 @@
     }
 
            function showAllPendingApprovals() {
-            document.getElementById('approvalStatusFilter').value = 'Pending';
-            //document.getElementById('approvalStatusFilter').value = 'Pending';
+            document.getElementById('approvalStatusFilter').value = 'All Status';
 
-            // Clear search term and status filter to show all pending items
+            // Clear search term and status filter to show all items
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = '';
 
-            // Set page size to a large number to show all pending approvals
-            // Or you can set it to the total pending count if available
+            // Set page size to a large number to show all approvals
+            // Or you can set it to the total count if available
             const originalPageSize = pageSize;
             pageSize = 100; // Set to a large number or use Model.TotalRecords if available
 

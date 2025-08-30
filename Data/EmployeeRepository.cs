@@ -541,6 +541,64 @@ IsActive = 1,
             );
         }
 
+        public async Task<IEnumerable<Employee>> GetAllEmployeesWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        {
+            using var connection = CreateConnection();
+            
+            var offset = (pageNumber - 1) * pageSize;
+            
+            var sql = @"
+                SELECT 
+                    e.*,
+                    d.Name as DepartmentName,
+                    des.Name as DesignationName,
+                    CASE 
+                        WHEN e.ApprovalStatus = 1 THEN 'Pending'
+                        WHEN e.ApprovalStatus = 2 THEN 'Approved'
+                        WHEN e.ApprovalStatus = 3 THEN 'Rejected'
+                        ELSE 'Unknown'
+                    END as ApprovalStatusText
+                FROM Employees e
+                LEFT JOIN Departments d ON e.DepartmentId = d.Id
+                LEFT JOIN Designations des ON e.DesignationId = des.Id
+                WHERE e.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR e.Name LIKE '%' + @SearchTerm + '%' OR e.Code LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR e.IsActive = CASE WHEN @StatusFilter = 'Active' THEN 1 WHEN @StatusFilter = 'Inactive' THEN 0 END)
+                ORDER BY e.CreatedAt DESC
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? "",
+                Offset = offset,
+                PageSize = pageSize
+            };
+
+            return await connection.QueryAsync<Employee>(sql, parameters);
+        }
+
+        public async Task<int> GetAllEmployeesWithApprovalStatusCountAsync(string searchTerm, string statusFilter)
+        {
+            using var connection = CreateConnection();
+            
+            var sql = @"
+                SELECT COUNT(*)
+                FROM Employees e
+                WHERE e.IsActiveRecord = 1
+                AND (@SearchTerm = '' OR e.Name LIKE '%' + @SearchTerm + '%' OR e.Code LIKE '%' + @SearchTerm + '%')
+                AND (@StatusFilter = '' OR e.IsActive = CASE WHEN @StatusFilter = 'Active' THEN 1 WHEN @StatusFilter = 'Inactive' THEN 0 END)";
+
+            var parameters = new
+            {
+                SearchTerm = searchTerm ?? "",
+                StatusFilter = statusFilter ?? ""
+            };
+
+            return await connection.QuerySingleAsync<int>(sql, parameters);
+        }
+
         #endregion
     }
 }

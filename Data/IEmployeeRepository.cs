@@ -24,6 +24,8 @@ namespace RentManagement.Data
         Task<int> GetPendingApprovalCountAsync(string searchTerm = "");
         Task<IEnumerable<Employee>> GetRejectedEmployeesAsync(string searchTerm = "", int page = 1, int pageSize = 10);
         Task<int> GetRejectedEmployeeCountAsync(string searchTerm = "");
+        Task<IEnumerable<Employee>> GetAllEmployeesWithApprovalStatusAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
+        Task<int> GetAllEmployeesWithApprovalStatusCountAsync(string searchTerm, string statusFilter);
         Task<int> AddEmployeeForApprovalAsync(Employee employee, string makerUserId, string makerUserName, MakerAction makerAction);
         Task<bool> UpdateEmployeeForApprovalAsync(Employee employee, string makerUserId, string makerUserName);
         Task<bool> DeleteEmployeeForApprovalAsync(int employeeId, string makerUserId, string makerUserName);
