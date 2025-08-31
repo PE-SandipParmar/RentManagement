@@ -33,16 +33,40 @@ namespace RentManagement.Models
         [DataType(DataType.Currency)]
         public decimal? TdsAmount { get; set; }
 
-        [Required(ErrorMessage = "Approval status is required")]
-        [Display(Name = "Approval Status")]
-        public string ApprovalStatus { get; set; } = "Pending";
-
         [Display(Name = "Remarks")]
         [StringLength(1000, ErrorMessage = "Remarks cannot exceed 1000 characters")]
         public string? Remark { get; set; }
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        // Approval Workflow Fields
+        [Display(Name = "Approval Status")]
+        public ApprovalStatus ApprovalStatus { get; set; } = ApprovalStatus.Pending;
+
+        [Display(Name = "Maker User ID")]
+        public string? MakerUserId { get; set; }
+
+        [Display(Name = "Maker User Name")]
+        public string? MakerUserName { get; set; }
+
+        [Display(Name = "Checker User ID")]
+        public string? CheckerUserId { get; set; }
+
+        [Display(Name = "Checker User Name")]
+        public string? CheckerUserName { get; set; }
+
+        [Display(Name = "Maker Action")]
+        public MakerAction MakerAction { get; set; } = MakerAction.Create;
+
+        [Display(Name = "Approval Date")]
+        public DateTime? ApprovalDate { get; set; }
+
+        [Display(Name = "Rejection Reason")]
+        public string? RejectionReason { get; set; }
+
+        [Display(Name = "Is Active Record")]
+        public bool IsActiveRecord { get; set; } = true;
 
         [Display(Name = "Created By")]
         public string? CreatedBy { get; set; }
@@ -109,5 +133,64 @@ namespace RentManagement.Models
                 return TdsRate?.ToString("F2") + "%" ?? "-";
             }
         }
+
+        // Helper property to get approval status display text
+        public string ApprovalStatusText => ApprovalStatus switch
+        {
+            ApprovalStatus.Pending => "Pending Approval",
+            ApprovalStatus.Approved => "Approved",
+            ApprovalStatus.Rejected => "Rejected",
+            _ => "Unknown"
+        };
+
+        // Helper property to check if record is visible in main list
+        public bool IsVisibleInMainList => ApprovalStatus == ApprovalStatus.Approved && IsActiveRecord;
+    }
+
+    public class SecurityDepositListViewModel
+    {
+        public List<SecurityDeposit> SecurityDeposits { get; set; } = new List<SecurityDeposit>();
+        public List<SecurityDeposit> PendingApprovals { get; set; } = new List<SecurityDeposit>();
+        public string SearchTerm { get; set; } = string.Empty;
+        public string StatusFilter { get; set; } = string.Empty;
+        public string ApprovalStatusFilter { get; set; } = string.Empty;
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public int TotalRecords { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalRecords / PageSize);
+        public UserRole CurrentUserRole { get; set; }
+        public bool ShowApprovalSection { get; set; }
+    }
+
+    // Request models for AJAX operations
+    public class SecurityDepositCreateRequest
+    {
+        public int EmployeeId { get; set; }
+        public int VendorId { get; set; }
+        public int LeaseId { get; set; }
+        public decimal Amount { get; set; }
+        public decimal? TdsRate { get; set; }
+        public decimal? TdsAmount { get; set; }
+        public string? Remark { get; set; }
+        public string Status { get; set; } = "Active";
+    }
+
+    public class SecurityDepositUpdateRequest
+    {
+        public int Id { get; set; }
+        public int EmployeeId { get; set; }
+        public int VendorId { get; set; }
+        public int LeaseId { get; set; }
+        public decimal Amount { get; set; }
+        public decimal? TdsRate { get; set; }
+        public decimal? TdsAmount { get; set; }
+        public string? Remark { get; set; }
+        public string Status { get; set; } = "Active";
+    }
+
+    public class SecurityDepositRejectionRequest
+    {
+        public int Id { get; set; }
+        public string RejectionReason { get; set; } = string.Empty;
     }
 }
