@@ -36,6 +36,7 @@ namespace RentManagement.Data
 
         // Dropdown data methods
         Task<IEnumerable<LeaseType>> GetLeaseTypesAsync();
+        Task<IEnumerable<LeaseType>> GetAllLeaseTypesAsync();
         Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();
         Task<IEnumerable<Owner>> GetOwnersAsync();
         Task<IEnumerable<RentRecoveryElement>> GetRentRecoveryElementsAsync();

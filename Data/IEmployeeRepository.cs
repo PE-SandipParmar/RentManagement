@@ -7,6 +7,7 @@ namespace RentManagement.Data
         // Original methods
         Task<PagedResult<Employee>> GetEmployeesAsync(int page, int pageSize, string search);
         Task<IEnumerable<Employee>> GetAllEmployeesDropdownAsync();
+        Task<IEnumerable<Employee>> GetAllEmployeesAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task<bool> EmailExistsAsync(string email, int? excludeId = null);
         Task<bool> AadharExistsAsync(string aadhar, int? excludeId = null);
@@ -14,7 +15,9 @@ namespace RentManagement.Data
         Task<bool> UpdateEmployeeAsync(Employee employee);
         Task<bool> DeleteEmployeeAsync(int id);
         Task<IEnumerable<Department>> GetDepartmentsAsync();
+        Task<IEnumerable<Department>> GetAllDepartmentsAsync();
         Task<IEnumerable<Designation>> GetDesignationsAsync();
+        Task<IEnumerable<Designation>> GetAllDesignationsAsync();
         Task ToggleActiveStatus(int? Id);
 
         // Approval Workflow Methods

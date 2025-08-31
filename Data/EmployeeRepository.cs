@@ -224,6 +224,33 @@ namespace RentManagement.Data
             );
         }
 
+        public async Task<IEnumerable<Employee>> GetAllEmployeesAsync()
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<Employee>(
+                "EmployeeRead",
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<IEnumerable<Department>> GetAllDepartmentsAsync()
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<Department>(
+                "DepartmentRead",
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
+        public async Task<IEnumerable<Designation>> GetAllDesignationsAsync()
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<Designation>(
+                "DesignationRead",
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
         public async Task ToggleActiveStatus(int? Id)
         {
             using var connection = CreateConnection();

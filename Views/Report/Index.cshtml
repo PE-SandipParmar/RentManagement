@@ -1,0 +1,292 @@
+@{
+    ViewData["Title"] = "Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
+            <p class="mt-2 text-gray-600">Generate comprehensive reports and analyze your rent management data</p>
+        </div>
+
+        <!-- Report Categories -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dashboard Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Dashboard</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Real-time overview of key metrics and trends</p>
+                <a href="@Url.Action("Dashboard", "Report")" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    View Dashboard
+                </a>
+            </div>
+
+            <!-- Lease Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Lease Reports</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Comprehensive lease management reports</p>
+                <div class="space-y-2">
+                    <a href="@Url.Action("Lease", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Lease Report</a>
+                    <a href="@Url.Action("LeaseSummary", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Lease Summary</a>
+                    <a href="@Url.Action("LeaseApproval", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Approval Status</a>
+                    <a href="@Url.Action("LeaseExpiry", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Expiry Report</a>
+                </div>
+            </div>
+
+            <!-- Employee Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Employee Reports</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Employee and HRA related reports</p>
+                <div class="space-y-2">
+                    <a href="@Url.Action("Employee", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Employee Report</a>
+                    <a href="@Url.Action("Employee", "Report")?department=all" class="block text-sm text-blue-600 hover:text-blue-800">• Department Wise</a>
+                    <a href="@Url.Action("Employee", "Report")?hra=all" class="block text-sm text-blue-600 hover:text-blue-800">• HRA Report</a>
+                </div>
+            </div>
+
+            <!-- Vendor Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Vendor Reports</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Vendor and property owner reports</p>
+                <div class="space-y-2">
+                    <a href="@Url.Action("Vendor", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Vendor Report</a>
+                    <a href="@Url.Action("Vendor", "Report")?lease=all" class="block text-sm text-blue-600 hover:text-blue-800">• Vendor Lease Report</a>
+                    <a href="@Url.Action("Vendor", "Report")?payment=all" class="block text-sm text-blue-600 hover:text-blue-800">• Payment Report</a>
+                </div>
+            </div>
+
+            <!-- Financial Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Financial Reports</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Financial analysis and revenue reports</p>
+                <div class="space-y-2">
+                    <a href="@Url.Action("Financial", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Financial Report</a>
+                    <a href="@Url.Action("Financial", "Report")?period=monthly" class="block text-sm text-blue-600 hover:text-blue-800">• Monthly Report</a>
+                    <a href="@Url.Action("Financial", "Report")?period=yearly" class="block text-sm text-blue-600 hover:text-blue-800">• Yearly Report</a>
+                    <a href="@Url.Action("Financial", "Report")?type=revenue" class="block text-sm text-blue-600 hover:text-blue-800">• Revenue Report</a>
+                </div>
+            </div>
+
+            <!-- Approval Reports -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900">Approval Reports</h3>
+                </div>
+                <p class="text-gray-600 mb-4">Approval workflow and status reports</p>
+                <div class="space-y-2">
+                    <a href="@Url.Action("Approval", "Report")" class="block text-sm text-blue-600 hover:text-blue-800">• Approval Report</a>
+                    <a href="@Url.Action("Approval", "Report")?status=pending" class="block text-sm text-blue-600 hover:text-blue-800">• Pending Approvals</a>
+                    <a href="@Url.Action("Approval", "Report")?status=summary" class="block text-sm text-blue-600 hover:text-blue-800">• Approval Summary</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Leases</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="totalLeases">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Active Employees</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="activeEmployees">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Vendors</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="totalVendors">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Monthly Rent</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="monthlyRent">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="mt-8 bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+            </div>
+            <div class="p-6">
+                <div id="recentActivities" class="space-y-4">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadDashboardStats();
+            loadRecentActivities();
+        });
+
+        function loadDashboardStats() {
+            $.ajax({
+                url: '@Url.Action("GetDashboardStats", "Report")',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const data = response.data;
+                        $('#totalLeases').text(data.totalLeases);
+                        $('#activeEmployees').text(data.totalEmployees);
+                        $('#totalVendors').text(data.totalVendors);
+                        $('#monthlyRent').text('₹' + data.totalMonthlyRent.toLocaleString());
+                    }
+                },
+                error: function() {
+                    console.error('Error loading dashboard stats');
+                }
+            });
+        }
+
+        function loadRecentActivities() {
+            $.ajax({
+                url: '@Url.Action("GetRecentActivities", "Report")',
+                type: 'GET',
+                data: { count: 5 },
+                success: function(response) {
+                    if (response.success) {
+                        displayRecentActivities(response.data);
+                    }
+                },
+                error: function() {
+                    console.error('Error loading recent activities');
+                }
+            });
+        }
+
+        function displayRecentActivities(activities) {
+            const container = $('#recentActivities');
+            
+            if (!activities || activities.length === 0) {
+                container.html('<p class="text-gray-500 text-center">No recent activities</p>');
+                return;
+            }
+
+            const html = activities.map(activity => `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-900">${activity.description}</p>
+                        <p class="text-xs text-gray-500">by ${activity.userName} • ${formatDate(activity.timestamp)}</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}">
+                            ${activity.status}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.html(html);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function getStatusColor(status) {
+            switch (status.toLowerCase()) {
+                case 'approved':
+                    return 'bg-green-100 text-green-800';
+                case 'pending':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'rejected':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+    </script>
+}

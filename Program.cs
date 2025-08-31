@@ -19,6 +19,7 @@ builder.Services.AddScoped<IBrokeragePaymentRepository, BrokeragePaymentReposito
 builder.Services.AddScoped<ISecurityDepositRepository, SecurityDepositRepository>();
 builder.Services.AddScoped<IMISReportRepository, MISReportRepository>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
 // Register repositories
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 

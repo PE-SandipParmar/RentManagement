@@ -474,6 +474,14 @@ namespace RentManagement.Data
                 commandType: CommandType.StoredProcedure);
         }
 
+        public async Task<IEnumerable<LeaseType>> GetAllLeaseTypesAsync()
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<LeaseType>(
+                "LeaseTypesRead",
+                commandType: CommandType.StoredProcedure);
+        }
+
         public async Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync()
         {
             using var connection = CreateConnection();
