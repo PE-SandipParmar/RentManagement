@@ -620,7 +620,8 @@
             .then(result => {
                 if (result.success) {
                     showAlert('success', result.message);
-                    loadSecurityDeposits();
+                    // loadSecurityDeposits();
+                        setTimeout(() => location.reload(), 1000);
                 } else {
                     showAlert('error', result.message);
                 }
@@ -671,8 +672,8 @@
             .then(result => {
                 if (result.success) {
                     showAlert('success', result.message);
-                    closeRejectModal();
-                    loadSecurityDeposits();
+                        closeRejectModal();
+                        setTimeout(() => location.reload(), 1000);
                 } else {
                     showAlert('error', result.message);
                 }

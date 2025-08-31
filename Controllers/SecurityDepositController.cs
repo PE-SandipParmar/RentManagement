@@ -4,6 +4,7 @@ using RentManagement.Data;
 using RentManagement.Models;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using NuGet.Protocol.Core.Types;
 
 namespace RentManagement.Controllers
 {
@@ -567,6 +568,9 @@ namespace RentManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SecurityDeposit deposit)
         {
+            var userRole = GetCurrentUserRole();
+            var userId = GetCurrentUserId();
+            var userName = GetCurrentUserName();
             // Custom validation for duplicate records
             if (await _securityDepositRepository.IsDuplicateRecordAsync(deposit.EmployeeId, deposit.LeaseId, deposit.VendorId))
             {
@@ -618,9 +622,41 @@ namespace RentManagement.Controllers
 
             if (ModelState.IsValid)
             {
-                var newId = await _securityDepositRepository.CreateAsync(deposit);
-                TempData["SuccessMessage"] = "Security deposit created successfully!";
-                return RedirectToAction(nameof(Index));
+                int depositeId;
+                string message;
+                if (userRole == UserRole.Admin)
+                {
+                    // Admin can directly create approved payments
+                    deposit.ApprovalStatus = ApprovalStatus.Approved;
+                    deposit.MakerUserId = userId;
+                    deposit.MakerUserName = userName;
+                    deposit.CheckerUserId = userId;
+                    deposit.CheckerUserName = userName;
+                    deposit.MakerAction = MakerAction.Create;
+                    deposit.CheckerApprovalDate = DateTime.Now;
+                    deposit.CreatedById = int.Parse(userId);
+                    deposit.IsActiveRecord = true;
+
+                    depositeId = await _securityDepositRepository.CreateAsync(deposit);
+                    message = "Payment created successfully.";
+                }
+
+                else
+                {
+                    // Maker role - create Security deposite for approval
+                    deposit.CreatedById = int.Parse(userId);
+                    depositeId = await _securityDepositRepository.AddSecurityDepositForApprovalAsync(deposit, userId, userName, MakerAction.Create);
+                    message = "Security Deposit created successfully and sent for approval.";
+                }
+
+                if (depositeId > 0)
+                {
+                    TempData["SuccessMessage"] = message;
+                    return RedirectToAction(nameof(Index));
+                }
+                //var newId = await _securityDepositRepository.CreateAsync(deposit);
+                //TempData["SuccessMessage"] = "Security deposit created successfully!";
+                //return RedirectToAction(nameof(Index));
             }
 
             await LoadDropdowns();
@@ -643,6 +679,11 @@ namespace RentManagement.Controllers
         {
             if (id != deposit.Id)
                 return NotFound();
+
+
+            var userRole = GetCurrentUserRole();
+            var userId = GetCurrentUserId();
+            var userName = GetCurrentUserName();
 
             // Custom validation for duplicate records (excluding current record)
             if (await _securityDepositRepository.IsDuplicateRecordAsync(deposit.EmployeeId, deposit.LeaseId, deposit.VendorId, deposit.Id))
@@ -695,16 +736,34 @@ namespace RentManagement.Controllers
 
             if (ModelState.IsValid)
             {
-                var success = await _securityDepositRepository.UpdateAsync(deposit);
-                if (success)
+                bool success;
+                string message;
+
+
+                if (userRole == UserRole.Admin)
                 {
-                    TempData["SuccessMessage"] = "Security deposit updated successfully!";
-                    return RedirectToAction(nameof(Index));
+                    // Admin can directly update approved payments
+                    deposit.CheckerUserId = userId;
+                    deposit.CheckerUserName = userName;
+                    deposit.CheckerApprovalDate = DateTime.Now;
+                    deposit.ModifiedById = int.Parse(userId);
+                    success = await _securityDepositRepository.UpdateAsync(deposit);
+                    message = "Security deposit updated successfully.";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to update security deposit.";
+                    // Maker role - update payment for approval
+                    deposit.ModifiedById = int.Parse(userId);
+                    success = await _securityDepositRepository.UpdateSecurityDepositForApprovalAsync(deposit, userId, userName);
+                    message = "Security deposit updated successfully and sent for approval.";
                 }
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = message;
+                    return RedirectToAction(nameof(Index));
+                }
+              
             }
 
             await LoadDropdowns();

@@ -60,6 +60,8 @@ namespace RentManagement.Models
         public MakerAction MakerAction { get; set; } = MakerAction.Create;
 
         [Display(Name = "Approval Date")]
+        public DateTime? CheckerApprovalDate { get; set; }
+        [Display(Name = "Approval Date")]
         public DateTime? ApprovalDate { get; set; }
 
         [Display(Name = "Rejection Reason")]
@@ -70,12 +72,13 @@ namespace RentManagement.Models
 
         [Display(Name = "Created By")]
         public string? CreatedBy { get; set; }
-
+        public int? CreatedById { get; set; }
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; }
 
         [Display(Name = "Modified By")]
         public string? ModifiedBy { get; set; }
+        public int? ModifiedById { get; set; }
 
         [Display(Name = "Modified Date")]
         public DateTime? ModifiedDate { get; set; }

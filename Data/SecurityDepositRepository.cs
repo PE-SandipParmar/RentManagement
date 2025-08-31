@@ -58,7 +58,7 @@ public class SecurityDepositRepository : ISecurityDepositRepository
             RejectionReason = deposit.RejectionReason,
             IsActiveRecord = deposit.IsActiveRecord,
             IsActive = deposit.IsActive,
-            CreatedBy = deposit.CreatedBy
+            CreatedBy = deposit.CreatedById
         };
 
         var result = await connection.QuerySingleAsync<int>(sql, parameters);
