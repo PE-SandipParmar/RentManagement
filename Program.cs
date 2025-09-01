@@ -27,6 +27,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddScoped<ILeaseDocumentRepository, LeaseDocumentRepository>();
+builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
 
 
 // Register Dapper and Repository
