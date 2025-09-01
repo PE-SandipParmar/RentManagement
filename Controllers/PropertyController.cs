@@ -283,7 +283,7 @@ namespace RentManagement.Controllers
         #region CRUD Operations
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProperty([FromBody] Property model)
         {
             try
@@ -332,7 +332,6 @@ namespace RentManagement.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProperty([FromBody] Property model)
         {
             try
@@ -390,7 +389,6 @@ namespace RentManagement.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProperty(int id)
         {
             try
@@ -433,7 +431,6 @@ namespace RentManagement.Controllers
         #region Approval Workflow
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveProperty(int id)
         {
             try
@@ -464,7 +461,6 @@ namespace RentManagement.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectProperty([FromBody] RejectRequest request)
         {
             try

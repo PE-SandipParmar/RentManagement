@@ -755,7 +755,7 @@
                 vendorId: parseInt(formData.get('vendorId')),
                 propertyAddress: formData.get('propertyAddress'),
                 totalRentAmount: parseFloat(formData.get('totalRentAmount')) || 0,
-                linkedEmployeesList: selectedEmployees.toString(),
+                linkedEmployeesList: selectedEmployees,
                 status: formData.get('status')
             };
 
@@ -769,6 +769,7 @@
             })
                 .then(response => response.json())
                 .then(result => {
+                    debugger
                     if (result.success) {
                         showAlert('success', result.message);
                         closeCreateDrawer();
@@ -1118,13 +1119,13 @@
             const searchTerm = document.getElementById('searchInput').value;
             const statusFilter = document.getElementById('statusFilter').value;
             const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
-            const vendorFilter = document.getElementById('vendorFilter').value;
+            // const vendorFilter = document.getElementById('vendorFilter').value;
 
             const params = new URLSearchParams({
                 searchTerm: searchTerm,
                 statusFilter: statusFilter,
                 approvalStatusFilter: approvalStatusFilter,
-                vendorFilter: vendorFilter || '',
+                // vendorFilter: vendorFilter || '',
                 page: currentPage,
                 pageSize: pageSize
             });

@@ -214,7 +214,14 @@
                         </div>
                         <span class="sidebar-text">Owner Management</span>
                     </a>
-
+                    <a asp-controller="Property" asp-action="Index"
+                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
+                       data-nav="Property-management">
+                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="ri-store-line"></i>
+                        </div>
+                        <span class="sidebar-text">Property Management</span>
+                    </a>
                   @*   <a asp-controller="Vendor" asp-action="Create"
                        class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
                        data-nav="add-vendor">
