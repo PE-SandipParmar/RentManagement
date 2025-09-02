@@ -691,7 +691,7 @@ namespace RentManagement.Data
                         '' as ProjectName,
                         '70800 : Rent Paid (Rent Free Accommodation)' as CoAName,
                         'Rent Payable for the Month of ' + ISNULL(DATENAME(MONTH, mr.PaymentMonth), '') + ' ' + ISNULL(CAST(YEAR(mr.PaymentMonth) AS VARCHAR(4)), '') + 
-                        ' on behalf of ' + ISNULL(e.Code, '') + ': ' + ISNULL(e.Name, '') + ' (@' + ISNULL(CAST(mr.MonthlyLeaseAmount AS VARCHAR(10)), '0') + '/-, ' + ISNULL(CAST(mr.TDSRate AS VARCHAR(5)), '0') + '%TDS deducted)' as Narration,
+                        ' on behalf of ' + ISNULL(e.Code, '') + ': ' + ISNULL(e.Name, '') + ' (@' + ISNULL(CAST(mr.MonthlyLeaseAmount AS VARCHAR(20)), '0') + '/-, ' + ISNULL(CAST(mr.TDSRate AS VARCHAR(10)), '0') + '%TDS deducted)' as Narration,
                         '' as ExemptionCertificateNo,
                         NULL as ExemptionFromDate,
                         NULL as ExemptionToDate,
@@ -816,7 +816,7 @@ namespace RentManagement.Data
                     WHERE TDSAmount > 0
                     UNION ALL
                     SELECT PaymentDate, TDSAmount, BrokerageAmount as TDSDeductedOn
-                    FROM BrokeragePayments 
+                    FROM BrokeragePayment 
                     WHERE TDSAmount > 0
                 ) t
                 WHERE (@FromDate IS NULL OR PaymentDate >= @FromDate)
@@ -865,6 +865,217 @@ namespace RentManagement.Data
                     WHERE mr.Id = @PaymentId";
 
                 var result = await connection.QueryFirstOrDefaultAsync<TDSPeggingDetail>(sql, new { PaymentId = paymentId });
+                if (result != null)
+                {
+                    peggingModel.VoucherNumber = $"CN/{paymentId:D6}/25-26";
+                    peggingModel.PaymentDate = result.PaymentDate;
+                    peggingModel.Amount = result.Amount;
+                    peggingModel.Status = result.Status;
+                    peggingModel.PeggingDetails.Add(result);
+                }
+            }
+
+            return peggingModel;
+        }
+
+        // TDS Brokerage Report Implementations
+        public async Task<TDSBrokerageReportModel> GetTDSBrokerageReportAsync(TDSBrokerageReportFilterModel filter)
+        {
+            using var connection = CreateConnection();
+            
+            // For export, let's use a simpler query without pagination to get all data
+            var isExport = filter.Page == 0; // If page is 0, treat as export
+            
+            if (isExport)
+            {
+                // Simple query for export without complex filters
+                var exportSql = @"
+                    SELECT 
+                        ROW_NUMBER() OVER (ORDER BY bp.PaymentDate DESC) as SlNo,
+                        'CN/' + RIGHT('000000' + CAST(bp.Id AS VARCHAR(6)), 6) + '/25-26' as VoucherNumber,
+                        ISNULL(e.Code, '') as EmployeeCode,
+                        ISNULL(e.Name, '') as EmployeeName,
+                        ISNULL(v.VendorCode, '') as VendorCode,
+                        ISNULL(v.VendorName, '') as VendorName,
+                        ISNULL(v.PanNumber, '') as PAN,
+                        bp.PaymentDate,
+                        ISNULL(bp.BrokerageAmount, 0) as TDSDeductedOn,
+                        ISNULL(bp.TDSRate, 0) as TDSRate,
+                        ISNULL(bp.TDSAmount, 0) as TDSAmount,
+                        ISNULL(bp.BrokerageAmount, 0) as GrossValue,
+                        '' as ProjectName,
+                        '70800 : Rent Paid (Rent Free Accommodation)' as CoAName,
+                        'Brokerage Payment for the Month of ' + ISNULL(DATENAME(MONTH, bp.PaymentMonth), '') + ' ' + ISNULL(CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)), '') + 
+                        ' on behalf of ' + ISNULL(e.Code, '') + ': ' + ISNULL(e.Name, '') + ' (@' + ISNULL(CAST(bp.BrokerageAmount AS VARCHAR(20)), '0') + '/-, ' + ISNULL(CAST(bp.TDSRate AS VARCHAR(10)), '0') + '%TDS deducted)' as Narration,
+                        '' as ExemptionCertificateNo,
+                        NULL as ExemptionFromDate,
+                        NULL as ExemptionToDate,
+                        'Brokerage' as PaymentType,
+                        ISNULL(bp.PaymentStatus, '') as PaymentStatus,
+                        ISNULL(l.RefNo, '') as LeaseRefNo,
+                        ISNULL(DATENAME(MONTH, bp.PaymentMonth), '') as Month,
+                        ISNULL(CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)), '') as Year,
+                        ISNULL(CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)), '') + '-' + ISNULL(RIGHT(CAST(YEAR(PaymentMonth) + 1 AS VARCHAR(4)), 2), '') as FinancialYear,
+                        ISNULL(t.Name, '') as TDSApplicableName,
+                        '' as TransactionReference,
+                        '' as Remarks,
+                        ISNULL(bp.CreatedDate, GETDATE()) as CreatedDate,
+                        '' as CreatedBy,
+                        ISNULL(bp.NetPayableAmount, 0) as NetPayableAmount,
+                        ISNULL(bp.DSCApprovalStatus, '') as DSCApprovalStatus
+                    FROM BrokeragePayment bp
+                    LEFT JOIN Employees e ON bp.EmployeeId = e.Id
+                    LEFT JOIN Vendors v ON bp.VendorId = v.Id
+                    LEFT JOIN Leases l ON bp.LeaseId = l.Id
+                    LEFT JOIN TDSApplicable t ON bp.TDSApplicableId = t.Id
+                    WHERE bp.TDSAmount > 0
+                    ORDER BY bp.PaymentDate DESC";
+
+                var tdsItems = await connection.QueryAsync<TDSBrokerageReportItem>(exportSql);
+                var tdsList = tdsItems.ToList();
+
+                // Add serial numbers
+                for (int i = 0; i < tdsList.Count; i++)
+                {
+                    tdsList[i].SlNo = i + 1;
+                }
+
+                var summary = await CalculateTDSBrokerageSummaryAsync(connection, filter);
+
+                return new TDSBrokerageReportModel
+                {
+                    ReportTitle = "TDS Brokerage Report - Lease Brokerage",
+                    GeneratedDate = DateTime.Now,
+                    GeneratedBy = "System",
+                    Filter = filter,
+                    TDSItems = tdsList,
+                    Summary = summary,
+                    TotalRecords = tdsList.Count,
+                    ReportType = "TDSBrokerage"
+                };
+            }
+            else
+            {
+                // Get total count first
+                var countSql = BuildTDSBrokerageReportCountQuery(filter);
+                var countParameters = BuildTDSBrokerageReportParameters(filter);
+                var totalRecords = await connection.QueryFirstOrDefaultAsync<int>(countSql, countParameters);
+                
+                // Get paginated data
+                var sql = BuildTDSBrokerageReportQuery(filter);
+                var parameters = BuildTDSBrokerageReportParameters(filter);
+                
+                // Add pagination parameters
+                parameters.Add("@Offset", (filter.Page - 1) * filter.PageSize);
+                parameters.Add("@PageSize", filter.PageSize);
+
+                var tdsItems = await connection.QueryAsync<TDSBrokerageReportItem>(sql, parameters);
+                var tdsList = tdsItems.ToList();
+
+                // Add serial numbers based on page
+                var startNumber = (filter.Page - 1) * filter.PageSize + 1;
+                for (int i = 0; i < tdsList.Count; i++)
+                {
+                    tdsList[i].SlNo = startNumber + i;
+                }
+
+                var summary = await CalculateTDSBrokerageSummaryAsync(connection, filter);
+
+                return new TDSBrokerageReportModel
+                {
+                    ReportTitle = "TDS Brokerage Report - Lease Brokerage",
+                    GeneratedDate = DateTime.Now,
+                    GeneratedBy = "System",
+                    Filter = filter,
+                    TDSItems = tdsList,
+                    Summary = summary,
+                    TotalRecords = totalRecords,
+                    ReportType = "TDSBrokerage"
+                };
+            }
+        }
+
+        public async Task<TDSBrokerageReportModel> GetTDSBrokerageMonthlyReportAsync(TDSBrokerageReportFilterModel filter)
+        {
+            // Similar to GetTDSBrokerageReportAsync but with monthly grouping
+            return await GetTDSBrokerageReportAsync(filter);
+        }
+
+        public async Task<TDSBrokerageReportModel> GetTDSBrokerageVendorReportAsync(TDSBrokerageReportFilterModel filter)
+        {
+            // Similar to GetTDSBrokerageReportAsync but with vendor grouping
+            return await GetTDSBrokerageReportAsync(filter);
+        }
+
+        public async Task<TDSBrokerageReportModel> GetTDSBrokerageEmployeeReportAsync(TDSBrokerageReportFilterModel filter)
+        {
+            // Similar to GetTDSBrokerageReportAsync but with employee grouping
+            return await GetTDSBrokerageReportAsync(filter);
+        }
+
+        public async Task<TDSBrokerageChartData> GetTDSBrokerageChartDataAsync(TDSBrokerageReportFilterModel filter)
+        {
+            using var connection = CreateConnection();
+            
+            var chartData = new TDSBrokerageChartData();
+
+            // Get monthly trends
+            var monthlyTrendsSql = @"
+                SELECT 
+                    DATENAME(MONTH, PaymentDate) as Month,
+                    YEAR(PaymentDate) as Year,
+                    SUM(TDSAmount) as TotalTDS,
+                    SUM(BrokerageAmount) as TotalGross,
+                    COUNT(*) as PaymentCount
+                FROM BrokeragePayment 
+                WHERE TDSAmount > 0
+                AND (@FromDate IS NULL OR PaymentDate >= @FromDate)
+                AND (@ToDate IS NULL OR PaymentDate <= @ToDate)
+                GROUP BY DATENAME(MONTH, PaymentDate), YEAR(PaymentDate)
+                ORDER BY YEAR(PaymentDate), MONTH(PaymentDate)";
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@FromDate", filter.FromDate);
+            parameters.Add("@ToDate", filter.ToDate);
+
+            chartData.MonthlyTrends = (await connection.QueryAsync<TDSBrokerageMonthlyTrend>(monthlyTrendsSql, parameters)).ToList();
+
+            return chartData;
+        }
+
+        public async Task<TDSBrokeragePeggingModel> GetTDSBrokeragePeggingAsync(int paymentId, string paymentType)
+        {
+            using var connection = CreateConnection();
+            
+            var peggingModel = new TDSBrokeragePeggingModel
+            {
+                PaymentId = paymentId,
+                PaymentType = paymentType
+            };
+
+            if (paymentType == "Brokerage")
+            {
+                var sql = @"
+                    SELECT 
+                        bp.Id as PaymentId,
+                        bp.PaymentDate,
+                        bp.BrokerageAmount as Amount,
+                        bp.PaymentStatus as Status,
+                        l.RefNo as LeaseRefNo,
+                        e.Name as EmployeeName,
+                        v.VendorName,
+                        bp.BrokerageAmount as AllocatedAmount,
+                        bp.TDSAmount,
+                        DATENAME(MONTH, bp.PaymentMonth) as Month,
+                        YEAR(bp.PaymentMonth) as Year,
+                        bp.NetPayableAmount
+                    FROM BrokeragePayment bp
+                    INNER JOIN Leases l ON bp.LeaseId = l.Id
+                    INNER JOIN Employees e ON bp.EmployeeId = e.Id
+                    INNER JOIN Vendors v ON bp.VendorId = v.Id
+                    WHERE bp.Id = @PaymentId";
+
+                var result = await connection.QueryFirstOrDefaultAsync<TDSBrokeragePeggingDetail>(sql, new { PaymentId = paymentId });
                 if (result != null)
                 {
                     peggingModel.VoucherNumber = $"CN/{paymentId:D6}/25-26";
@@ -1215,7 +1426,7 @@ namespace RentManagement.Data
                               $"\"{item.EmployeeCode}\"," +
                               $"\"{item.EmployeeName}\"," +
                               $"\"{item.PAN}\"," +
-                              $"{item.PaymentDate:dd/MM/yyyy}," +
+                              $"\"{item.PaymentDate:dd/MM/yyyy}\"," +
                               $"{item.TDSDeductedOn:N2}," +
                               $"{item.TDSRate:N2}," +
                               $"{item.TDSAmount:N2}," +
@@ -1224,8 +1435,8 @@ namespace RentManagement.Data
                               $"\"{item.CoAName}\"," +
                               $"\"{item.Narration}\"," +
                               $"\"{item.ExemptionCertificateNo}\"," +
-                              $"{(item.ExemptionFromDate?.ToString("dd/MM/yyyy") ?? "")}," +
-                              $"{(item.ExemptionToDate?.ToString("dd/MM/yyyy") ?? "")}");
+                              $"\"{(item.ExemptionFromDate.HasValue ? item.ExemptionFromDate.Value.ToString("dd/MM/yyyy") : string.Empty)}\"," +
+                              $"\"{(item.ExemptionToDate.HasValue ? item.ExemptionToDate.Value.ToString("dd/MM/yyyy") : string.Empty)}\"");
             }
             
             return csv.ToString();
@@ -1311,7 +1522,7 @@ namespace RentManagement.Data
                     '' as ProjectName,
                     '70800 : Rent Paid (Rent Free Accommodation)' as CoAName,
                     'Rent Payable for the Month of ' + DATENAME(MONTH, PaymentMonth) + ' ' + CAST(YEAR(PaymentMonth) AS VARCHAR(4)) + 
-                    ' on behalf of ' + e.Code + ': ' + e.Name + ' (@' + CAST(MonthlyLeaseAmount AS VARCHAR(10)) + '/-, ' + CAST(TDSRate AS VARCHAR(5)) + '%TDS deducted)' as Narration,
+                    ' on behalf of ' + e.Code + ': ' + e.Name + ' (@' + CAST(MonthlyLeaseAmount AS VARCHAR(20)) + '/-, ' + CAST(TDSRate AS VARCHAR(10)) + '%TDS deducted)' as Narration,
                     '' as ExemptionCertificateNo,
                     NULL as ExemptionFromDate,
                     NULL as ExemptionToDate,
@@ -1534,6 +1745,528 @@ namespace RentManagement.Data
                 HasTDSData = (result?.TotalWithTDS ?? 0) > 0,
                 HasValidJoins = (result?.TotalWithJoins ?? 0) > 0
             };
+        }
+
+        // TDS Brokerage Report Export Methods
+        public async Task<byte[]> ExportTDSBrokerageReportToPdfAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options)
+        {
+            try
+            {
+                var html = new StringBuilder();
+                
+                // HTML header
+                html.AppendLine("<!DOCTYPE html>");
+                html.AppendLine("<html>");
+                html.AppendLine("<head>");
+                html.AppendLine("<meta charset='utf-8'>");
+                html.AppendLine("<title>TDS Brokerage Report - Lease Brokerage</title>");
+                html.AppendLine("<style>");
+                html.AppendLine("body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }");
+                html.AppendLine("table { width: 100%; border-collapse: collapse; margin-top: 20px; }");
+                html.AppendLine("th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 11px; }");
+                html.AppendLine("th { background-color: #f2f2f2; font-weight: bold; }");
+                html.AppendLine(".header { text-align: center; margin-bottom: 20px; }");
+                html.AppendLine(".summary { margin-bottom: 20px; }");
+                html.AppendLine(".filters { margin-bottom: 20px; }");
+                html.AppendLine("</style>");
+                html.AppendLine("</head>");
+                html.AppendLine("<body>");
+
+                // Report header
+                html.AppendLine("<div class='header'>");
+                html.AppendLine($"<h1>{options.ReportTitle}</h1>");
+                html.AppendLine($"<p>Generated on: {report.GeneratedDate:dd/MM/yyyy HH:mm}</p>");
+                html.AppendLine($"<p>Generated by: {report.GeneratedBy}</p>");
+                html.AppendLine("</div>");
+
+                // Summary section
+                if (options.IncludeSummary)
+                {
+                    html.AppendLine("<div class='summary'>");
+                    html.AppendLine("<h2>Summary</h2>");
+                    html.AppendLine("<table>");
+                    html.AppendLine("<tr><td>Total Payments:</td><td>" + report.Summary.TotalPayments + "</td></tr>");
+                    html.AppendLine("<tr><td>Total Gross Amount:</td><td>₹" + report.Summary.TotalGrossAmount.ToString("N2") + "</td></tr>");
+                    html.AppendLine("<tr><td>Total TDS Amount:</td><td>₹" + report.Summary.TotalTDSAmount.ToString("N2") + "</td></tr>");
+                    html.AppendLine("<tr><td>Total Net Amount:</td><td>₹" + report.Summary.TotalNetAmount.ToString("N2") + "</td></tr>");
+                    html.AppendLine("</table>");
+                    html.AppendLine("</div>");
+                }
+
+                // Report data table
+                html.AppendLine("<table>");
+                html.AppendLine("<thead>");
+                html.AppendLine("<tr>");
+                html.AppendLine("<th>Sl No</th><th>Voucher No.</th><th>Code</th><th>Name</th><th>PAN</th>");
+                html.AppendLine("<th>Date</th><th>TDS Deducted on</th><th>TDS %</th><th>TDS Amount</th><th>Gross CN Value</th>");
+                html.AppendLine("<th>Project Name</th><th>CoA Name</th><th>Narration</th><th>Exemption Certificate No.</th><th>Exemption From Dt</th><th>Exemption To Dt</th>");
+                html.AppendLine("</tr>");
+                html.AppendLine("</thead>");
+                html.AppendLine("<tbody>");
+
+                foreach (var item in report.TDSItems)
+                {
+                    html.AppendLine("<tr>");
+                    html.AppendLine($"<td>{item.SlNo}</td>");
+                    html.AppendLine($"<td>{item.VoucherNumber}</td>");
+                    html.AppendLine($"<td>{item.EmployeeCode}</td>");
+                    html.AppendLine($"<td>{item.EmployeeName}</td>");
+                    html.AppendLine($"<td>{item.PAN}</td>");
+                    html.AppendLine($"<td>{item.PaymentDate:dd/MM/yyyy}</td>");
+                    html.AppendLine($"<td>{item.TDSDeductedOn:N2}</td>");
+                    html.AppendLine($"<td>{item.TDSRate:N2}</td>");
+                    html.AppendLine($"<td>{item.TDSAmount:N2}</td>");
+                    html.AppendLine($"<td>{item.GrossValue:N2}</td>");
+                    html.AppendLine($"<td>{item.ProjectName}</td>");
+                    html.AppendLine($"<td>{item.CoAName}</td>");
+                    html.AppendLine($"<td>{item.Narration}</td>");
+                    html.AppendLine($"<td>{item.ExemptionCertificateNo}</td>");
+                    html.AppendLine($"<td>{(item.ExemptionFromDate.HasValue ? item.ExemptionFromDate.Value.ToString("dd/MM/yyyy") : "")}</td>");
+                    html.AppendLine($"<td>{(item.ExemptionToDate.HasValue ? item.ExemptionToDate.Value.ToString("dd/MM/yyyy") : "")}</td>");
+                    html.AppendLine("</tr>");
+                }
+
+                html.AppendLine("</tbody>");
+                html.AppendLine("</table>");
+                html.AppendLine("</body>");
+                html.AppendLine("</html>");
+
+                return System.Text.Encoding.UTF8.GetBytes(html.ToString());
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error generating TDS Brokerage PDF report: {ex.Message}");
+            }
+        }
+
+        public async Task<byte[]> ExportTDSBrokerageReportToExcelAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options)
+        {
+            try
+            {
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("TDS Brokerage Report");
+
+                // Add header
+                worksheet.Cell("A1").Value = options.ReportTitle;
+                worksheet.Cell("A1").Style.Font.Bold = true;
+                worksheet.Cell("A1").Style.Font.FontSize = 16;
+                worksheet.Range("A1:L1").Merge();
+
+                // Add summary
+                if (options.IncludeSummary)
+                {
+                    worksheet.Cell("A3").Value = "Summary";
+                    worksheet.Cell("A3").Style.Font.Bold = true;
+                    worksheet.Cell("A3").Style.Font.FontSize = 14;
+
+                    worksheet.Cell("A4").Value = "Total Payments:";
+                    worksheet.Cell("B4").Value = report.Summary.TotalPayments;
+                    worksheet.Cell("A5").Value = "Total Gross Amount:";
+                    worksheet.Cell("B5").Value = report.Summary.TotalGrossAmount;
+                    worksheet.Cell("A6").Value = "Total TDS Amount:";
+                    worksheet.Cell("B6").Value = report.Summary.TotalTDSAmount;
+                    worksheet.Cell("A7").Value = "Total Net Amount:";
+                    worksheet.Cell("B7").Value = report.Summary.TotalNetAmount;
+                }
+
+                // Add table headers
+                var headerRow = options.IncludeSummary ? 9 : 3;
+                worksheet.Cell($"A{headerRow}").Value = "Sl No";
+                worksheet.Cell($"B{headerRow}").Value = "Voucher No.";
+                worksheet.Cell($"C{headerRow}").Value = "Code";
+                worksheet.Cell($"D{headerRow}").Value = "Name";
+                worksheet.Cell($"E{headerRow}").Value = "PAN";
+                worksheet.Cell($"F{headerRow}").Value = "Date";
+                worksheet.Cell($"G{headerRow}").Value = "TDS Deducted on";
+                worksheet.Cell($"H{headerRow}").Value = "TDS %";
+                worksheet.Cell($"I{headerRow}").Value = "TDS Amount";
+                worksheet.Cell($"J{headerRow}").Value = "Gross CN Value";
+                worksheet.Cell($"K{headerRow}").Value = "Project Name";
+                worksheet.Cell($"L{headerRow}").Value = "CoA Name";
+                worksheet.Cell($"M{headerRow}").Value = "Narration";
+                worksheet.Cell($"N{headerRow}").Value = "Exemption Certificate No.";
+                worksheet.Cell($"O{headerRow}").Value = "Exemption From Dt";
+                worksheet.Cell($"P{headerRow}").Value = "Exemption To Dt";
+
+                // Style headers
+                var headerRange = worksheet.Range($"A{headerRow}:P{headerRow}");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
+
+                // Add data
+                var dataStartRow = headerRow + 1;
+                for (int i = 0; i < report.TDSItems.Count; i++)
+                {
+                    var item = report.TDSItems[i];
+                    var row = dataStartRow + i;
+
+                    worksheet.Cell($"A{row}").Value = item.SlNo;
+                    worksheet.Cell($"B{row}").Value = item.VoucherNumber;
+                    worksheet.Cell($"C{row}").Value = item.EmployeeCode;
+                    worksheet.Cell($"D{row}").Value = item.EmployeeName;
+                    worksheet.Cell($"E{row}").Value = item.PAN;
+                    worksheet.Cell($"F{row}").Value = item.PaymentDate.ToString("dd/MM/yyyy");
+                    worksheet.Cell($"G{row}").Value = item.TDSDeductedOn;
+                    worksheet.Cell($"H{row}").Value = item.TDSRate;
+                    worksheet.Cell($"I{row}").Value = item.TDSAmount;
+                    worksheet.Cell($"J{row}").Value = item.GrossValue;
+                    worksheet.Cell($"K{row}").Value = item.ProjectName;
+                    worksheet.Cell($"L{row}").Value = item.CoAName;
+                    worksheet.Cell($"M{row}").Value = item.Narration;
+                    worksheet.Cell($"N{row}").Value = item.ExemptionCertificateNo;
+                    worksheet.Cell($"O{row}").Value = item.ExemptionFromDate?.ToString("dd/MM/yyyy");
+                    worksheet.Cell($"P{row}").Value = item.ExemptionToDate?.ToString("dd/MM/yyyy");
+                }
+
+                // Auto-fit columns
+                worksheet.Columns().AdjustToContents();
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                return stream.ToArray();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error generating TDS Brokerage Excel report: {ex.Message}");
+            }
+        }
+
+        public async Task<string> ExportTDSBrokerageReportToCsvAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options)
+        {
+            try
+            {
+                var csv = new StringBuilder();
+
+                // Add headers
+                csv.AppendLine("Sl No,Voucher No,Employee Code,Employee Name,Vendor Code,Vendor Name,PAN,Payment Date,Gross Amount,TDS Rate,TDS Amount,Net Amount,Status,Lease Ref,Month,Year,Financial Year");
+
+                // Add data
+                foreach (var item in report.TDSItems)
+                {
+                    csv.AppendLine($"{item.SlNo}," +
+                                 $"\"{item.VoucherNumber}\"," +
+                                 $"\"{item.EmployeeCode}\"," +
+                                 $"\"{item.EmployeeName}\"," +
+                                 $"\"{item.VendorCode}\"," +
+                                 $"\"{item.VendorName}\"," +
+                                 $"\"{item.PAN}\"," +
+                                 $"\"{item.PaymentDate:dd/MM/yyyy}\"," +
+                                 $"{item.GrossValue}," +
+                                 $"{item.TDSRate}," +
+                                 $"{item.TDSAmount}," +
+                                 $"{item.NetPayableAmount}," +
+                                 $"\"{item.PaymentStatus}\"," +
+                                 $"\"{item.LeaseRefNo}\"," +
+                                 $"\"{item.Month}\"," +
+                                 $"\"{item.Year}\"," +
+                                 $"\"{item.FinancialYear}\"");
+                }
+
+                return csv.ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error generating TDS Brokerage CSV report: {ex.Message}");
+            }
+        }
+
+        // Helper method to calculate TDS Brokerage summary
+        private async Task<TDSBrokerageReportSummary> CalculateTDSBrokerageSummaryAsync(IDbConnection connection, TDSBrokerageReportFilterModel filter)
+        {
+            var summarySql = @"
+                SELECT 
+                    COUNT(*) as TotalPayments,
+                    SUM(ISNULL(bp.BrokerageAmount, 0)) as TotalGrossAmount,
+                    SUM(ISNULL(TDSAmount, 0)) as TotalTDSAmount,
+                    SUM(ISNULL(NetPayableAmount, 0)) as TotalNetAmount,
+                    AVG(ISNULL(TDSRate, 0)) as AverageTDSRate,
+                    COUNT(DISTINCT bp.EmployeeId) as UniqueEmployees,
+                    COUNT(DISTINCT bp.VendorId) as UniqueVendors,
+                    COUNT(DISTINCT v.PanNumber) as UniquePANs
+                FROM BrokeragePayment bp
+                INNER JOIN Employees e ON bp.EmployeeId = e.Id
+                INNER JOIN Vendors v ON bp.VendorId = v.Id
+                INNER JOIN Leases l ON bp.LeaseId = l.Id
+                WHERE 1=1";
+
+            // Add filters
+            if (filter.FromDate.HasValue)
+                summarySql += " AND bp.PaymentDate >= @FromDate";
+            if (filter.ToDate.HasValue)
+                summarySql += " AND bp.PaymentDate <= @ToDate";
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                summarySql += " AND e.Code LIKE @EmployeeCode";
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                summarySql += " AND e.Name LIKE @EmployeeName";
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                summarySql += " AND v.VendorCode LIKE @VendorCode";
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                summarySql += " AND v.VendorName LIKE @VendorCode";
+            if (!string.IsNullOrEmpty(filter.PAN))
+                summarySql += " AND v.PanNumber LIKE @PAN";
+            if (filter.TDSApplicableId.HasValue)
+                summarySql += " AND bp.TDSApplicableId = @TDSApplicableId";
+            if (filter.MinAmount.HasValue)
+                summarySql += " AND bp.BrokerageAmount >= @MinAmount";
+            if (filter.MaxAmount.HasValue)
+                summarySql += " AND bp.BrokerageAmount <= @MaxAmount";
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                summarySql += " AND bp.PaymentStatus = @PaymentStatus";
+            if (!string.IsNullOrEmpty(filter.FinancialYear))
+                summarySql += " AND CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) + '-' + RIGHT(CAST(YEAR(PaymentMonth) + 1 AS VARCHAR(4)), 2) = @FinancialYear";
+            if (!string.IsNullOrEmpty(filter.Month))
+                summarySql += " AND DATENAME(MONTH, bp.PaymentMonth) = @Month";
+            if (!filter.IncludeZeroTDS)
+                summarySql += " AND bp.TDSAmount > 0";
+
+            var parameters = BuildTDSBrokerageReportParameters(filter);
+            var summary = await connection.QueryFirstOrDefaultAsync<TDSBrokerageReportSummary>(summarySql, parameters);
+            return summary ?? new TDSBrokerageReportSummary();
+        }
+
+        // Helper method to test basic TDS Brokerage query without filters
+        public async Task<bool> TestBasicTDSBrokerageQueryAsync()
+        {
+            try
+            {
+                using var connection = CreateConnection();
+                
+                var testSql = @"
+                    SELECT TOP 5
+                        bp.Id,
+                        e.Code as EmployeeCode,
+                        e.Name as EmployeeName,
+                        v.VendorCode,
+                        v.VendorName,
+                        bp.PaymentDate,
+                        bp.BrokerageAmount,
+                        bp.TDSAmount,
+                        bp.TDSRate,
+                        bp.PaymentStatus
+                    FROM BrokeragePayment bp
+                    INNER JOIN Employees e ON bp.EmployeeId = e.Id
+                    INNER JOIN Vendors v ON bp.VendorId = v.Id
+                    INNER JOIN Leases l ON bp.LeaseId = l.Id
+                    ORDER BY bp.PaymentDate DESC";
+
+                var results = await connection.QueryAsync(testSql);
+                
+                // Log the results for debugging
+                Console.WriteLine("=== BASIC TDS BROKERAGE QUERY TEST ===");
+                foreach (var item in results)
+                {
+                    Console.WriteLine($"ID: {item.Id}, BrokerageAmount: {item.BrokerageAmount}, TDSRate: {item.TDSRate}, TDSAmount: {item.TDSAmount}");
+                }
+                
+                return results.Any(); // Return true if we got results, false otherwise
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in TestBasicTDSBrokerageQueryAsync: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Helper method to get TDS Brokerage diagnostic information
+        public async Task<object> GetTDSBrokerageDiagnosticInfoAsync()
+        {
+            using var connection = CreateConnection();
+            
+            var diagnosticSql = @"
+                SELECT 
+                    (SELECT COUNT(*) FROM BrokeragePayment) as TotalBrokeragePayments,
+                    (SELECT COUNT(*) FROM BrokeragePayment WHERE TDSAmount > 0) as TotalWithTDS,
+                    (SELECT COUNT(*) FROM BrokeragePayment WHERE TDSAmount = 0 OR TDSAmount IS NULL) as TotalWithoutTDS,
+                    (SELECT COUNT(*) FROM Employees WHERE IsActive = 1) as TotalEmployees,
+                    (SELECT COUNT(*) FROM Vendors WHERE IsActive = 1) as TotalVendors,
+                    (SELECT COUNT(*) FROM Leases WHERE IsActiveRecord = 1) as TotalLeases,
+                    (SELECT COUNT(*) FROM TDSApplicable) as TotalTDSApplicable,
+                    (SELECT MIN(PaymentDate) FROM BrokeragePayment) as EarliestPaymentDate,
+                    (SELECT MAX(PaymentDate) FROM BrokeragePayment) as LatestPaymentDate,
+                    (SELECT COUNT(*) FROM BrokeragePayment bp 
+                     INNER JOIN Employees e ON bp.EmployeeId = e.Id 
+                     INNER JOIN Vendors v ON bp.VendorId = v.Id 
+                     INNER JOIN Leases l ON bp.LeaseId = l.Id) as TotalWithJoins";
+
+            var result = await connection.QueryFirstOrDefaultAsync(diagnosticSql);
+            
+            return new
+            {
+                TotalBrokeragePayments = result?.TotalBrokeragePayments ?? 0,
+                TotalWithTDS = result?.TotalWithTDS ?? 0,
+                TotalWithoutTDS = result?.TotalWithoutTDS ?? 0,
+                TotalEmployees = result?.TotalEmployees ?? 0,
+                TotalVendors = result?.TotalVendors ?? 0,
+                TotalLeases = result?.TotalLeases ?? 0,
+                TotalTDSApplicable = result?.TotalTDSApplicable ?? 0,
+                TotalWithJoins = result?.TotalWithJoins ?? 0,
+                EarliestPaymentDate = result?.EarliestPaymentDate,
+                LatestPaymentDate = result?.LatestPaymentDate,
+                HasData = (result?.TotalBrokeragePayments ?? 0) > 0,
+                HasTDSData = (result?.TotalWithTDS ?? 0) > 0,
+                HasValidJoins = (result?.TotalWithJoins ?? 0) > 0
+            };
+        }
+
+        // Helper methods for TDS Brokerage Report queries
+        private string BuildTDSBrokerageReportCountQuery(TDSBrokerageReportFilterModel filter)
+        {
+            var sql = @"
+                SELECT COUNT(*)
+                FROM BrokeragePayment bp
+                INNER JOIN Employees e ON bp.EmployeeId = e.Id
+                INNER JOIN Vendors v ON bp.VendorId = v.Id
+                INNER JOIN Leases l ON bp.LeaseId = l.Id
+                LEFT JOIN TDSApplicable t ON bp.TDSApplicableId = t.Id
+                WHERE 1=1";
+
+            // Add filters
+            if (filter.FromDate.HasValue)
+                sql += " AND bp.PaymentDate >= @FromDate";
+            if (filter.ToDate.HasValue)
+                sql += " AND bp.PaymentDate <= @ToDate";
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                sql += " AND e.Code LIKE @EmployeeCode";
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                sql += " AND e.Name LIKE @EmployeeName";
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                sql += " AND v.VendorCode LIKE @VendorCode";
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                sql += " AND v.VendorName LIKE @VendorName";
+            if (!string.IsNullOrEmpty(filter.PAN))
+                sql += " AND v.PanNumber LIKE @PAN";
+            if (filter.TDSApplicableId.HasValue)
+                sql += " AND bp.TDSApplicableId = @TDSApplicableId";
+            if (filter.MinAmount.HasValue)
+                sql += " AND bp.BrokerageAmount >= @MinAmount";
+            if (filter.MaxAmount.HasValue)
+                sql += " AND bp.BrokerageAmount <= @MaxAmount";
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                sql += " AND bp.PaymentStatus = @PaymentStatus";
+            if (!string.IsNullOrEmpty(filter.FinancialYear))
+                sql += " AND CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) + '-' + RIGHT(CAST(YEAR(PaymentMonth) + 1 AS VARCHAR(4)), 2) = @FinancialYear";
+            if (!string.IsNullOrEmpty(filter.Month))
+                sql += " AND DATENAME(MONTH, bp.PaymentMonth) = @Month";
+            if (!filter.IncludeZeroTDS)
+                sql += " AND bp.TDSAmount > 0";
+
+            return sql;
+        }
+
+        private string BuildTDSBrokerageReportQuery(TDSBrokerageReportFilterModel filter)
+        {
+            var sql = @"
+                SELECT 
+                    ROW_NUMBER() OVER (ORDER BY bp.PaymentDate DESC) as SlNo,
+                    'CN/' + RIGHT('000000' + CAST(bp.Id AS VARCHAR(6)), 6) + '/25-26' as VoucherNumber,
+                    e.Code as EmployeeCode,
+                    e.Name as EmployeeName,
+                    v.VendorCode,
+                    v.VendorName,
+                    v.PanNumber as PAN,
+                    bp.PaymentDate as PaymentDate,
+                    CAST(bp.BrokerageAmount AS DECIMAL(18,2)) as TDSDeductedOn,
+                    CAST(bp.TDSRate AS DECIMAL(5,2)) as TDSRate,
+                    CAST(bp.TDSAmount AS DECIMAL(18,2)) as TDSAmount,
+                    CAST(bp.BrokerageAmount AS DECIMAL(18,2)) as GrossValue,
+                    '' as ProjectName,
+                    '70800 : Rent Paid (Rent Free Accommodation)' as CoAName,
+                    'Brokerage Payment for the Month of ' + DATENAME(MONTH, bp.PaymentMonth) + ' ' + CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) + 
+                    ' on behalf of ' + e.Code + ': ' + e.Name + ' (@' + CAST(bp.BrokerageAmount AS VARCHAR(20)) + '/-, ' + CAST(bp.TDSRate AS VARCHAR(10)) + '%TDS deducted)' as Narration,
+                    '' as ExemptionCertificateNo,
+                    NULL as ExemptionFromDate,
+                    NULL as ExemptionToDate,
+                    'Brokerage' as PaymentType,
+                    bp.PaymentStatus,
+                    l.RefNo as LeaseRefNo,
+                    DATENAME(MONTH, bp.PaymentMonth) as Month,
+                    CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) as Year,
+                    CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) + '-' + RIGHT('0' + CAST(YEAR(bp.PaymentMonth) + 1 AS VARCHAR(2)), 2) as FinancialYear,
+                    t.Name as TDSApplicableName,
+                    '' as TransactionReference,
+                    '' as Remarks,
+                    bp.CreatedDate as CreatedDate,
+                    '' as CreatedBy,
+                    CAST(bp.NetPayableAmount AS DECIMAL(18,2)) as NetPayableAmount,
+                    bp.DSCApprovalStatus
+                FROM BrokeragePayment bp
+                INNER JOIN Employees e ON bp.EmployeeId = e.Id
+                INNER JOIN Vendors v ON bp.VendorId = v.Id
+                INNER JOIN Leases l ON bp.LeaseId = l.Id
+                LEFT JOIN TDSApplicable t ON bp.TDSApplicableId = t.Id
+                WHERE 1=1";
+
+            // Add filters
+            if (filter.FromDate.HasValue)
+                sql += " AND bp.PaymentDate >= @FromDate";
+            if (filter.ToDate.HasValue)
+                sql += " AND bp.PaymentDate <= @ToDate";
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                sql += " AND e.Code LIKE @EmployeeCode";
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                sql += " AND e.Name LIKE @EmployeeName";
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                sql += " AND v.VendorCode LIKE @VendorCode";
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                sql += " AND v.VendorName LIKE @VendorName";
+            if (!string.IsNullOrEmpty(filter.PAN))
+                sql += " AND v.PanNumber LIKE @PAN";
+            if (filter.TDSApplicableId.HasValue)
+                sql += " AND bp.TDSApplicableId = @TDSApplicableId";
+            if (filter.MinAmount.HasValue)
+                sql += " AND bp.BrokerageAmount >= @MinAmount";
+            if (filter.MaxAmount.HasValue)
+                sql += " AND bp.BrokerageAmount <= @MaxAmount";
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                sql += " AND bp.PaymentStatus = @PaymentStatus";
+            if (!string.IsNullOrEmpty(filter.FinancialYear))
+                sql += " AND CAST(YEAR(bp.PaymentMonth) AS VARCHAR(4)) + '-' + RIGHT(CAST(YEAR(PaymentMonth) + 1 AS VARCHAR(4)), 2) = @FinancialYear";
+            if (!string.IsNullOrEmpty(filter.Month))
+                sql += " AND DATENAME(MONTH, bp.PaymentMonth) = @Month";
+            if (!filter.IncludeZeroTDS)
+                sql += " AND bp.TDSAmount > 0";
+
+            // Add sorting
+            sql += $" ORDER BY {filter.SortBy} {filter.SortOrder}";
+
+            // Add pagination
+            sql += " OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+            return sql;
+        }
+
+        private DynamicParameters BuildTDSBrokerageReportParameters(TDSBrokerageReportFilterModel filter)
+        {
+            var parameters = new DynamicParameters();
+            
+            parameters.Add("@FromDate", filter.FromDate);
+            parameters.Add("@ToDate", filter.ToDate);
+            
+            // Only add parameters if they have values to avoid SQL issues
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                parameters.Add("@EmployeeCode", $"%{filter.EmployeeCode}%");
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                parameters.Add("@EmployeeName", $"%{filter.EmployeeName}%");
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                parameters.Add("@VendorCode", $"%{filter.VendorCode}%");
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                parameters.Add("@VendorName", $"%{filter.VendorName}%");
+            if (!string.IsNullOrEmpty(filter.PAN))
+                parameters.Add("@PAN", $"%{filter.PAN}%");
+            if (filter.TDSApplicableId.HasValue)
+                parameters.Add("@TDSApplicableId", filter.TDSApplicableId);
+            if (filter.MinAmount.HasValue)
+                parameters.Add("@MinAmount", filter.MinAmount);
+            if (filter.MaxAmount.HasValue)
+                parameters.Add("@MinAmount", filter.MaxAmount);
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                parameters.Add("@PaymentStatus", filter.PaymentStatus);
+            if (!string.IsNullOrEmpty(filter.FinancialYear))
+                parameters.Add("@FinancialYear", filter.FinancialYear);
+            if (!string.IsNullOrEmpty(filter.Month))
+                parameters.Add("@Month", filter.Month);
+
+            return parameters;
         }
     }
 }

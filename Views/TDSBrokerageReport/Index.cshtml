@@ -1,0 +1,630 @@
+@model TDSBrokerageReportModel
+@{
+    ViewData["Title"] = "TDS Brokerage Report - Lease Brokerage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .status-active { background-color: #dcfce7; color: #166534; }
+    .status-pending { background-color: #fef3c7; color: #d97706; }
+    .status-inactive { background-color: #fee2e2; color: #dc2626; }
+    .chart-container {
+        min-height: 300px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2rem;
+        gap: 0.5rem;
+    }
+    .pagination-info {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+</style>
+
+<!-- Header -->
+<header class="gradient-bg text-white">
+    <div class="container mx-auto px-6 py-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">TDS Brokerage Report - Lease Brokerage</h1>
+                <p class="text-blue-100">Comprehensive Tax Deducted at Source reporting for brokerage payments</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="glass-effect rounded-lg px-4 py-2">
+                    <span class="text-sm">Last Updated: <span id="lastUpdated">@DateTime.Now.ToString("dd MMM yyyy HH:mm")</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container mx-auto px-6 py-8">
+    <!-- No Data Alert -->
+    @if (Model.TotalRecords == 0 && ViewBag.DiagnosticInfo != null)
+    {
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i class="ri-information-line text-orange-600 text-xl mr-3"></i>
+                <div>
+                    <h4 class="text-orange-800 font-medium">No TDS Brokerage Data Available</h4>
+                    <p class="text-orange-700 text-sm mt-1">
+                        @if (!ViewBag.DiagnosticInfo.HasData)
+                        {
+                            <span>No Brokerage Payments found in the database. Please create some payments first.</span>
+                        }
+                        else if (!ViewBag.DiagnosticInfo.HasTDSData)
+                        {
+                            <span>Brokerage Payments exist but none have TDS amounts. Try checking "Include Zero TDS Payments" or configure TDS rates.</span>
+                        }
+                        else
+                        {
+                            <span>No data matches your current filter criteria. Try adjusting the filters below.</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Quick Stats Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Brokerage Payments</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalPayments">@Model.Summary.TotalPayments</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-calendar-check-line text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Gross Brokerage Amount</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalGrossAmount">₹@Model.Summary.TotalGrossAmount.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-money-dollar-circle-line text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">TDS Amount</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalTDSAmount">₹@Model.Summary.TotalTDSAmount.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-percent-line text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Unique Vendors</p>
+                    <p class="text-2xl font-bold text-gray-900" id="uniqueVendors">@Model.Summary.UniqueVendors</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-team-line text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Configuration and Data -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Filter Configuration -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold mb-6 flex items-center">
+                    <i class="ri-settings-line mr-2 text-primary"></i>
+                    Filter Configuration
+                </h3>
+                
+                <form id="tdsBrokerageReportForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="FromDate" name="FromDate" value="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <input type="date" id="ToDate" name="ToDate" value="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employee Code</label>
+                        <input type="text" id="EmployeeCode" name="EmployeeCode" value="@Model.Filter.EmployeeCode" placeholder="Enter employee code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employee Name</label>
+                        <input type="text" id="EmployeeName" name="EmployeeName" value="@Model.Filter.EmployeeName" placeholder="Enter employee name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Code</label>
+                        <input type="text" id="VendorCode" name="VendorCode" value="@Model.Filter.VendorCode" placeholder="Enter vendor code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Name</label>
+                        <input type="text" id="VendorName" name="VendorName" value="@Model.Filter.VendorName" placeholder="Enter vendor name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">PAN Number</label>
+                        <input type="text" id="PAN" name="PAN" value="@Model.Filter.PAN" placeholder="Enter PAN number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">TDS Applicable</label>
+                        <select id="TDSApplicableId" name="TDSApplicableId" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="" selected>All TDS Types</option>
+                            @if (ViewBag.TDSApplicable != null)
+                            {
+                                @foreach (var tds in ViewBag.TDSApplicable)
+                                {
+                                    <option value="@tds.Id">@tds.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Financial Year</label>
+                        <select id="FinancialYear" name="FinancialYear" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            @if (ViewBag.FinancialYearOptions != null)
+                            {
+                                @foreach (var year in ViewBag.FinancialYearOptions)
+                                {
+                                    var isSelected = Model.Filter.FinancialYear == year.Value ? "selected" : "";
+                                    <option value="@year.Value" selected=@isSelected>@year.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                        <select id="Month" name="Month" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            @if (ViewBag.MonthOptions != null)
+                            {
+                                @foreach (var month in ViewBag.MonthOptions)
+                                {
+                                    var isSelected = Model.Filter.Month == month.Value ? "selected" : "";
+                                    <option value="@month.Value" selected=@isSelected>@month.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                        <select id="PaymentStatus" name="PaymentStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="" selected>All Status</option>
+                            @if (ViewBag.PaymentStatusOptions != null)
+                            {
+                                @foreach (var status in ViewBag.PaymentStatusOptions)
+                                {
+                                    var isSelected = Model.Filter.PaymentStatus == status.Value ? "selected" : "";
+                                    <option value="@status.Value" selected=@isSelected>@status.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                        <select id="SortBy" name="SortBy" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            @if (ViewBag.SortOptions != null)
+                            {
+                                @foreach (var sort in ViewBag.SortOptions)
+                                {
+                                    var isSelected = Model.Filter.SortBy == sort.Value ? "selected" : "";
+                                    <option value="@sort.Value" selected=@isSelected>@sort.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
+                        <select id="SortOrder" name="SortOrder" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="DESC" selected="@(Model.Filter.SortOrder == "DESC")">Descending</option>
+                            <option value="ASC" selected="@(Model.Filter.SortOrder == "ASC")">Ascending</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="IncludeZeroTDS" name="IncludeZeroTDS" value="true" @(Model.Filter.IncludeZeroTDS ? "checked" : "") class="rounded border-gray-300 text-primary focus:ring-primary">
+                        <label for="IncludeZeroTDS" class="text-sm text-gray-700">Include Zero TDS Payments</label>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                            <i class="ri-search-line mr-2"></i>Generate Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Report Data -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i class="ri-file-list-line mr-2 text-primary"></i>
+                        TDS Brokerage Report Data
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportReport('PDF')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">
+                            <i class="ri-file-pdf-line mr-1"></i>PDF
+                        </button>
+                        <button onclick="exportReport('EXCEL')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">
+                            <i class="ri-file-excel-line mr-1"></i>Excel
+                        </button>
+                        <button onclick="exportReport('CSV')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                            <i class="ri-file-text-line mr-1"></i>CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3">Sl No</th>
+                                <th class="px-6 py-3">Voucher No.</th>
+                                <th class="px-6 py-3">Code</th>
+                                <th class="px-6 py-3">Name</th>
+                                <th class="px-6 py-3">PAN</th>
+                                <th class="px-6 py-3">Date</th>
+                                <th class="px-6 py-3">TDS Deducted on</th>
+                                <th class="px-6 py-3">TDS %</th>
+                                <th class="px-6 py-3">TDS Amount</th>
+                                <th class="px-6 py-3">Gross CN Value</th>
+                                <th class="px-6 py-3">Project Name</th>
+                                <th class="px-6 py-3">CoA Name</th>
+                                <th class="px-6 py-3">Narration</th>
+                                <th class="px-6 py-3">Exemption Certificate No.</th>
+                                <th class="px-6 py-3">Exemption From Dt</th>
+                                <th class="px-6 py-3">Exemption To Dt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            @if (Model.TDSItems != null && Model.TDSItems.Any())
+                            {
+                                @foreach (var item in Model.TDSItems)
+                                {
+                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                        <td class="px-6 py-4">@item.SlNo</td>
+                                        <td class="px-6 py-4 font-medium">@item.VoucherNumber</td>
+                                        <td class="px-6 py-4 font-mono">@item.EmployeeCode</td>
+                                        <td class="px-6 py-4">@item.EmployeeName</td>
+                                        <td class="px-6 py-4 font-mono">@item.PAN</td>
+                                        <td class="px-6 py-4">@item.PaymentDate.ToString("dd/MM/yyyy")</td>
+                                        <td class="px-6 py-4 font-medium">₹@item.TDSDeductedOn.ToString("N2")</td>
+                                        <td class="px-6 py-4">@item.TDSRate%</td>
+                                        <td class="px-6 py-4 font-medium text-purple-600">₹@item.TDSAmount.ToString("N2")</td>
+                                        <td class="px-6 py-4 font-medium text-green-600">₹@item.GrossValue.ToString("N2")</td>
+                                        <td class="px-6 py-4">@item.ProjectName</td>
+                                        <td class="px-6 py-4">@item.CoAName</td>
+                                        <td class="px-6 py-4">@item.Narration</td>
+                                        <td class="px-6 py-4">@item.ExemptionCertificateNo</td>
+                                        <td class="px-6 py-4">@(item.ExemptionFromDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                        <td class="px-6 py-4">@(item.ExemptionToDate?.ToString("dd/MM/yyyy") ?? "")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="12" class="px-6 py-12 text-center">
+                                        <div class="text-gray-500">
+                                            <i class="ri-inbox-line text-4xl mb-4"></i>
+                                            <h5 class="text-lg font-medium">No TDS Brokerage data found</h5>
+                                            <p class="text-sm">Try adjusting your filter options to see more results.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="paginationContainer" class="mt-6 @(Model.TotalRecords <= 20 ? "hidden" : "")">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-gray-700">
+                            Showing <span id="recordCount">@Model.TotalRecords</span> records
+                        </div>
+                        <div class="flex items-center space-x-2" id="pagination">
+                            <!-- Pagination will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        <span>Generating report...</span>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform translate-y-full hidden">
+    <span id="toastMessage"></span>
+</div>
+
+@section Scripts {
+    <script>
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showPegging(paymentId, paymentType) {
+            // Implementation for showing pegging details
+            console.log('Show pegging for payment:', paymentId, paymentType);
+        }
+
+        function updatePagination(totalRecords) {
+            const pagination = document.getElementById('pagination');
+            const pageSize = 20;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = '';
+            
+            // Previous button
+            paginationHtml += `
+                <button onclick="changePage(${Math.max(1, 1 - 1)})" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= 1 - 2 && i <= 1 + 2)) {
+                    paginationHtml += `
+                        <button onclick="changePage(${i})" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 ${i === 1 ? 'bg-primary text-white' : ''}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === 1 - 3 || i === 1 + 3) {
+                    paginationHtml += '<span class="px-2 py-2 text-gray-500">...</span>';
+                }
+            }
+
+            // Next button
+            paginationHtml += `
+                <button onclick="changePage(${Math.min(totalPages, 1 + 1)})" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+            `;
+
+            pagination.innerHTML = paginationHtml;
+        }
+
+        function changePage(page) {
+            const form = document.getElementById('tdsBrokerageReportForm');
+            const pageInput = document.createElement('input');
+            pageInput.type = 'hidden';
+            pageInput.name = 'Page';
+            pageInput.value = page;
+            form.appendChild(pageInput);
+            form.submit();
+        }
+
+        // Form submission
+        document.getElementById('tdsBrokerageReportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showLoading();
+            
+            const formData = new FormData(this);
+            formData.append('Page', '1'); // Reset to first page on new search
+            
+            fetch('@Url.Action("Details", "TDSBrokerageReport")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateReportTable(data.data);
+                    updateSummary(data.data.summary);
+                    updatePagination(data.data.totalRecords);
+                } else {
+                    showToast(data.message || 'Error loading report data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error loading report data', 'error');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        });
+
+        function updateReportTable(data) {
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+
+            if (data.tdsItems && data.tdsItems.length > 0) {
+                data.tdsItems.forEach((item, index) => {
+                    const row = `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4">${item.slNo}</td>
+                            <td class="px-6 py-4 font-medium">${item.voucherNumber}</td>
+                            <td class="px-6 py-4 font-mono">${item.employeeCode}</td>
+                            <td class="px-6 py-4">${item.employeeName}</td>
+                            <td class="px-6 py-4 font-mono">${item.pan}</td>
+                            <td class="px-6 py-4">${new Date(item.paymentDate).toLocaleDateString('en-GB')}</td>
+                            <td class="px-6 py-4 font-medium">₹${parseFloat(item.tdsDeductedOn).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4">${item.tdsRate}%</td>
+                            <td class="px-6 py-4 font-medium text-purple-600">₹${parseFloat(item.tdsAmount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4 font-medium text-green-600">₹${parseFloat(item.grossValue).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4">${item.projectName || ''}</td>
+                            <td class="px-6 py-4">${item.coAName || ''}</td>
+                            <td class="px-6 py-4">${item.narration || ''}</td>
+                            <td class="px-6 py-4">${item.exemptionCertificateNo || ''}</td>
+                            <td class="px-6 py-4">${item.exemptionFromDate ? new Date(item.exemptionFromDate).toLocaleDateString('en-GB') : ''}</td>
+                            <td class="px-6 py-4">${item.exemptionToDate ? new Date(item.exemptionToDate).toLocaleDateString('en-GB') : ''}</td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            } else {
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td colspan="12" class="px-6 py-12 text-center">
+                            <div class="text-gray-500">
+                                <i class="ri-inbox-line text-4xl mb-4"></i>
+                                <h5 class="text-lg font-medium">No TDS Brokerage data found</h5>
+                                <p class="text-sm">Try adjusting your filter options to see more results.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            }
+            
+            $('#recordCount').text(data.totalRecords || 0);
+        }
+
+        function updateSummary(summary) {
+            $('#totalPayments').text(summary.totalPayments || 0);
+            $('#totalGrossAmount').text('₹' + (parseFloat(summary.totalGrossAmount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
+            $('#totalTDSAmount').text('₹' + (parseFloat(summary.totalTDSAmount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
+            $('#uniqueVendors').text(summary.uniqueVendors || 0);
+        }
+
+        function exportReport(format) {
+            showLoading();
+            const formData = new FormData(document.getElementById('tdsBrokerageReportForm'));
+            formData.append('format', format);
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Export", "TDSBrokerageReport")';
+            
+            for (let [key, value] of formData.entries()) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+            
+            const checkboxInput = document.createElement('input');
+            checkboxInput.type = 'hidden';
+            checkboxInput.name = 'IncludeZeroTDS';
+            checkboxInput.value = document.getElementById('IncludeZeroTDS').checked;
+            form.appendChild(checkboxInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            setTimeout(() => {
+                hideLoading();
+                showToast('Export completed successfully!');
+            }, 2000);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = `fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform ${type === 'error' ? 'bg-red-600' : 'bg-primary'} text-white`;
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('hidden');
+            toast.classList.add('translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        $(document).ready(function() {
+            // Initialize pagination
+            updatePagination(@Model.TotalRecords);
+            
+            // Set default date range if not set
+            if (!$('#FromDate').val()) {
+                $('#FromDate').val(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+            }
+            if (!$('#ToDate').val()) {
+                $('#ToDate').val(new Date().toISOString().split('T')[0]);
+            }
+            
+            // Set default Financial Year to current year if not set
+            if (!$('#FinancialYear').val()) {
+                var currentYear = new Date().getFullYear();
+                var currentFinancialYear = currentYear + '-' + (currentYear + 1).toString().substring(2);
+                $('#FinancialYear').val(currentFinancialYear);
+            }
+            
+            // Set default Month to current month if not set
+            if (!$('#Month').val()) {
+                var currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
+                $('#Month').val(currentMonth);
+            }
+            
+            // Set default TDS Applicable to "All TDS Types" if not set
+            if (!$('#TDSApplicableId').val()) {
+                $('#TDSApplicableId').val('');
+            }
+            
+            // Set default Payment Status to "All Status" if not set
+            if (!$('#PaymentStatus').val()) {
+                $('#PaymentStatus').val('');
+            }
+            
+            // Show pagination if there are multiple pages
+            if (@Model.TotalRecords > 20) {
+                $('#paginationContainer').show();
+            }
+        });
+    </script>
+}

@@ -129,6 +129,11 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Dashboard}/{action=index}/{id?}");
 
+// Add specific route for TDS Brokerage Report
+app.MapControllerRoute(
+    name: "TDSBrokerageReport",
+    pattern: "TDSBrokerageReport/{action=Index}/{id?}");
+
 app.MapControllers(); // For API controllers
 
 // Create default admin user if none exists
