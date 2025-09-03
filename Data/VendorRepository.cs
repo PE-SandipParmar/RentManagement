@@ -134,6 +134,10 @@ namespace RentManagement.Data
             using var connection = CreateConnection();
 
             var sql = @"
+	DECLARE @NewCode NVARCHAR(20)
+	SELECT @NewCode = 'OWN' + RIGHT('00000' + CAST(ISNULL(MAX(Id),0) + 1 AS VARCHAR), 5)
+	FROM Vendors
+	
                 INSERT INTO Vendors (
                     VendorCode, VendorName, PANNumber, GSTNumber, MobileNumber, AlternateNumber,
                     EmailId, Address, AccountHolderName, BankName, BranchName,
@@ -143,7 +147,7 @@ namespace RentManagement.Data
                     RejectionReason, IsActiveRecord, CreatedDate, UpdatedDate
                 )
                 VALUES (
-                    @VendorCode, @VendorName, @PANNumber, @GSTNumber, @MobileNumber, @AlternateNumber,
+                    @NewCode, @VendorName, @PANNumber, @GSTNumber, @MobileNumber, @AlternateNumber,
                     @EmailId, @Address, @AccountHolderName, @BankName, @BranchName,
                     @AccountNumber, @IFSCCode, @PropertyAddress, @TotalRentAmount,
                     @LinkedEmployees, @Status, @ApprovalStatus, @MakerUserId, @MakerUserName,

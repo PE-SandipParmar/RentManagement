@@ -72,8 +72,8 @@ namespace RentManagement.Models
         [Display(Name = "IFSC Code")]
         public string IFSCCode { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Property Address is required")]
-        [Display(Name = "Property Address")]
+        //[Required(ErrorMessage = "Property Address is required")]
+        //[Display(Name = "Property Address")]
         [StringLength(500, ErrorMessage = "Property Address cannot exceed 500 characters")]
         public string PropertyAddress { get; set; } = string.Empty;
 
