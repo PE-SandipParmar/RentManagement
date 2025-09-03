@@ -15,6 +15,10 @@ namespace RentManagement.Models
         [StringLength(200, ErrorMessage = "Vendor Name cannot exceed 200 characters")]
         public string VendorName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Vendor Role is required")]
+        [Display(Name = "Vendor Role")]
+        public string VendorRole { get; set; } = "Owner";
+
         [Required(ErrorMessage = "PAN Number is required")]
         [Display(Name = "PAN Number")]
         [RegularExpression(@"^[A-Z]{5}[0-9]{4}[A-Z]{1}$", ErrorMessage = "Invalid PAN Number format")]

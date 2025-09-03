@@ -36,5 +36,6 @@ namespace RentManagement.Data
         Task<bool> RejectEmployeeAsync(int employeeId, string checkerUserId, string checkerUserName, string rejectionReason);
         Task<bool> HasPendingChangesAsync(int employeeId);
         Task<Employee?> GetEmployeeByCodeAsync(string employeeCode);
+        Task<IEnumerable<Employee>> GetEmployeesByIdsAsync(List<int> employeeIds);
     }
 }

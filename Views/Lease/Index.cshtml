@@ -465,13 +465,16 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Owner's Name <span class="text-red-500">*</span></label>
-                            <select name="VendorId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                <option value="0">Select</option>
-                                @foreach (var item in ViewBag.Owners)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            </select>
+                            <div class="flex gap-2">
+                                <select name="VendorId" class="searchable-dropdown flex-1 px-3 py-2 border border-gray-300 rounded-md" required>
+                                    <option value="0">Select</option>
+                                    @foreach (var item in ViewBag.Owners)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                              
+                            </div>
                             <span class="text-red-600 text-sm" data-validation="VendorId"></span>
                         </div>
                     </div>
@@ -885,10 +888,13 @@
                 const employeeId = $(this).val();
                 if (employeeId && employeeId !== '0') {
                     fetchEmployeeHRA(employeeId);
+                    fetchVendorsByEmployee(employeeId);
                 } else {
                     currentEmployeeHRA = null;
                     maxAllowedRent = null;
                     updateRentInputPlaceholder();
+                    // Reset owner dropdown to show all owners
+                    resetOwnerDropdown();
                 }
             });
 
@@ -1207,6 +1213,149 @@
                 });
         }
 
+        // Function to fetch vendors by employee
+        async function fetchVendorsByEmployee(employeeId) {
+            console.log('fetchVendorsByEmployee called with employeeId:', employeeId);
+            
+            const vendorSelect = document.querySelector('select[name="VendorId"]');
+            if (!vendorSelect) {
+                console.error('Vendor select not found');
+                return;
+            }
+
+            // Show loading state
+            vendorSelect.innerHTML = '<option value="0">Loading vendors...</option>';
+            vendorSelect.disabled = true;
+
+            const url = `@Url.Action("GetVendorsByEmployee")?employeeId=${employeeId}`;
+            console.log('Fetching from URL:', url);
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('API response:', result);
+                    if (result.success) {
+                        if (result.data && result.data.length > 0) {
+                            console.log('Vendors found:', result.data.length);
+                            // Populate vendor dropdown with filtered vendors
+                            vendorSelect.innerHTML = '<option value="0">Select Owner</option>' +
+                                result.data.map(v => `<option value="${v.id}">${v.vendorName} (${v.vendorCode})</option>`).join('');
+                            
+                            // Refresh Select2 if it's initialized
+                            if ($(vendorSelect).hasClass('select2-hidden-accessible')) {
+                                $(vendorSelect).trigger('change.select2');
+                            }
+                        } else {
+                            console.log('No vendors found for employee');
+                            vendorSelect.innerHTML = '<option value="0">No owners found for this employee</option>';
+                        }
+                    } else {
+                        console.error('API returned error:', result.message);
+                        vendorSelect.innerHTML = '<option value="0">Error loading owners</option>';
+                    }
+                    vendorSelect.disabled = false;
+                    if (glbVendorId > 0) {
+
+                        document.querySelector('[name="VendorId"]').value = glbVendorId;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching vendors by employee:', error);
+                    vendorSelect.innerHTML = '<option value="0">Error loading owners</option>';
+                    vendorSelect.disabled = false;
+                });
+               
+                
+        }
+
+        // Function to restore all vendors (for editing existing leases)
+        function restoreAllVendors() {
+            console.log('Restoring all vendors for editing mode');
+            const vendorSelect = document.querySelector('select[name="VendorId"]');
+            if (!vendorSelect) {
+                console.error('Vendor select not found');
+                return;
+            }
+
+            // Restore the original vendor options from ViewBag.Owners
+            const originalOptions = @Html.Raw(Json.Serialize(ViewBag.Owners));
+            console.log('Original options from ViewBag:', originalOptions);
+            
+            if (originalOptions && originalOptions.length > 0) {
+                vendorSelect.innerHTML = '<option value="0">Select</option>' +
+                    originalOptions.map(v => `<option value="${v.Id}">${v.Name}</option>`).join('');
+                
+                // Refresh Select2 if it's initialized
+                if ($(vendorSelect).hasClass('select2-hidden-accessible')) {
+                    $(vendorSelect).trigger('change.select2');
+                }
+                console.log('All vendors restored:', originalOptions.length);
+                console.log('Vendor select innerHTML:', vendorSelect.innerHTML);
+            } else {
+                console.warn('No original vendors found in ViewBag.Owners');
+                // Fallback: try to get options from the current select
+                const currentOptions = Array.from(vendorSelect.options);
+                console.log('Current options in select:', currentOptions);
+            }
+        }
+
+        // Function to reset owner dropdown to show all owners
+        function resetOwnerDropdown() {
+            const vendorSelect = document.querySelector('select[name="VendorId"]');
+            if (!vendorSelect) {
+                return;
+            }
+
+            // Reset to original state with all owners
+            vendorSelect.innerHTML = '<option value="0">Select</option>' +
+                Array.from(document.querySelectorAll('select[name="VendorId"] option')).slice(1).map(opt => opt.outerHTML).join('');
+            
+            // Refresh Select2 if it's initialized
+            if ($(vendorSelect).hasClass('select2-hidden-accessible')) {
+                $(vendorSelect).trigger('change.select2');
+            }
+        }
+
+        // Test function to verify vendor repository is working
+        function testVendorRepository() {
+            console.log('Testing vendor repository...');
+            fetch('@Url.Action("TestVendorRepository")')
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Vendor repository test result:', result);
+                    if (result.success) {
+                        console.log('✅ Vendor repository is working:', result.message);
+                    } else {
+                        console.error('❌ Vendor repository test failed:', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error testing vendor repository:', error);
+                });
+        }
+
+        // Function to filter vendors by currently selected employee
+        function filterVendorsByCurrentEmployee() {
+            const employeeSelect = document.querySelector('select[name="EmployeeId"]');
+            const employeeId = employeeSelect ? employeeSelect.value : null;
+            
+            if (!employeeId || employeeId === '0') {
+                showAlert('warning', 'Please select an employee first to filter owners.');
+                return;
+            }
+            
+            console.log('Filtering vendors for employee ID:', employeeId);
+            fetchVendorsByEmployee(employeeId);
+        }
+
+      
+
         // Add this new function to update rent input placeholder
         function updateRentInputPlaceholder() {
             const rentInput = document.querySelector('input[name="MonthlyRentPayable"]');
@@ -1409,6 +1558,9 @@
             clearDrawerAlert();
             $('.searchable-dropdown').val(null).trigger('change');
 
+            // Reset owner dropdown to show all owners
+            resetOwnerDropdown();
+
             // Reset file upload
             uploadedFiles = [];
             existingFiles = [];
@@ -1419,13 +1571,17 @@
 
             openDrawer();
         }
-
+        var glbVendorId = 0;
         function openEditDrawer(id) {
             currentLeaseId = id;
             document.getElementById('drawerTitle').textContent = 'Edit Lease';
             document.getElementById('saveButtonText').textContent = 'Update Lease';
             clearValidationErrors();
             clearDrawerAlert();
+            
+            // Restore all vendors for editing mode
+            restoreAllVendors();
+            
             // Reset file upload arrays
             uploadedFiles = [];
             deletedFileIds = [];
@@ -1521,9 +1677,13 @@
             }, 300);
         }
         function populateForm(data) {
+            console.log('=== POPULATE FORM START ===');
             console.log('Populating form with data:', data);
             console.log('MaintenancePayment value:', data.maintenancePayment || data.MaintenancePayment);
-
+            console.log('VendorId from data:', data.vendorId || data.VendorId);
+            console.log('EmployeeId from data:', data.employeeId || data.EmployeeId);
+            console.log('=== POPULATE FORM DATA END ===');
+            glbVendorId = data.vendorId;
             document.getElementById('leaseId').value = data.id || data.Id || 0;
 
             const perquisiteType = data.perquisiteType || data.PerquisiteType || 'Non-Government';
@@ -1608,6 +1768,7 @@
                 'PayableOnOrBeforeId': ['payableOnOrBeforeId', 'PayableOnOrBeforeId']
             };
 
+            // First, set all dropdown values without triggering vendor filtering
             Object.keys(selectFieldMappings).forEach(fieldName => {
                 let value = null;
                 for (const prop of selectFieldMappings[fieldName]) {
@@ -1617,14 +1778,40 @@
                     }
                 }
                 if (value) {
+                    console.log(`Setting ${fieldName} to:`, value);
                     $(`select[name="${fieldName}"]`).val(value).trigger('change');
                     
-                    // If this is the EmployeeId field, fetch the employee HRA
-                    if (fieldName === 'EmployeeId') {
-                        fetchEmployeeHRA(value);
+                    // Special handling for VendorId to ensure it's properly set (populateForm)
+                    if (fieldName === 'VendorId') {
+                       
+                        // Force a small delay to ensure the value is set
+                        setTimeout(() => {
+                            if (vendorSelect) {
+                                console.log('After timeout - Vendor select value:', vendorSelect.value);
+                                console.log('After timeout - Expected value:', value);
+                                
+                                if (vendorSelect.value !== value.toString()) {
+                                    console.log('VendorId mismatch, forcing update');
+                                    vendorSelect.value = value;
+                                    $(vendorSelect).trigger('change');
+                                    console.log('After force update - Vendor select value:', vendorSelect.value);
+                                }
+                            }
+                        }, 100);
+                        console.log('=== VENDOR ID SETTING (populateForm) END ===');
                     }
                 }
             });
+
+            // After setting all values, fetch employee-specific data if EmployeeId exists
+            const employeeId = data.employeeId || data.EmployeeId;
+            if (employeeId) {
+                fetchEmployeeHRA(employeeId);
+                // Don't filter vendors immediately - let the user see the current vendor first
+                // fetchVendorsByEmployee(employeeId);
+            }
+
+        
         }
         function populateForm1(data) {
             console.log('Populating form with data:', data); // Debug log
@@ -1723,6 +1910,7 @@
                 'PayableOnOrBeforeId': ['payableOnOrBeforeId', 'PayableOnOrBeforeId']
             };
 
+            // First, set all dropdown values without triggering vendor filtering
             Object.keys(selectFieldMappings).forEach(fieldName => {
                 let value = null;
                 for (const prop of selectFieldMappings[fieldName]) {
@@ -1735,12 +1923,48 @@
                     console.log(`Setting select ${fieldName} to:`, value); // Debug log
                     $(`select[name="${fieldName}"]`).val(value).trigger('change');
                     
-                    // If this is the EmployeeId field, fetch the employee HRA
-                    if (fieldName === 'EmployeeId') {
-                        fetchEmployeeHRA(value);
+                    // Special handling for VendorId to ensure it's properly set (populateForm1)
+                    if (fieldName === 'VendorId') {
+                        console.log('=== VENDOR ID SETTING (populateForm1) ===');
+                        console.log('VendorId set to:', value);
+                        console.log('VendorId type:', typeof value);
+                        
+                        const vendorSelect = document.querySelector('select[name="VendorId"]');
+                        console.log('Vendor select element:', vendorSelect);
+                        console.log('Vendor select current value:', vendorSelect ? vendorSelect.value : 'N/A');
+                        console.log('Vendor select options count:', vendorSelect ? vendorSelect.options.length : 'N/A');
+                        
+                        // Force a small delay to ensure the value is set
+                        setTimeout(() => {
+                            if (vendorSelect) {
+                                console.log('After timeout - Vendor select value:', vendorSelect.value);
+                                console.log('After timeout - Expected value:', value);
+                                
+                                if (vendorSelect.value !== value.toString()) {
+                                    console.log('VendorId mismatch, forcing update');
+                                    vendorSelect.value = value;
+                                    $(vendorSelect).trigger('change');
+                                    console.log('After force update - Vendor select value:', vendorSelect.value);
+                                }
+                            }
+                        }, 100);
+                        console.log('=== VENDOR ID SETTING (populateForm1) END ===');
                     }
                 }
             });
+
+            // After setting all values, fetch employee-specific data if EmployeeId exists
+            const employeeId = data.employeeId || data.EmployeeId;
+            if (employeeId) {
+                fetchEmployeeHRA(employeeId);
+                // Don't filter vendors immediately - let the user see the current vendor first
+                // fetchVendorsByEmployee(employeeId);
+            }
+
+            // Check vendor value after form population
+            setTimeout(() => {
+                checkAndSetVendorValue();
+            }, 200);
         }
         async function saveLease() {
             clearDrawerAlert();

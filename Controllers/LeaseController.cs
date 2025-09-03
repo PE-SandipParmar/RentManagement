@@ -13,17 +13,20 @@ namespace RentManagement.Controllers
 
         private readonly ILeaseRepository _leaseRepository;
         private readonly ILeaseDocumentRepository _leaseDocumentRepository;
+        private readonly IVendorRepository _vendorRepository;
         private readonly ILogger<LeaseController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public LeaseController(
             ILeaseRepository leaseRepository,
             ILeaseDocumentRepository leaseDocumentRepository,
+            IVendorRepository vendorRepository,
             ILogger<LeaseController> logger,
             IWebHostEnvironment webHostEnvironment)
         {
             _leaseRepository = leaseRepository;
             _leaseDocumentRepository = leaseDocumentRepository;
+            _vendorRepository = vendorRepository;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -141,6 +144,85 @@ namespace RentManagement.Controllers
             {
                 _logger.LogError(ex, "Error occurred while fetching employee HRA for ID: {EmployeeId}", employeeId);
                 return Json(new { success = false, message = "An error occurred while fetching employee HRA." });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetVendorsByEmployee(int employeeId)
+        {
+            try
+            {
+                if (employeeId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid employee ID." });
+                }
+
+                // Check if vendor repository is available
+                if (_vendorRepository == null)
+                {
+                    _logger.LogError("Vendor repository is null in GetVendorsByEmployee");
+                    return Json(new { success = false, message = "Vendor repository not available." });
+                }
+
+                _logger.LogInformation("Fetching vendors for employee ID: {EmployeeId}", employeeId);
+
+                // Get vendors who have properties linked to this employee
+                var vendors = await _vendorRepository.GetVendorsByEmployeeAsync(employeeId);
+                
+                _logger.LogInformation("Found {VendorCount} vendors for employee ID: {EmployeeId}", vendors?.Count() ?? 0, employeeId);
+                
+                if (vendors != null && vendors.Any())
+                {
+                    var vendorList = vendors.Select(v => new
+                    {
+                        id = v.Id,
+                        vendorCode = v.VendorCode,
+                        vendorName = v.VendorName
+                    }).ToList();
+
+                    return Json(new { success = true, data = vendorList });
+                }
+                else
+                {
+                    return Json(new { success = true, data = new List<object>(), message = "No vendors found for this employee." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching vendors for employee ID: {EmployeeId}", employeeId);
+                return Json(new { success = false, message = "An error occurred while fetching vendors." });
+            }
+        }
+
+        // Test endpoint to verify vendor repository is working
+        [HttpGet]
+        public async Task<IActionResult> TestVendorRepository()
+        {
+            try
+            {
+                if (_vendorRepository == null)
+                {
+                    return Json(new { success = false, message = "Vendor repository is null" });
+                }
+
+                // Try to get a simple vendor list
+                var vendors = await _vendorRepository.GetApprovedVendorsAsync("", "", 1, 5);
+                
+                return Json(new { 
+                    success = true, 
+                    message = "Vendor repository is working", 
+                    vendorCount = vendors?.Count() ?? 0,
+                    repositoryType = _vendorRepository.GetType().Name
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "Vendor repository test failed", 
+                    error = ex.Message,
+                    repositoryType = _vendorRepository?.GetType().Name ?? "NULL"
+                });
             }
         }
         // AJAX: Get lease details for view/edit

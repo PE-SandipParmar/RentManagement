@@ -66,18 +66,22 @@ namespace RentManagement.Models
         [Display(Name = "Is Active Record")]
         public bool IsActiveRecord { get; set; } = true;
 
-        // Helper property to get linked employees as a list
-        public List<string> LinkedEmployeesList
+        // Helper property to get linked employees as a list of IDs
+        public List<int> LinkedEmployeesList
         {
             get
             {
                 if (string.IsNullOrEmpty(LinkedEmployees))
-                    return new List<string>();
-                return LinkedEmployees.Split(',').Select(x => x.Trim()).ToList();
+                    return new List<int>();
+                return LinkedEmployees.Split(',')
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                    .Where(id => id > 0)
+                    .ToList();
             }
             set
             {
-                LinkedEmployees = string.Join(",", value);
+                LinkedEmployees = value != null && value.Any() ? string.Join(",", value) : null;
             }
         }
 
@@ -108,7 +112,7 @@ namespace RentManagement.Models
         public Property Property { get; set; } = new Property();
         public List<Vendor> AvailableVendors { get; set; } = new List<Vendor>();
         public List<Employee> AvailableEmployees { get; set; } = new List<Employee>();
-        public List<string> SelectedEmployees { get; set; } = new List<string>();
+        public List<int> SelectedEmployees { get; set; } = new List<int>();
     }
 
     public class PropertyListViewModel

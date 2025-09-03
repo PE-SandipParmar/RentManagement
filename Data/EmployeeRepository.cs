@@ -626,6 +626,23 @@ IsActive = 1,
             return await connection.QuerySingleAsync<int>(sql, parameters);
         }
 
+        public async Task<IEnumerable<Employee>> GetEmployeesByIdsAsync(List<int> employeeIds)
+        {
+            if (employeeIds == null || !employeeIds.Any())
+                return new List<Employee>();
+
+            using var connection = CreateConnection();
+
+            var sql = @"
+                SELECT Id, Code, Name, Email, DepartmentId, DesignationId
+                FROM Employees 
+                WHERE Id IN @EmployeeIds AND IsActiveRecord = 1";
+
+            var parameters = new { EmployeeIds = employeeIds.ToArray() };
+
+            return await connection.QueryAsync<Employee>(sql, parameters);
+        }
+
         #endregion
     }
 }

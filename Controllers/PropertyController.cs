@@ -163,22 +163,28 @@ namespace RentManagement.Controllers
                     totalRecords = await _propertyRepository.GetAllPropertiesWithApprovalStatusCountAsync(searchTerm, statusFilter, vendorFilter);
                 }
 
-                var propertyList = properties.Select(p => new
+                var propertyList = new List<object>();
+                foreach (var p in properties)
                 {
-                    id = p.Id,
-                    propertyCode = p.PropertyCode,
-                    vendorId = p.VendorId,
-                    vendorCode = p.VendorCode,
-                    vendorName = p.VendorName,
-                    propertyAddress = p.PropertyAddress,
-                    totalRentAmount = p.TotalRentAmount,
-                    linkedEmployees = p.LinkedEmployees,
-                    status = p.Status,
-                    approvalStatus = (int)p.ApprovalStatus,
-                    approvalStatusText = p.ApprovalStatusText,
-                    makerUserName = p.MakerUserName,
-                    makerAction = p.MakerActionText
-                }).ToList();
+                    var employeeNames = await GetEmployeeNamesAsync(p.LinkedEmployeesList);
+                    propertyList.Add(new
+                    {
+                        id = p.Id,
+                        propertyCode = p.PropertyCode,
+                        vendorId = p.VendorId,
+                        vendorCode = p.VendorCode,
+                        vendorName = p.VendorName,
+                        propertyAddress = p.PropertyAddress,
+                        totalRentAmount = p.TotalRentAmount,
+                        linkedEmployees = p.LinkedEmployeesList,
+                        linkedEmployeeNames = employeeNames,
+                        status = p.Status,
+                        approvalStatus = (int)p.ApprovalStatus,
+                        approvalStatusText = p.ApprovalStatusText,
+                        makerUserName = p.MakerUserName,
+                        makerAction = p.MakerActionText
+                    });
+                }
 
                 return Json(new
                 {
@@ -211,6 +217,8 @@ namespace RentManagement.Controllers
                     return Json(new { success = false, message = "Property not found." });
                 }
 
+                var employeeNames = await GetEmployeeNamesAsync(property.LinkedEmployeesList);
+                
                 return Json(new
                 {
                     success = true,
@@ -224,6 +232,7 @@ namespace RentManagement.Controllers
                         propertyAddress = property.PropertyAddress,
                         totalRentAmount = property.TotalRentAmount,
                         linkedEmployees = property.LinkedEmployeesList,
+                        linkedEmployeeNames = employeeNames,
                         status = property.Status,
                         approvalStatus = property.ApprovalStatus,
                         approvalStatusText = property.ApprovalStatusText,
@@ -524,6 +533,27 @@ namespace RentManagement.Controllers
             }
 
             return errors;
+        }
+
+        #endregion
+
+        #region Private Helper Methods
+
+        private async Task<List<string>> GetEmployeeNamesAsync(List<int> employeeIds)
+        {
+            if (employeeIds == null || !employeeIds.Any())
+                return new List<string>();
+
+            try
+            {
+                var employees = await _employeeRepository.GetEmployeesByIdsAsync(employeeIds);
+                return employees.Select(e => e.Name).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting employee names for IDs: {EmployeeIds}", string.Join(",", employeeIds));
+                return new List<string>();
+            }
         }
 
         #endregion

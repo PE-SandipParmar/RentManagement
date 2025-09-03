@@ -7,6 +7,7 @@
     var isMaker = Model.CurrentUserRole == RentManagement.Models.UserRole.Maker;
 }
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <div class="p-1">
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -329,7 +330,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Owner <span class="text-red-500">*</span></label>
-                                <select name="vendorId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <select name="vendorId" required class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                     <option value="">Select Owner</option>
                                 </select>
                                 <div class="error-text hidden" data-field="vendorId"></div>
@@ -354,11 +355,16 @@
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Linked Employees</label>
+                                <div class="relative mb-2">
+                                    <input type="text" id="createEmployeeSearch" placeholder="Search employees..." 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                                    <i class="ri-search-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
                                 <div id="createEmployeeList" class="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
                                     @foreach (var employee in employees)
                                     {
-                                        <div class="flex items-center mb-2">
-                                            <input type="checkbox" name="linkedEmployees" value="@employee.Name" id="create_emp_@employee.Id" class="mr-2" />
+                                        <div class="employee-item flex items-center mb-2" data-name="@employee.Name.ToLower()" data-code="@employee.Code.ToLower()">
+                                            <input type="checkbox" name="linkedEmployees" value="@employee.Id" id="create_emp_@employee.Id" class="mr-2" />
                                             <label for="create_emp_@employee.Id" class="text-sm text-gray-700">@employee.Name (@employee.Code)</label>
                                         </div>
                                     }
@@ -405,7 +411,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Owner <span class="text-red-500">*</span></label>
-                                <select name="vendorId" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <select name="vendorId" required class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                                     <option value="">Select Owner</option>
                                 </select>
                                 <div class="error-text hidden" data-field="vendorId"></div>
@@ -430,11 +436,16 @@
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Linked Employees</label>
+                                <div class="relative mb-2">
+                                    <input type="text" id="editEmployeeSearch" placeholder="Search employees..." 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                                    <i class="ri-search-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
                                 <div id="editEmployeeList" class="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
                                     @foreach (var employee in employees)
                                     {
-                                        <div class="flex items-center mb-2">
-                                            <input type="checkbox" name="linkedEmployees" value="@employee.Name" id="edit_emp_@employee.Id" class="mr-2" />
+                                        <div class="employee-item flex items-center mb-2" data-name="@employee.Name.ToLower()" data-code="@employee.Code.ToLower()">
+                                            <input type="checkbox" name="linkedEmployees" value="@employee.Id" id="edit_emp_@employee.Id" class="mr-2" />
                                             <label for="edit_emp_@employee.Id" class="text-sm text-gray-700">@employee.Name (@employee.Code)</label>
                                         </div>
                                     }
@@ -544,6 +555,8 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Global variables
         let currentPage = @Model.CurrentPage;
@@ -553,27 +566,59 @@
         let isChecker = @(isChecker ? "true" : "false");
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+        
             initializeEventListeners();
             initializeValidation();
-            loadVendors(); // Load vendors for dropdown
+            
+            // Load vendors first, then initialize Select2
+            await loadVendors();
+            initializeSelect2();
         });
+       
 
+        function initializeSelect2() {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%'
+                //dropdownParent: $('#leaseDrawer')
+            });
+        }
         // Load vendors for dropdown
         async function loadVendors() {
             try {
+                console.log('Loading vendors...');
                 const response = await fetch('@Url.Action("GetApprovedVendors")');
                 const result = await response.json();
                 
-                if (result.success) {
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    console.log('Vendors loaded:', result.data.length, 'vendors');
                     const createSelect = document.querySelector('#createPropertyForm select[name="vendorId"]');
                     const editSelect = document.querySelector('#editPropertyForm select[name="vendorId"]');
                     
-                    const options = '<option value="">Select Owner</option>' + 
-                        result.data.map(v => `<option value="${v.id}">${v.vendorName} (${v.vendorCode})</option>`).join('');
-                    
-                    createSelect.innerHTML = options;
-                    editSelect.innerHTML = options;
+                    if (createSelect && editSelect) {
+                        const options = '<option value="">Select Owner</option>' + 
+                            result.data.map(v => `<option value="${v.id || ''}">${v.vendorName || 'Unknown'} (${v.vendorCode || 'N/A'})</option>`).join('');
+                        
+                        createSelect.innerHTML = options;
+                        editSelect.innerHTML = options;
+                        console.log('Vendor options set for both forms');
+                        
+                        // Refresh Select2 if it's already initialized
+                        if ($(createSelect).hasClass('select2-hidden-accessible')) {
+                            console.log('Refreshing Select2 for create form');
+                            $(createSelect).trigger('change.select2');
+                        }
+                        if ($(editSelect).hasClass('select2-hidden-accessible')) {
+                            console.log('Refreshing Select2 for edit form');
+                            $(editSelect).trigger('change.select2');
+                        }
+                    } else {
+                        console.warn('One or both vendor selects not found');
+                    }
+                } else {
+                    console.warn('No vendor data received or invalid format');
                 }
             } catch (error) {
                 console.error('Error loading vendors:', error);
@@ -594,6 +639,9 @@
                     checkbox.checked = this.checked;
                 });
             });
+
+            // Employee search functionality
+            initializeEmployeeSearch();
         }
 
         // Form validation
@@ -672,26 +720,68 @@
         }
 
         // Drawer functions
-        function openCreateDrawer() {
-            clearAllErrors('createPropertyForm');
-            const drawer = document.getElementById('createPropertyDrawer');
-            const panel = document.getElementById('createDrawerPanel');
-            drawer.classList.remove('hidden');
-            setTimeout(() => {
-                panel.classList.remove('translate-x-full');
-            }, 10);
-            document.body.style.overflow = 'hidden';
+        async function openCreateDrawer() {
+            try {
+                // Ensure vendors are loaded and form is reset
+                await loadVendors();
+                
+                clearAllErrors('createPropertyForm');
+                const drawer = document.getElementById('createPropertyDrawer');
+                const panel = document.getElementById('createDrawerPanel');
+                const form = document.getElementById('createPropertyForm');
+                
+                if (!drawer || !panel) {
+                    showAlert('error', 'Create drawer elements not found');
+                    return;
+                }
+                
+                // Reset form and clear any previous values
+                if (form) {
+                    form.reset();
+                    // Reset Select2 dropdowns
+                    const vendorSelect = form.querySelector('select[name="vendorId"]');
+                    if (vendorSelect && $(vendorSelect).hasClass('select2-hidden-accessible')) {
+                        $(vendorSelect).val('').trigger('change.select2');
+                    }
+                }
+                
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Error opening create drawer:', error);
+                showAlert('error', 'An error occurred while opening the create form.');
+            }
         }
 
         function closeCreateDrawer() {
             const drawer = document.getElementById('createPropertyDrawer');
             const panel = document.getElementById('createDrawerPanel');
+            const form = document.getElementById('createPropertyForm');
+            
+            if (!drawer || !panel) {
+                console.error('Create drawer elements not found');
+                return;
+            }
+            
             panel.classList.add('translate-x-full');
             setTimeout(() => {
                 drawer.classList.add('hidden');
                 document.body.style.overflow = 'auto';
-                document.getElementById('createPropertyForm').reset();
-                clearAllErrors('createPropertyForm');
+                
+                // Reset form and clear Select2 values
+                if (form) {
+                    form.reset();
+                    clearAllErrors('createPropertyForm');
+                    
+                    // Reset Select2 dropdowns
+                    const vendorSelect = form.querySelector('select[name="vendorId"]');
+                    if (vendorSelect && $(vendorSelect).hasClass('select2-hidden-accessible')) {
+                        $(vendorSelect).val('').trigger('change.select2');
+                    }
+                }
             }, 300);
         }
 
@@ -709,12 +799,29 @@
         function closeEditDrawer() {
             const drawer = document.getElementById('editPropertyDrawer');
             const panel = document.getElementById('editDrawerPanel');
+            const form = document.getElementById('editPropertyForm');
+            
+            if (!drawer || !panel) {
+                console.error('Edit drawer elements not found');
+                return;
+            }
+            
             panel.classList.add('translate-x-full');
             setTimeout(() => {
                 drawer.classList.add('hidden');
                 document.body.style.overflow = 'auto';
-                document.getElementById('editPropertyForm').reset();
-                clearAllErrors('editPropertyForm');
+                
+                // Reset form and clear Select2 values
+                if (form) {
+                    form.reset();
+                    clearAllErrors('editPropertyForm');
+                    
+                    // Reset Select2 dropdowns
+                    const vendorSelect = form.querySelector('select[name="vendorId"]');
+                    if (vendorSelect && $(vendorSelect).hasClass('select2-hidden-accessible')) {
+                        $(vendorSelect).val('').trigger('change.select2');
+                    }
+                }
             }, 300);
         }
 
@@ -740,23 +847,41 @@
 
         // CRUD Operations
         function submitCreateForm() {
-            debugger
             if (!validateForm('createPropertyForm')) {
                 return;
             }
 
             const form = document.getElementById('createPropertyForm');
+            if (!form) {
+                showAlert('error', 'Form not found');
+                return;
+            }
+
             const formData = new FormData(form);
+            const vendorId = formData.get('vendorId');
+            const propertyAddress = formData.get('propertyAddress');
+            const totalRentAmount = formData.get('totalRentAmount');
+            const status = formData.get('status');
+
+            // Validate required fields
+            if (!vendorId || !propertyAddress || !totalRentAmount) {
+                showAlert('error', 'Please fill in all required fields');
+                return;
+            }
 
             const selectedEmployees = Array.from(form.querySelectorAll('input[name="linkedEmployees"]:checked'))
-                .map(cb => cb.value);
+                .map(cb => {
+                    const value = cb.value;
+                    return value ? parseInt(value) : null;
+                })
+                .filter(id => id !== null && !isNaN(id));
 
             const data = {
-                vendorId: parseInt(formData.get('vendorId')),
-                propertyAddress: formData.get('propertyAddress'),
-                totalRentAmount: parseFloat(formData.get('totalRentAmount')) || 0,
-                linkedEmployeesList: selectedEmployees,
-                status: formData.get('status')
+                vendorId: parseInt(vendorId),
+                propertyAddress: propertyAddress.trim(),
+                totalRentAmount: parseFloat(totalRentAmount) || 0,
+                linkedEmployeesList: selectedEmployees || [],
+                status: status || 'Active'
             };
 
             fetch('@Url.Action("CreateProperty")', {
@@ -784,34 +909,95 @@
                 });
         }
 
-        function editProperty(id) {
-            fetch(`@Url.Action("GetPropertyDetails")?id=${id}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        const property = result.data;
-                        const form = document.getElementById('editPropertyForm');
+        async function editProperty(id) {
+            if (!id) {
+                showAlert('error', 'Invalid property ID');
+                return;
+            }
 
-                        form.querySelector('input[name="propertyId"]').value = property.id;
-                        form.querySelector('select[name="vendorId"]').value = property.vendorId;
-                        form.querySelector('textarea[name="propertyAddress"]').value = property.propertyAddress;
-                        form.querySelector('input[name="totalRentAmount"]').value = property.totalRentAmount;
-                        form.querySelector('select[name="status"]').value = property.status;
-
-                        // Set linked employees
-                        form.querySelectorAll('input[name="linkedEmployees"]').forEach(cb => {
-                            cb.checked = property.linkedEmployees && property.linkedEmployees.includes(cb.value);
-                        });
-
-                        openEditDrawer();
-                    } else {
-                        showAlert('error', result.message);
+            try {
+                // First, ensure vendors are loaded
+                await loadVendors();
+                
+                const response = await fetch(`@Url.Action("GetPropertyDetails")?id=${id}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const property = result.data;
+                    const form = document.getElementById('editPropertyForm');
+                    
+                    if (!form) {
+                        showAlert('error', 'Edit form not found');
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading property details.');
-                });
+
+                    // Safely set form values with null checks
+                    const propertyIdInput = form.querySelector('input[name="propertyId"]');
+                    const vendorIdSelect = form.querySelector('select[name="vendorId"]');
+                    const propertyAddressTextarea = form.querySelector('textarea[name="propertyAddress"]');
+                    const totalRentAmountInput = form.querySelector('input[name="totalRentAmount"]');
+                    const statusSelect = form.querySelector('select[name="status"]');
+
+                    if (propertyIdInput) propertyIdInput.value = property.id || '';
+                                        if (vendorIdSelect) {
+                        console.log('Setting vendor ID:', property.vendorId, 'for property:', property.id);
+                        console.log('Vendor select element:', vendorIdSelect);
+                        console.log('Available options:', Array.from(vendorIdSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+                        
+                        vendorIdSelect.value = property.vendorId || '';
+                        console.log('Vendor select value after setting:', vendorIdSelect.value);
+                        console.log('Vendor select selectedIndex:', vendorIdSelect.selectedIndex);
+                        
+                        // Refresh Select2 if it's initialized
+                        if ($(vendorIdSelect).hasClass('select2-hidden-accessible')) {
+                            console.log('Select2 is initialized, triggering change event');
+                            $(vendorIdSelect).trigger('change.select2');
+                            
+                            // Add a small delay to ensure Select2 updates properly
+                            setTimeout(() => {
+                                if ($(vendorIdSelect).val() !== property.vendorId) {
+                                    console.log('Select2 value mismatch, forcing update');
+                                    $(vendorIdSelect).val(property.vendorId).trigger('change.select2');
+                                }
+                            }, 100);
+                            
+                            // Additional fallback with longer delay
+                            setTimeout(() => {
+                                if ($(vendorIdSelect).val() !== property.vendorId) {
+                                    console.log('Final fallback: forcing Select2 update');
+                                    $(vendorIdSelect).val(property.vendorId).trigger('change.select2');
+                                }
+                            }, 500);
+                        } else {
+                            console.log('Select2 is not initialized yet');
+                        }
+                    }
+                    if (propertyAddressTextarea) propertyAddressTextarea.value = property.propertyAddress || '';
+                    if (totalRentAmountInput) totalRentAmountInput.value = property.totalRentAmount || '';
+                    if (statusSelect) statusSelect.value = property.status || 'Active';
+
+                    // Set linked employees with null safety
+                    if (property.linkedEmployees && Array.isArray(property.linkedEmployees)) {
+                        form.querySelectorAll('input[name="linkedEmployees"]').forEach(cb => {
+                            if (cb && cb.value) {
+                                cb.checked = property.linkedEmployees.includes(parseInt(cb.value));
+                            }
+                        });
+                    } else {
+                        // Clear all checkboxes if no linked employees
+                        form.querySelectorAll('input[name="linkedEmployees"]').forEach(cb => {
+                            if (cb) cb.checked = false;
+                        });
+                    }
+
+                    openEditDrawer();
+                } else {
+                    showAlert('error', result.message || 'Failed to load property details');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while loading property details.');
+            }
         }
 
         function submitEditForm() {
@@ -820,18 +1006,38 @@
             }
 
             const form = document.getElementById('editPropertyForm');
+            if (!form) {
+                showAlert('error', 'Form not found');
+                return;
+            }
+
             const formData = new FormData(form);
+            const propertyId = formData.get('propertyId');
+            const vendorId = formData.get('vendorId');
+            const propertyAddress = formData.get('propertyAddress');
+            const totalRentAmount = formData.get('totalRentAmount');
+            const status = formData.get('status');
+
+            // Validate required fields
+            if (!propertyId || !vendorId || !propertyAddress || !totalRentAmount) {
+                showAlert('error', 'Please fill in all required fields');
+                return;
+            }
 
             const selectedEmployees = Array.from(form.querySelectorAll('input[name="linkedEmployees"]:checked'))
-                .map(cb => cb.value);
+                .map(cb => {
+                    const value = cb.value;
+                    return value ? parseInt(value) : null;
+                })
+                .filter(id => id !== null && !isNaN(id));
 
             const data = {
-                id: parseInt(formData.get('propertyId')),
-                vendorId: parseInt(formData.get('vendorId')),
-                propertyAddress: formData.get('propertyAddress'),
-                totalRentAmount: parseFloat(formData.get('totalRentAmount')),
-                linkedEmployeesList: selectedEmployees,
-                status: formData.get('status')
+                id: parseInt(propertyId),
+                vendorId: parseInt(vendorId),
+                propertyAddress: propertyAddress.trim(),
+                totalRentAmount: parseFloat(totalRentAmount) || 0,
+                linkedEmployeesList: selectedEmployees || [],
+                status: status || 'Active'
             };
 
             fetch('@Url.Action("UpdateProperty")', {
@@ -859,13 +1065,20 @@
         }
 
         function viewProperty(id) {
+            if (!id) {
+                showAlert('error', 'Invalid property ID');
+                return;
+            }
+
             fetch(`@Url.Action("GetPropertyDetails")?id=${id}`)
                 .then(response => response.json())
                 .then(result => {
-                    if (result.success) {
+                    if (result.success && result.data) {
                         const property = result.data;
-                        const linkedEmployees = property.linkedEmployees && property.linkedEmployees.length > 0
-                            ? property.linkedEmployees.join(', ')
+                        
+                        // For display purposes, we'll show employee names if available, otherwise show IDs
+                        const linkedEmployees = property.linkedEmployees && Array.isArray(property.linkedEmployees) && property.linkedEmployees.length > 0
+                            ? (property.linkedEmployeeNames && property.linkedEmployeeNames.length > 0 ? property.linkedEmployeeNames.join(', ') : property.linkedEmployees.join(', '))
                             : 'None';
 
                         document.getElementById('viewPropertyDetails').innerHTML = `
@@ -959,8 +1172,16 @@
         }
 
         function confirmDeleteProperty(id, code) {
+            if (!id) {
+                showAlert('error', 'Invalid property ID');
+                return;
+            }
+            
             currentPropertyId = id;
-            document.getElementById('deletePropertyCode').textContent = code;
+            const deletePropertyCodeElement = document.getElementById('deletePropertyCode');
+            if (deletePropertyCodeElement) {
+                deletePropertyCodeElement.textContent = code || 'Unknown';
+            }
             openDeleteModal();
         }
 
@@ -993,32 +1214,59 @@
 
         // Modal functions
         function openDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                console.error('Delete modal not found');
+            }
         }
 
         function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            currentPropertyId = null;
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                currentPropertyId = null;
+            }
         }
 
         function openRejectModal(id, code) {
+            if (!id) {
+                showAlert('error', 'Invalid property ID');
+                return;
+            }
+            
             currentPropertyId = id;
-            document.getElementById('rejectPropertyCode').textContent = code;
-            document.getElementById('rejectionReason').value = '';
-            document.getElementById('rejectModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            const rejectPropertyCodeElement = document.getElementById('rejectPropertyCode');
+            const rejectionReasonElement = document.getElementById('rejectionReason');
+            const rejectModal = document.getElementById('rejectModal');
+            
+            if (rejectPropertyCodeElement) rejectPropertyCodeElement.textContent = code || 'Unknown';
+            if (rejectionReasonElement) rejectionReasonElement.value = '';
+            if (rejectModal) {
+                rejectModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
         }
 
         function closeRejectModal() {
-            document.getElementById('rejectModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            currentPropertyId = null;
+            const rejectModal = document.getElementById('rejectModal');
+            if (rejectModal) {
+                rejectModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                currentPropertyId = null;
+            }
         }
 
         // Approval workflow
         function approveProperty(id) {
+            if (!id) {
+                showAlert('error', 'Invalid property ID');
+                return;
+            }
+            
             if (!confirm('Are you sure you want to approve this property?')) {
                 return;
             }
@@ -1047,9 +1295,18 @@
         }
 
         function rejectProperty() {
-            if (!currentPropertyId) return;
+            if (!currentPropertyId) {
+                showAlert('error', 'No property selected for rejection');
+                return;
+            }
 
-            const rejectionReason = document.getElementById('rejectionReason').value.trim();
+            const rejectionReasonElement = document.getElementById('rejectionReason');
+            if (!rejectionReasonElement) {
+                showAlert('error', 'Rejection reason field not found');
+                return;
+            }
+            
+            const rejectionReason = rejectionReasonElement.value.trim();
             if (!rejectionReason) {
                 showAlert('error', 'Please provide a reason for rejection.');
                 return;
@@ -1085,10 +1342,14 @@
         }
 
         function showAllPendingApprovals() {
-            document.getElementById('approvalStatusFilter').value = 'Pending';
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('vendorFilter').value = '';
+            const approvalStatusFilter = document.getElementById('approvalStatusFilter');
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            
+            if (approvalStatusFilter) approvalStatusFilter.value = 'Pending';
+            if (searchInput) searchInput.value = '';
+            if (statusFilter) statusFilter.value = '';
+            
             currentPage = 1;
             searchProperties();
         }
@@ -1110,27 +1371,37 @@
         }
 
         function changePageSize() {
-            pageSize = parseInt(document.getElementById('pageSize').value);
-            currentPage = 1;
-            loadProperties();
+            const pageSizeElement = document.getElementById('pageSize');
+            if (pageSizeElement && pageSizeElement.value) {
+                pageSize = parseInt(pageSizeElement.value) || 10;
+                currentPage = 1;
+                loadProperties();
+            }
         }
 
         function loadProperties() {
-            const searchTerm = document.getElementById('searchInput').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const approvalStatusFilter = document.getElementById('approvalStatusFilter')?.value || '';
-            // const vendorFilter = document.getElementById('vendorFilter').value;
+            const searchInput = document.getElementById('searchInput');
+            const statusFilterElement = document.getElementById('statusFilter');
+            const approvalStatusFilterElement = document.getElementById('approvalStatusFilter');
+            
+            const searchTerm = searchInput ? searchInput.value : '';
+            const statusFilter = statusFilterElement ? statusFilterElement.value : '';
+            const approvalStatusFilter = approvalStatusFilterElement ? approvalStatusFilterElement.value : '';
 
             const params = new URLSearchParams({
-                searchTerm: searchTerm,
-                statusFilter: statusFilter,
-                approvalStatusFilter: approvalStatusFilter,
-                // vendorFilter: vendorFilter || '',
-                page: currentPage,
-                pageSize: pageSize
+                searchTerm: searchTerm || '',
+                statusFilter: statusFilter || '',
+                approvalStatusFilter: approvalStatusFilter || '',
+                page: currentPage || 1,
+                pageSize: pageSize || 10
             });
 
             const tbody = document.getElementById('propertyTableBody');
+            if (!tbody) {
+                console.error('Property table body not found');
+                return;
+            }
+            
             const colspan = isChecker ? 10 : 9;
             tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading properties...</td></tr>`;
 
@@ -1154,6 +1425,11 @@
 
         function updateTable(properties) {
             const tbody = document.getElementById('propertyTableBody');
+            if (!tbody) {
+                console.error('Property table body not found');
+                return;
+            }
+            
             tbody.innerHTML = '';
 
             if (!properties || properties.length === 0) {
@@ -1242,8 +1518,8 @@
                     }
                 }
 
-                const linkedEmployeesDisplay = property.linkedEmployees ? 
-                    `<span title="${property.linkedEmployees}">${property.linkedEmployees.split(',').length} Employee(s)</span>` : 
+                const linkedEmployeesDisplay = property.linkedEmployees && Array.isArray(property.linkedEmployees) ? 
+                    `<span title="${property.linkedEmployeeNames && property.linkedEmployeeNames.length > 0 ? property.linkedEmployeeNames.join(', ') : property.linkedEmployees.join(', ')}">${property.linkedEmployees.length} Employee(s)</span>` : 
                     '-';
 
                 const row = `
@@ -1283,6 +1559,11 @@
             const info = document.getElementById('paginationInfo');
             const buttons = document.getElementById('paginationButtons');
 
+            if (!info || !buttons || !pagination) {
+                console.error('Pagination elements not found or invalid pagination data');
+                return;
+            }
+
             const startRecord = (pagination.CurrentPage - 1) * pagination.PageSize + 1;
             const endRecord = Math.min(pagination.CurrentPage * pagination.PageSize, pagination.TotalRecords);
 
@@ -1317,8 +1598,12 @@
         }
 
         function goToPage(page) {
-            currentPage = page;
-            loadProperties();
+            if (page && !isNaN(page) && page > 0) {
+                currentPage = page;
+                loadProperties();
+            } else {
+                console.error('Invalid page number:', page);
+            }
         }
 
         function showAlert(type, message) {
@@ -1335,10 +1620,60 @@
                 container.innerHTML = '';
             }, 5000);
         }
+
+        // Employee search functionality
+        function initializeEmployeeSearch() {
+            const createSearch = document.getElementById('createEmployeeSearch');
+            const editSearch = document.getElementById('editEmployeeSearch');
+
+            if (createSearch) {
+                createSearch.addEventListener('input', function() {
+                    filterEmployees('createEmployeeList', this.value);
+                });
+            }
+
+            if (editSearch) {
+                editSearch.addEventListener('input', function() {
+                    filterEmployees('editEmployeeList', this.value);
+                });
+            }
+        }
+
+        function filterEmployees(containerId, searchTerm) {
+            const container = document.getElementById(containerId);
+            const employeeItems = container.querySelectorAll('.employee-item');
+            const searchLower = searchTerm.toLowerCase();
+
+            employeeItems.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const code = item.getAttribute('data-code');
+                
+                if (name.includes(searchLower) || code.includes(searchLower)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
     </script>
 }
 
 <style>
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 6px 12px;
+    }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151;
+            line-height: 28px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+        }
     .status-badge {
         display: inline-block;
         padding: 0.25rem 0.5rem;

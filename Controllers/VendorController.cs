@@ -199,19 +199,20 @@ namespace RentManagement.Controllers
                     success = true,
                     data = new
                     {
-                        Id = vendor.Id,
-                        VendorCode = vendor.VendorCode,
-                        VendorName = vendor.VendorName,
-                        MobileNumber = vendor.MobileNumber,
-                        AlternateNumber = vendor.AlternateNumber,
-                        EmailId = vendor.EmailId,
-                        Address = vendor.Address,
-                        AccountHolderName = vendor.AccountHolderName,
-                        BankName = vendor.BankName,
-                        BranchName = vendor.BranchName,
-                        AccountNumber = vendor.AccountNumber,
-                        PropertyAddress = vendor.PropertyAddress,
-                        TotalRentAmount = vendor.TotalRentAmount,
+                        id = vendor.Id,
+                        vendorCode = vendor.VendorCode,
+                        vendorName = vendor.VendorName,
+                        vendorRole = vendor.VendorRole,
+                        mobileNumber = vendor.MobileNumber,
+                        alternateNumber = vendor.AlternateNumber,
+                        emailId = vendor.EmailId,
+                        address = vendor.Address,
+                        accountHolderName = vendor.AccountHolderName,
+                        bankName = vendor.BankName,
+                        branchName = vendor.BranchName,
+                        accountNumber = vendor.AccountNumber,
+                        propertyAddress = vendor.PropertyAddress,
+                        totalRentAmount = vendor.TotalRentAmount,
                         LinkedEmployees = vendor.LinkedEmployeesList,
                         Status = vendor.Status,
                         ApprovalStatus = (int)vendor.ApprovalStatus,
@@ -225,7 +226,7 @@ namespace RentManagement.Controllers
                         CreatedDate = vendor.CreatedDate,
                         UpdatedDate = vendor.UpdatedDate,
                         // Use the property names that JavaScript expects
-                        panNumber = vendor.PANNumber,
+                        pANNumber = vendor.PANNumber,
                         gstNumber = vendor.GSTNumber,
                         ifscCode = vendor.IFSCCode
                     }
@@ -257,6 +258,7 @@ namespace RentManagement.Controllers
                 {
                     VendorCode = vendorCode,
                     VendorName = request.VendorName,
+                    VendorRole = request.VendorRole,
                     PANNumber = request.PanNumber,
                     GSTNumber = request.GstNumber,
                     MobileNumber = request.MobileNumber,
@@ -346,6 +348,7 @@ namespace RentManagement.Controllers
                 // Update vendor properties (vendor code cannot be changed)
                 vendor.VendorCode = vendor.VendorCode; // Keep existing vendor code
                 vendor.VendorName = request.VendorName;
+                vendor.VendorRole = request.VendorRole;
                 vendor.PANNumber = request.PanNumber;
                 vendor.GSTNumber = request.GstNumber;
                 vendor.MobileNumber = request.MobileNumber;
@@ -591,6 +594,7 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                 v.Id,
                 v.VendorCode,
                 v.VendorName,
+                v.VendorRole,
                 v.MobileNumber,
                 v.IFSCCode,
                 v.BankName,
@@ -702,6 +706,7 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
                         v.Id,
                         v.VendorCode,
                         v.VendorName,
+                        v.VendorRole,
                         v.MobileNumber,
                         v.IFSCCode,
                         v.BankName,
@@ -801,6 +806,7 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
     public class VendorCreateRequest
     {
         public string VendorName { get; set; } = string.Empty;
+        public string VendorRole { get; set; } = string.Empty;
         public string PanNumber { get; set; } = string.Empty;
         public string? GstNumber { get; set; }
         public string MobileNumber { get; set; } = string.Empty;
@@ -822,6 +828,7 @@ public async Task<IActionResult> GetVendors(string searchTerm = "", string statu
     {
         public int Id { get; set; }
         public string VendorName { get; set; } = string.Empty;
+        public string VendorRole { get; set; } = string.Empty;
         public string PanNumber { get; set; } = string.Empty;
         public string? GstNumber { get; set; }
         public string MobileNumber { get; set; } = string.Empty;

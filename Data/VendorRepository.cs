@@ -139,7 +139,7 @@ namespace RentManagement.Data
 	FROM Vendors
 	
                 INSERT INTO Vendors (
-                    VendorCode, VendorName, PANNumber, GSTNumber, MobileNumber, AlternateNumber,
+                    VendorCode, VendorName, VendorRole, PANNumber, GSTNumber, MobileNumber, AlternateNumber,
                     EmailId, Address, AccountHolderName, BankName, BranchName,
                     AccountNumber, IFSCCode, PropertyAddress, TotalRentAmount,
                     LinkedEmployees, Status, ApprovalStatus, MakerUserId, MakerUserName,
@@ -147,7 +147,7 @@ namespace RentManagement.Data
                     RejectionReason, IsActiveRecord, CreatedDate, UpdatedDate
                 )
                 VALUES (
-                    @NewCode, @VendorName, @PANNumber, @GSTNumber, @MobileNumber, @AlternateNumber,
+                    @NewCode, @VendorName, @VendorRole, @PANNumber, @GSTNumber, @MobileNumber, @AlternateNumber,
                     @EmailId, @Address, @AccountHolderName, @BankName, @BranchName,
                     @AccountNumber, @IFSCCode, @PropertyAddress, @TotalRentAmount,
                     @LinkedEmployees, @Status, @ApprovalStatus, @MakerUserId, @MakerUserName,
@@ -160,6 +160,7 @@ namespace RentManagement.Data
             {
                 VendorCode = vendor.VendorCode,
                 VendorName = vendor.VendorName,
+                VendorRole = vendor.VendorRole,
                 PANNumber = vendor.PANNumber,
                 GSTNumber = vendor.GSTNumber,
                 MobileNumber = vendor.MobileNumber,
@@ -199,6 +200,7 @@ namespace RentManagement.Data
                 SET 
                     VendorCode = @VendorCode,
                     VendorName = @VendorName,
+                    VendorRole = @VendorRole,
                     PANNumber = @PANNumber,
                     GSTNumber = @GSTNumber,
                     MobileNumber = @MobileNumber,
@@ -231,6 +233,7 @@ namespace RentManagement.Data
                 Id = vendor.Id,
                 VendorCode = vendor.VendorCode,
                 VendorName = vendor.VendorName,
+                VendorRole = vendor.VendorRole,
                 PANNumber = vendor.PANNumber,
                 GSTNumber = vendor.GSTNumber,
                 MobileNumber = vendor.MobileNumber,
@@ -333,7 +336,7 @@ namespace RentManagement.Data
                 SELECT * FROM (
                     SELECT *, ROW_NUMBER() OVER (ORDER BY ApprovalDate DESC, CreatedDate DESC) as RowNum
                     FROM Vendors 
-                    WHERE ApprovalStatus = 2 AND IsActiveRecord = 1
+                    WHERE ApprovalStatus = 2 AND IsActiveRecord = 1 AND isnull(VendorRole,'Owner') = 'Owner'
                     AND (@SearchTerm IS NULL OR @SearchTerm = '' 
                            OR VendorName LIKE '%' + @SearchTerm + '%' 
                            OR VendorCode LIKE '%' + @SearchTerm + '%'
@@ -545,6 +548,7 @@ namespace RentManagement.Data
                 SET 
                     VendorCode = @VendorCode,
                     VendorName = @VendorName,
+                    VendorRole = @VendorRole,
                     PANNumber = @PANNumber,
                     MobileNumber = @MobileNumber,
                     AlternateNumber = @AlternateNumber,
@@ -575,6 +579,7 @@ namespace RentManagement.Data
                 Id = vendor.Id,
                 VendorCode = vendor.VendorCode,
                 VendorName = vendor.VendorName,
+                VendorRole = vendor.VendorRole,
                 PANNumber = vendor.PANNumber,
                 MobileNumber = vendor.MobileNumber,
                 AlternateNumber = vendor.AlternateNumber,
@@ -642,6 +647,35 @@ namespace RentManagement.Data
                 "SELECT COUNT(*) FROM Vendors WHERE Id = @Id AND ApprovalStatus = 1",
                 parameters);
             return count > 0;
+        }
+
+        public async Task<IEnumerable<Vendor>> GetVendorsByEmployeeAsync(int employeeId)
+        {
+            try
+            {
+                using var connection = CreateConnection();
+                
+                var sql = @"
+                    SELECT DISTINCT v.*
+                    FROM Vendors v
+                    INNER JOIN Properties p ON v.Id = p.VendorId
+                    WHERE v.IsActiveRecord = 1 
+                    AND v.ApprovalStatus = 2  -- Only approved vendors
+                    AND v.Status = 'Active'   -- Only active vendors
+                    AND p.IsActiveRecord = 1  -- Only active properties
+                    AND p.ApprovalStatus = 2  -- Only approved properties
+                    AND p.LinkedEmployees LIKE '%' + @EmployeeId + '%'  -- Employee is linked to property
+                    ORDER BY v.VendorName";
+
+                var parameters = new { EmployeeId = employeeId.ToString() };
+                var result = await connection.QueryAsync<Vendor>(sql, parameters);
+                return result ?? new List<Vendor>();
+            }
+            catch (Exception ex)
+            {
+                // Log the error (you might want to inject ILogger here)
+                throw new Exception($"Error in GetVendorsByEmployeeAsync for employee ID {employeeId}: {ex.Message}", ex);
+            }
         }
 
         #endregion
