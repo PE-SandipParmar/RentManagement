@@ -18,6 +18,7 @@ namespace RentManagement.Data
         Task<bool> DeleteAsync(int id);
         Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();
         Task<IEnumerable<Owner>> GetOwnersAsync();
+        Task<IEnumerable<Owner>> GetBrokersAsync();
         Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync();
         Task<IEnumerable<LeaseName>> GetLeaseNameAsync();
         Task ToggleActiveStatus(int Id);

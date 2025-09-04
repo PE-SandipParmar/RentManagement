@@ -2268,5 +2268,341 @@ namespace RentManagement.Data
 
             return parameters;
         }
+
+        #region Rent Payment Reports
+
+        public async Task<RentPaymentReportModel> GetRentPaymentReportAsync(RentPaymentReportFilterModel filter)
+        {
+            using var connection = CreateConnection();
+            
+            var sql = BuildRentPaymentReportQuery(filter);
+            var parameters = BuildRentPaymentReportParameters(filter);
+
+            var items = await connection.QueryAsync<RentPaymentItem>(sql, parameters);
+            var itemList = items.ToList();
+
+            // Get total count
+            var countSql = BuildRentPaymentReportCountQuery(filter);
+            var totalRecords = await connection.QuerySingleAsync<int>(countSql, parameters);
+
+            // Calculate summary
+            var summary = await CalculateRentPaymentSummaryAsync(filter);
+
+            return new RentPaymentReportModel
+            {
+                ReportTitle = "Rent Payment Report",
+                OrganizationName = "Food Safety and Standards Authority of India",
+                OrganizationAddress = "FDA Bhawan, Kotla Marg, near Bal Bhavan, New Delhi - 110002",
+                VoucherNumber = $"RQBP1/001038/25-26 dt : {DateTime.Now:dd/MM/yyyy}",
+                ChequeNumber = $"289255 dt. {DateTime.Now:dd/MM/yyyy}",
+                PaymentDate = DateTime.Now,
+                PaymentReference = "RENT FOR THE MONTH OF JULY 2025 ALONG WITH SOME JUNE 2025 ARREARS",
+                GeneratedDate = DateTime.Now,
+                GeneratedBy = "System",
+                Filter = filter,
+                PaymentItems = itemList,
+                Summary = summary,
+                TotalRecords = totalRecords,
+                ReportType = "RentPayment",
+                ReportPeriod = $"{filter.FromDate?.ToString("MMM yyyy")} - {filter.ToDate?.ToString("MMM yyyy")}"
+            };
+        }
+
+        public async Task<RentPaymentReportModel> GetRentPaymentMonthlyReportAsync(RentPaymentReportFilterModel filter)
+        {
+            return await GetRentPaymentReportAsync(filter);
+        }
+
+        public async Task<RentPaymentReportModel> GetRentPaymentVendorReportAsync(RentPaymentReportFilterModel filter)
+        {
+            return await GetRentPaymentReportAsync(filter);
+        }
+
+        public async Task<RentPaymentReportModel> GetRentPaymentEmployeeReportAsync(RentPaymentReportFilterModel filter)
+        {
+            return await GetRentPaymentReportAsync(filter);
+        }
+
+        public async Task<RentPaymentChartData> GetRentPaymentChartDataAsync(RentPaymentReportFilterModel filter)
+        {
+            return new RentPaymentChartData();
+        }
+
+        public async Task<RentPaymentPeggingModel> GetRentPaymentPeggingAsync(int paymentId, string paymentType)
+        {
+            return new RentPaymentPeggingModel();
+        }
+
+        public async Task<byte[]> ExportRentPaymentReportToPdfAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options)
+        {
+            var html = GenerateRentPaymentReportHtml(report, options);
+            return System.Text.Encoding.UTF8.GetBytes(html);
+        }
+
+        public async Task<byte[]> ExportRentPaymentReportToExcelAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options)
+        {
+            return new byte[0];
+        }
+
+        public async Task<string> ExportRentPaymentReportToCsvAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options)
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Sl No,Payment No,Transaction No,Vendor Name,Bank Name,Account No,PAN,Invoice No,Amount,Payable,Employee Name,Remarks");
+            
+            foreach (var item in report.PaymentItems)
+            {
+                csv.AppendLine($"{item.SlNo},{item.PaymentNumber},{item.TransactionNumber},{item.VendorName},{item.BankName},{item.AccountNumber},{item.PAN},{item.InvoiceNumber},{item.Amount},{item.Payable},{item.EmployeeName},{item.Remarks}");
+            }
+            
+            return csv.ToString();
+        }
+
+        public async Task<object> GetRentPaymentDiagnosticInfoAsync()
+        {
+            using var connection = CreateConnection();
+            
+            var totalPayments = await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM MonthlyRentPayments");
+            var totalVendors = await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM Vendors");
+            var totalEmployees = await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM Employees");
+            
+            return new
+            {
+                HasData = totalPayments > 0,
+                TotalPayments = totalPayments,
+                TotalVendors = totalVendors,
+                TotalEmployees = totalEmployees,
+                HasRentData = totalPayments > 0
+            };
+        }
+
+        public async Task<object> TestBasicRentPaymentQueryAsync()
+        {
+            using var connection = CreateConnection();
+            
+            var sql = @"
+                SELECT TOP 5
+                    mrp.Id,
+                    mrp.Amount,
+                    mrp.PaymentDate,
+                    mrp.PaymentMonth,
+                    e.Code as EmployeeCode,
+                    e.Name as EmployeeName,
+                    v.VendorCode,
+                    v.VendorName,
+                    v.PANNumber
+                FROM MonthlyRentPayments mrp
+                LEFT JOIN Employees e ON mrp.EmployeeId = e.Id
+                LEFT JOIN Vendors v ON mrp.VendorId = v.Id
+                ORDER BY mrp.PaymentDate DESC";
+
+            var rawData = await connection.QueryAsync(sql);
+            
+            return new { 
+                Success = true, 
+                Data = rawData,
+                Message = "Test query executed successfully"
+            };
+        }
+
+        private async Task<RentPaymentSummary> CalculateRentPaymentSummaryAsync(RentPaymentReportFilterModel filter)
+        {
+            using var connection = CreateConnection();
+            
+            var whereClause = BuildRentPaymentWhereClause(filter);
+            var parameters = BuildRentPaymentReportParameters(filter);
+
+            var sql = $@"
+                SELECT 
+                    COUNT(*) as TotalPayments,
+                    SUM(mrp.Amount) as TotalAmount,
+                    0 as TotalAdjustment,
+                    0 as TotalRecoveries,
+                    SUM(mrp.Amount) as TotalPayable,
+                    0 as TotalTDSAmount,
+                    SUM(mrp.Amount) as TotalNetPayable,
+                    COUNT(DISTINCT v.Id) as UniqueVendors,
+                    COUNT(DISTINCT e.Id) as UniqueEmployees,
+                    COUNT(DISTINCT v.BankName) as UniqueBanks
+                FROM MonthlyRentPayments mrp
+                LEFT JOIN Employees e ON mrp.EmployeeId = e.Id
+                LEFT JOIN Vendors v ON mrp.VendorId = v.Id
+                {whereClause}";
+
+            var result = await connection.QuerySingleAsync(sql, parameters);
+            
+            return new RentPaymentSummary
+            {
+                TotalPayments = result.TotalPayments,
+                TotalAmount = result.TotalAmount ?? 0,
+                TotalAdjustment = result.TotalAdjustment ?? 0,
+                TotalRecoveries = result.TotalRecoveries ?? 0,
+                TotalPayable = result.TotalPayable ?? 0,
+                TotalTDSAmount = result.TotalTDSAmount ?? 0,
+                TotalNetPayable = result.TotalNetPayable ?? 0,
+                UniqueVendors = result.UniqueVendors,
+                UniqueEmployees = result.UniqueEmployees,
+                UniqueBanks = result.UniqueBanks
+            };
+        }
+
+        private string BuildRentPaymentReportQuery(RentPaymentReportFilterModel filter)
+        {
+            var whereClause = BuildRentPaymentWhereClause(filter);
+            var orderClause = BuildRentPaymentOrderClause(filter);
+            var paginationClause = BuildRentPaymentPaginationClause(filter);
+
+            return $@"
+                SELECT 
+                    ROW_NUMBER() OVER ({orderClause}) as SlNo,
+                    mrp.Id as PaymentId,
+                    CONCAT('CN/', FORMAT(mrp.Id, '000000'), '/25-26') as PaymentNumber,
+                    CONCAT('CN/', FORMAT(mrp.Id, '000000'), '/25-26') as TransactionNumber,
+                    v.VendorName,
+                    COALESCE(v.BankName, 'N/A') as BankName,
+                    COALESCE(v.AccountNumber, 'N/A') as AccountNumber,
+                    v.PANNumber as PAN,
+                    CONCAT('R', FORMAT(mrp.Id, '00000'), '-52') as InvoiceNumber,
+                    mrp.PaymentDate as InvoiceDate,
+                    '' as POAdvanceNumber,
+                    COALESCE(v.IFSCCode, 'N/A') as IFSC,
+                    COALESCE(v.GSTNumber, 'N/A') as GSTN,
+                    mrp.Amount,
+                    0 as Adjustment,
+                    0 as Recoveries,
+                    mrp.Amount as Payable,
+                    'Project & CoA Head' as ProjectCoAHead,
+                    CONCAT('Rent Payable for the Month of ', mrp.PaymentMonth, ' on behalf of ', CONCAT('R', FORMAT(mrp.Id, '00000'), '-52'), ' : ', e.Name) as Remarks,
+                    e.Name as EmployeeName,
+                    CONCAT('R', FORMAT(mrp.Id, '00000'), '-52') as LeaseReference,
+                    'Rent' as PaymentType,
+                    'Posted' as PaymentStatus,
+                    mrp.PaymentDate,
+                    mrp.PaymentMonth as Month,
+                    YEAR(mrp.PaymentDate) as Year,
+                    CONCAT(YEAR(mrp.PaymentDate), '-', RIGHT(YEAR(mrp.PaymentDate) + 1, 2)) as FinancialYear,
+                    0 as TDSAmount,
+                    mrp.Amount as NetPayableAmount,
+                    mrp.CreatedBy,
+                    mrp.CreatedDate
+                FROM MonthlyRentPayments mrp
+                LEFT JOIN Employees e ON mrp.EmployeeId = e.Id
+                LEFT JOIN Vendors v ON mrp.VendorId = v.Id
+                {whereClause}
+                {orderClause}
+                {paginationClause}";
+        }
+
+        private string BuildRentPaymentReportCountQuery(RentPaymentReportFilterModel filter)
+        {
+            var whereClause = BuildRentPaymentWhereClause(filter);
+
+            return $@"
+                SELECT COUNT(*)
+                FROM MonthlyRentPayments mrp
+                LEFT JOIN Employees e ON mrp.EmployeeId = e.Id
+                LEFT JOIN Vendors v ON mrp.VendorId = v.Id
+                {whereClause}";
+        }
+
+        private string BuildRentPaymentWhereClause(RentPaymentReportFilterModel filter)
+        {
+            var conditions = new List<string>();
+
+            if (filter.FromDate.HasValue)
+                conditions.Add("mrp.PaymentDate >= @FromDate");
+
+            if (filter.ToDate.HasValue)
+                conditions.Add("mrp.PaymentDate <= @ToDate");
+
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                conditions.Add("e.Code LIKE @EmployeeCode");
+
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                conditions.Add("e.Name LIKE @EmployeeName");
+
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                conditions.Add("v.VendorCode LIKE @VendorCode");
+
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                conditions.Add("v.VendorName LIKE @VendorName");
+
+            if (!string.IsNullOrEmpty(filter.PAN))
+                conditions.Add("v.PANNumber LIKE @PAN");
+
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                conditions.Add("mrp.PaymentStatus = @PaymentStatus");
+
+            if (!string.IsNullOrEmpty(filter.Month))
+                conditions.Add("mrp.PaymentMonth = @Month");
+
+            if (!string.IsNullOrEmpty(filter.BankName))
+                conditions.Add("v.BankName LIKE @BankName");
+
+            if (filter.MinAmount.HasValue)
+                conditions.Add("mrp.Amount >= @MinAmount");
+
+            if (filter.MaxAmount.HasValue)
+                conditions.Add("mrp.Amount <= @MaxAmount");
+
+            if (!filter.IncludeZeroAmounts)
+                conditions.Add("mrp.Amount > 0");
+
+            return conditions.Any() ? $"WHERE {string.Join(" AND ", conditions)}" : "";
+        }
+
+        private string BuildRentPaymentOrderClause(RentPaymentReportFilterModel filter)
+        {
+            var sortBy = filter.SortBy ?? "PaymentDate";
+            var sortOrder = filter.SortOrder ?? "DESC";
+
+            return $"ORDER BY mrp.{sortBy} {sortOrder}";
+        }
+
+        private string BuildRentPaymentPaginationClause(RentPaymentReportFilterModel filter)
+        {
+            if (filter.Page <= 0) filter.Page = 1;
+            if (filter.PageSize <= 0) filter.PageSize = 20;
+
+            var offset = (filter.Page - 1) * filter.PageSize;
+            return $"OFFSET {offset} ROWS FETCH NEXT {filter.PageSize} ROWS ONLY";
+        }
+
+        private DynamicParameters BuildRentPaymentReportParameters(RentPaymentReportFilterModel filter)
+        {
+            var parameters = new DynamicParameters();
+            
+            parameters.Add("@FromDate", filter.FromDate);
+            parameters.Add("@ToDate", filter.ToDate);
+            
+            if (!string.IsNullOrEmpty(filter.EmployeeCode))
+                parameters.Add("@EmployeeCode", $"%{filter.EmployeeCode}%");
+            if (!string.IsNullOrEmpty(filter.EmployeeName))
+                parameters.Add("@EmployeeName", $"%{filter.EmployeeName}%");
+            if (!string.IsNullOrEmpty(filter.VendorCode))
+                parameters.Add("@VendorCode", $"%{filter.VendorCode}%");
+            if (!string.IsNullOrEmpty(filter.VendorName))
+                parameters.Add("@VendorName", $"%{filter.VendorName}%");
+            if (!string.IsNullOrEmpty(filter.PAN))
+                parameters.Add("@PAN", $"%{filter.PAN}%");
+            if (!string.IsNullOrEmpty(filter.PaymentStatus))
+                parameters.Add("@PaymentStatus", filter.PaymentStatus);
+            if (!string.IsNullOrEmpty(filter.Month))
+                parameters.Add("@Month", filter.Month);
+            if (!string.IsNullOrEmpty(filter.BankName))
+                parameters.Add("@BankName", $"%{filter.BankName}%");
+            if (filter.MinAmount.HasValue)
+                parameters.Add("@MinAmount", filter.MinAmount);
+            if (filter.MaxAmount.HasValue)
+                parameters.Add("@MaxAmount", filter.MaxAmount);
+
+            return parameters;
+        }
+
+        private string GenerateRentPaymentReportHtml(RentPaymentReportModel report, RentPaymentReportExportOptions options)
+        {
+            return "<html><body><h1>Rent Payment Report</h1></body></html>";
+        }
+
+        #endregion
     }
 }

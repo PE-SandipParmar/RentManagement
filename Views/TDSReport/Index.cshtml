@@ -50,6 +50,40 @@
         color: #6b7280;
         font-size: 0.875rem;
     }
+    .narration-text {
+        cursor: pointer;
+        position: relative;
+        display: inline-block;
+    }
+    .narration-text:hover {
+        color: #3b82f6;
+        text-decoration: underline;
+    }
+    .narration-tooltip {
+        position: absolute;
+        background: #1f2937;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        white-space: normal;
+        word-wrap: break-word;
+        display: none;
+    }
+    .narration-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1f2937 transparent transparent transparent;
+    }
 </style>
 
 <!-- Header -->
@@ -145,186 +179,183 @@
         </div>
     </div>
 
-    <!-- Report Configuration and Data -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <!-- Filter Configuration -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold mb-6 flex items-center">
-                    <i class="ri-settings-line mr-2 text-primary"></i>
-                    Filter Configuration
-                </h3>
-                
-                <form id="tdsReportForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="date" id="FromDate" name="FromDate" value="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            <input type="date" id="ToDate" name="ToDate" value="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Employee Code</label>
-                        <input type="text" id="EmployeeCode" name="EmployeeCode" value="@Model.Filter.EmployeeCode" placeholder="Enter employee code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Employee Name</label>
-                        <input type="text" id="EmployeeName" name="EmployeeName" value="@Model.Filter.EmployeeName" placeholder="Enter employee name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Code</label>
-                        <input type="text" id="VendorCode" name="VendorCode" value="@Model.Filter.VendorCode" placeholder="Enter vendor code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Name</label>
-                        <input type="text" id="VendorName" name="VendorName" value="@Model.Filter.VendorName" placeholder="Enter vendor name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">PAN Number</label>
-                        <input type="text" id="PAN" name="PAN" value="@Model.Filter.PAN" placeholder="Enter PAN number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">TDS Applicable</label>
-                        <select id="TDSApplicableId" name="TDSApplicableId" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="" selected>All TDS Types</option>
-                            @if (ViewBag.TDSApplicable != null)
-                            {
-                                @foreach (var tds in ViewBag.TDSApplicable)
-                                {
-                                   @*  var isSelected = Model.Filter.TDSApplicableId == tds.Id ? "selected" : ""; *@
-                                    @* <option value="@tds.Id" selected="@isSelected">@tds.Name</option> *@
-                                    <option value="@tds.Id" >@tds.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount Range</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="MinAmount" name="MinAmount" value="@Model.Filter.MinAmount" placeholder="Min" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            <input type="number" id="MaxAmount" name="MaxAmount" value="@Model.Filter.MaxAmount" placeholder="Max" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
-                        <select id="PaymentStatus" name="PaymentStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="" selected>All Status</option>
-                            @if (ViewBag.PaymentStatusOptions != null)
-                            {
-                                @foreach (var status in ViewBag.PaymentStatusOptions)
-                                {
-                          
-                                    <option value="@status.Value">@status.Text</option>
-
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Financial Year</label>
-                        <select id="FinancialYear" name="FinancialYear" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            @if (ViewBag.FinancialYearOptions != null)
-                            {
-                                @foreach (var year in ViewBag.FinancialYearOptions)
-                                {
-                                    var isSelected = Model.Filter.FinancialYear == year.Value ? "selected" : "";
-                                    <option value="@year.Value" selected="@isSelected">@year.Text</option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
-                        <select id="Month" name="Month" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            @if (ViewBag.MonthOptions != null)
-                            {
-                                @foreach (var month in ViewBag.MonthOptions)
-                                {
-                                    var isSelected = Model.Filter.Month == month.Value ? "selected" : "";
-                                    if (Model.Filter.Month == month.Value)
-                                    {
-                                        <option value="@month.Value" selected="selected">@month.Text</option>
-
-                                    }
-                                    else
-                                    {
-                                        <option value="@month.Value" >@month.Text</option>
-
-                                    }
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Voucher Number</label>
-                        <input type="text" id="VoucherNumber" name="VoucherNumber" value="@Model.Filter.VoucherNumber" placeholder="Enter voucher number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                        <select id="SortBy" name="SortBy" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            @if (ViewBag.SortOptions != null)
-                            {
-                                @foreach (var sort in ViewBag.SortOptions)
-                                {
-                                    var isSelected = Model.Filter.SortBy == sort.Value ? "selected" : "";
-                                    <option value="@sort.Value" selected="@isSelected">@sort.Text</option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
-                        <select id="SortOrder" name="SortOrder" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                            @{
-                                var descSelected = Model.Filter.SortOrder == "DESC" ? "selected" : "";
-                                var ascSelected = Model.Filter.SortOrder == "ASC" ? "selected" : "";
-                            }
-                            <option value="DESC" selected="@descSelected">Descending</option>
-                            <option value="ASC" selected="@ascSelected">Ascending</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="IncludeZeroTDS" name="IncludeZeroTDS" @(Model.Filter.IncludeZeroTDS ? "checked" : "") class="rounded border-gray-300 text-primary focus:ring-primary">
-                            <span class="ml-2 text-sm text-gray-600">Include Zero TDS Payments</span>
-                        </label>
-                    </div>
-
-                    <div class="flex space-x-2">
-                        <button type="button" onclick="applyFilter()" class="flex-1 bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary/90 flex items-center justify-center transition-colors">
-                            <i class="ri-search-line mr-2"></i>
-                            Apply Filter
-                        </button>
-                        <button type="button" onclick="clearFilter()" class="px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 flex items-center transition-colors">
-                            <i class="ri-refresh-line"></i>
-                        </button>
-                    </div>
-                </form>
+    <!-- Filter Configuration -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-6 flex items-center">
+            <i class="ri-settings-line mr-2 text-primary"></i>
+            Filter Configuration
+        </h3>
+        
+        <form id="tdsReportForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="FromDate" name="FromDate" value="@Model.Filter.FromDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    <input type="date" id="ToDate" name="ToDate" value="@Model.Filter.ToDate?.ToString("yyyy-MM-dd")" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
             </div>
-        </div>
 
-        <!-- Data Table -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold flex items-center">
-                        <i class="ri-table-line mr-2 text-primary"></i>
-                        TDS Report Data
-                    </h3>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Employee Code</label>
+                <input type="text" id="EmployeeCode" name="EmployeeCode" value="@Model.Filter.EmployeeCode" placeholder="Enter employee code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Employee Name</label>
+                <input type="text" id="EmployeeName" name="EmployeeName" value="@Model.Filter.EmployeeName" placeholder="Enter employee name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Code</label>
+                <input type="text" id="VendorCode" name="VendorCode" value="@Model.Filter.VendorCode" placeholder="Enter vendor code" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Vendor Name</label>
+                <input type="text" id="VendorName" name="VendorName" value="@Model.Filter.VendorName" placeholder="Enter vendor name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">PAN Number</label>
+                <input type="text" id="PAN" name="PAN" value="@Model.Filter.PAN" placeholder="Enter PAN number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">TDS Applicable</label>
+                <select id="TDSApplicableId" name="TDSApplicableId" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="" selected>All TDS Types</option>
+                    @if (ViewBag.TDSApplicable != null)
+                    {
+                        @foreach (var tds in ViewBag.TDSApplicable)
+                        {
+                           @*  var isSelected = Model.Filter.TDSApplicableId == tds.Id ? "selected" : ""; *@
+                            @* <option value="@tds.Id" selected="@isSelected">@tds.Name</option> *@
+                            <option value="@tds.Id" >@tds.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Amount Range</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="MinAmount" name="MinAmount" value="@Model.Filter.MinAmount" placeholder="Min" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    <input type="number" id="MaxAmount" name="MaxAmount" value="@Model.Filter.MaxAmount" placeholder="Max" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                <select id="PaymentStatus" name="PaymentStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    <option value="" selected>All Status</option>
+                    @if (ViewBag.PaymentStatusOptions != null)
+                    {
+                        @foreach (var status in ViewBag.PaymentStatusOptions)
+                        {
+
+                            var isSelected = Model.Filter.PaymentStatus == status.Value ? "selected" : "";
+                            <option value="@status.Value" selected=@isSelected>@status.Text</option>
+
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Financial Year</label>
+                <select id="FinancialYear" name="FinancialYear" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    @if (ViewBag.FinancialYearOptions != null)
+                    {
+                        @foreach (var year in ViewBag.FinancialYearOptions)
+                        {
+                            var isSelected = Model.Filter.FinancialYear == year.Value ? "selected" : "";
+                            <option value="@year.Value" selected="@isSelected">@year.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <select id="Month" name="Month" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    @if (ViewBag.MonthOptions != null)
+                    {
+                        @foreach (var month in ViewBag.MonthOptions)
+                        {
+                            var isSelected = Model.Filter.Month == month.Value ? "selected" : "";
+                            if (Model.Filter.Month == month.Value)
+                            {
+                                <option value="@month.Value" selected="selected">@month.Text</option>
+
+                            }
+                            else
+                            {
+                                <option value="@month.Value" >@month.Text</option>
+
+                            }
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Voucher Number</label>
+                <input type="text" id="VoucherNumber" name="VoucherNumber" value="@Model.Filter.VoucherNumber" placeholder="Enter voucher number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <select id="SortBy" name="SortBy" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    @if (ViewBag.SortOptions != null)
+                    {
+                        @foreach (var sort in ViewBag.SortOptions)
+                        {
+                            var isSelected = Model.Filter.SortBy == sort.Value ? "selected" : "";
+                            <option value="@sort.Value" selected="@isSelected">@sort.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
+                <select id="SortOrder" name="SortOrder" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+                    @{
+                        var descSelected = Model.Filter.SortOrder == "DESC" ? "selected" : "";
+                        var ascSelected = Model.Filter.SortOrder == "ASC" ? "selected" : "";
+                    }
+                    <option value="DESC" selected="@descSelected">Descending</option>
+                    <option value="ASC" selected="@ascSelected">Ascending</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="IncludeZeroTDS" name="IncludeZeroTDS" @(Model.Filter.IncludeZeroTDS ? "checked" : "") class="rounded border-gray-300 text-primary focus:ring-primary">
+                <label for="IncludeZeroTDS" class="text-sm text-gray-700">Include Zero TDS Payments</label>
+            </div>
+
+            <div class="md:col-span-2 lg:col-span-4 pt-4">
+                <div class="flex space-x-2">
+                    <button type="button" onclick="applyFilter()" class="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 flex items-center justify-center transition-colors">
+                        <i class="ri-search-line mr-2"></i>
+                        Apply Filter
+                    </button>
+                    <button type="button" onclick="clearFilter()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 flex items-center transition-colors">
+                        <i class="ri-refresh-line mr-2"></i>
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold flex items-center">
+                <i class="ri-table-line mr-2 text-primary"></i>
+                TDS Report Data
+            </h3>
                     <div class="flex items-center space-x-2">
                         <span class="text-sm text-gray-600">Total Records: <span id="recordCount" class="font-semibold">@Model.TotalRecords</span></span>
                         <div class="flex space-x-2">
@@ -396,7 +427,11 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹@item.GrossValue.ToString("N2")</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.ProjectName</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.CoAName</td>
-                                        <td class="px-6 py-4 text-sm text-gray-500" title="@item.Narration">@(item.Narration.Length > 30 ? item.Narration.Substring(0, 30) + "..." : item.Narration)</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <span class="narration-text" title="@item.Narration">
+                                                @(item.Narration?.Length > 30 ? item.Narration.Substring(0, 30) + "..." : item.Narration)
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.ExemptionCertificateNo</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(item.ExemptionFromDate?.ToString("dd/MM/yyyy") ?? "-")</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(item.ExemptionToDate?.ToString("dd/MM/yyyy") ?? "-")</td>
@@ -439,8 +474,6 @@
                             <i class="ri-arrow-right-s-line"></i>
                         </button>
                     </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -591,7 +624,11 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹${parseFloat(item.grossValue).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.projectName}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.coAName}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500" title="${item.narration}">${item.narration.length > 30 ? item.narration.substring(0, 30) + '...' : item.narration}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <span class="narration-text" title="${item.narration}">
+                                    ${item.narration && item.narration.length > 30 ? item.narration.substring(0, 30) + '...' : (item.narration || '')}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.exemptionCertificateNo}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.exemptionFromDate ? new Date(item.exemptionFromDate).toLocaleDateString('en-GB') : '-'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.exemptionToDate ? new Date(item.exemptionToDate).toLocaleDateString('en-GB') : '-'}</td>
@@ -627,30 +664,39 @@
 
         function exportReport(format) {
             showLoading();
-            const formData = new FormData(document.getElementById('tdsReportForm'));
+            
+            // Get current form values
+            const form = document.getElementById('tdsReportForm');
+            const formData = new FormData(form);
+            
+            // Add format and reset page to 0 for export (get all filtered data)
             formData.append('format', format);
+            formData.append('Page', '0');
             
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '@Url.Action("Export", "TDSReport")';
+            // Create form for submission
+            const exportForm = document.createElement('form');
+            exportForm.method = 'POST';
+            exportForm.action = '@Url.Action("Export", "TDSReport")';
             
+            // Add all form data as hidden inputs
             for (let [key, value] of formData.entries()) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = key;
                 input.value = value;
-                form.appendChild(input);
+                exportForm.appendChild(input);
             }
             
-            const checkboxInput = document.createElement('input');
-            checkboxInput.type = 'hidden';
-            checkboxInput.name = 'IncludeZeroTDS';
-            checkboxInput.value = document.getElementById('IncludeZeroTDS').checked;
-            form.appendChild(checkboxInput);
+            // Ensure IncludeZeroTDS checkbox value is properly set
+            const includeZeroTDSInput = document.createElement('input');
+            includeZeroTDSInput.type = 'hidden';
+            includeZeroTDSInput.name = 'IncludeZeroTDS';
+            includeZeroTDSInput.value = document.getElementById('IncludeZeroTDS').checked ? 'true' : 'false';
+            exportForm.appendChild(includeZeroTDSInput);
             
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            document.body.appendChild(exportForm);
+            exportForm.submit();
+            document.body.removeChild(exportForm);
             
             setTimeout(() => {
                 hideLoading();
@@ -671,6 +717,77 @@
             setTimeout(() => {
                 toast.classList.add('hidden');
             }, 3000);
+        }
+
+        // Function to show narration tooltip
+        function showNarrationTooltip(element, text) {
+            // Remove any existing tooltips
+            $('.narration-tooltip').remove();
+            
+            if (!text || text.length <= 30) return;
+            
+            const tooltip = $(`<div class="narration-tooltip">${text}</div>`);
+            $('body').append(tooltip);
+            
+            const rect = element.getBoundingClientRect();
+            const tooltipRect = tooltip[0].getBoundingClientRect();
+            
+            // Position tooltip
+            let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            let top = rect.top - tooltipRect.height - 10;
+            
+            // Adjust if tooltip goes off screen
+            if (left < 10) left = 10;
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (top < 10) {
+                top = rect.bottom + 10;
+                tooltip.find('::after').css('border-color', 'transparent transparent #1f2937 transparent');
+            }
+            
+            tooltip.css({
+                position: 'fixed',
+                left: left + 'px',
+                top: top + 'px',
+                display: 'block'
+            });
+        }
+
+        // Function to hide narration tooltip
+        function hideNarrationTooltip() {
+            $('.narration-tooltip').remove();
+        }
+
+        // Function to show narration in modal
+        function showNarrationModal(text) {
+            if (!text || text.length <= 30) return;
+            
+            const modal = $(`
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="narrationModal">
+                    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Narration Details</h3>
+                            <button onclick="closeNarrationModal()" class="text-gray-500 hover:text-gray-700">
+                                <i class="ri-close-line text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="text-gray-700 whitespace-pre-wrap">${text}</div>
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="closeNarrationModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(modal);
+        }
+
+        // Function to close narration modal
+        function closeNarrationModal() {
+            $('#narrationModal').remove();
         }
 
         $(document).ready(function() {
@@ -712,6 +829,28 @@
             if (@Model.TotalRecords > 20) {
                 $('#paginationContainer').show();
             }
+
+            // Add event handlers for narration tooltips
+            $(document).on('mouseenter', '.narration-text', function() {
+                const fullText = $(this).attr('title');
+                showNarrationTooltip(this, fullText);
+            });
+
+            $(document).on('mouseleave', '.narration-text', function() {
+                hideNarrationTooltip();
+            });
+
+            $(document).on('click', '.narration-text', function() {
+                const fullText = $(this).attr('title');
+                showNarrationModal(fullText);
+            });
+
+            // Close modal when clicking outside
+            $(document).on('click', '#narrationModal', function(e) {
+                if (e.target === this) {
+                    closeNarrationModal();
+                }
+            });
         });
     </script>
 }

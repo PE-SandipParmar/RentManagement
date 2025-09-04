@@ -55,6 +55,14 @@ namespace RentManagement.Data
         Task<TDSBrokerageChartData> GetTDSBrokerageChartDataAsync(TDSBrokerageReportFilterModel filter);
         Task<TDSBrokeragePeggingModel> GetTDSBrokeragePeggingAsync(int paymentId, string paymentType);
 
+        // Rent Payment Reports
+        Task<RentPaymentReportModel> GetRentPaymentReportAsync(RentPaymentReportFilterModel filter);
+        Task<RentPaymentReportModel> GetRentPaymentMonthlyReportAsync(RentPaymentReportFilterModel filter);
+        Task<RentPaymentReportModel> GetRentPaymentVendorReportAsync(RentPaymentReportFilterModel filter);
+        Task<RentPaymentReportModel> GetRentPaymentEmployeeReportAsync(RentPaymentReportFilterModel filter);
+        Task<RentPaymentChartData> GetRentPaymentChartDataAsync(RentPaymentReportFilterModel filter);
+        Task<RentPaymentPeggingModel> GetRentPaymentPeggingAsync(int paymentId, string paymentType);
+
         // Dashboard Reports
         Task<DashboardReportModel> GetDashboardStatisticsAsync();
         Task<DashboardReportModel> GetDashboardStatisticsByDateRangeAsync(DateTime fromDate, DateTime toDate);
@@ -72,12 +80,17 @@ namespace RentManagement.Data
         Task<byte[]> ExportTDSBrokerageReportToPdfAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options);
         Task<byte[]> ExportTDSBrokerageReportToExcelAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options);
         Task<string> ExportTDSBrokerageReportToCsvAsync(TDSBrokerageReportModel report, TDSBrokerageReportExportOptions options);
+        Task<byte[]> ExportRentPaymentReportToPdfAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options);
+        Task<byte[]> ExportRentPaymentReportToExcelAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options);
+        Task<string> ExportRentPaymentReportToCsvAsync(RentPaymentReportModel report, RentPaymentReportExportOptions options);
 
         // Diagnostic Methods
         Task<object> GetTDSDiagnosticInfoAsync();
         Task<object> TestBasicTDSQueryAsync();
         Task<object> GetTDSBrokerageDiagnosticInfoAsync();
         Task<bool> TestBasicTDSBrokerageQueryAsync();
+        Task<object> GetRentPaymentDiagnosticInfoAsync();
+        Task<object> TestBasicRentPaymentQueryAsync();
 
         // Utility Methods
         Task<int> GetTotalLeasesCountAsync(ReportFilterModel filter);

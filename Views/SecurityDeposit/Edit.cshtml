@@ -219,7 +219,7 @@
 
         let employeeSalary = 0;
         let maxSecurityDeposit = 0;
-
+        $('#vendorSelect').prop('disabled', true);
         // Real-time validation for required fields
         function validateRequiredField(fieldId, validationId, errorMessage) {
             const field = $(fieldId);
@@ -407,7 +407,7 @@
                 data: { leaseId: leaseId },
                 success: function (data) {
                     if (data.success) {
-                        $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', false);
+                        $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', true);
                         // Validate the auto-selected vendor
                         validateRequiredField('#vendorSelect', '#vendorValidation', 'Please select an owner');
                     }

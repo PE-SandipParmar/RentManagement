@@ -16,6 +16,10 @@ namespace RentManagement.Models
         [Range(1, int.MaxValue, ErrorMessage = "Owner is required.")]
         public int VendorId { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "Broker is required.")]
+        [Display(Name = "Broker")]
+        public int BrokerId { get; set; }
+
         [Required(ErrorMessage = "Payment Month is required.")]
         [DataType(DataType.Date)]
         public DateTime? PaymentMonth { get; set; }
@@ -77,6 +81,7 @@ namespace RentManagement.Models
         // Navigation properties for display
         public string? EmployeeName { get; set; }
         public string? VendorName { get; set; }
+        public string? BrokerName { get; set; }
         public string? LeaseName { get; set; }
 
         // Business rule properties (not stored in DB)

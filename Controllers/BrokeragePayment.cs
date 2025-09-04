@@ -388,6 +388,7 @@ namespace RentManagement.Controllers
             ViewBag.Leases = await _BrokeragePaymentRepository.GetLeaseNameAsync();
             ViewBag.Employees = await _BrokeragePaymentRepository.GetEmployeeNamesAsync();
             ViewBag.Vendors = await _BrokeragePaymentRepository.GetOwnersAsync();
+            ViewBag.Brokers = await _BrokeragePaymentRepository.GetBrokersAsync();
             ViewBag.TDSApplicable = await _BrokeragePaymentRepository.GetTdsApplicableAsync();
         }
 

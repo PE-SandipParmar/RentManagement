@@ -1,6 +1,6 @@
-@model TDSBrokerageReportModel
+@model RentPaymentReportModel
 @{
-    ViewData["Title"] = "TDS Brokerage Report - Lease Brokerage";
+    ViewData["Title"] = "Rent Payment Report";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -39,16 +39,16 @@
         color: #6b7280;
         font-size: 0.875rem;
     }
-    .narration-text {
+    .remarks-text {
         cursor: pointer;
         position: relative;
         display: inline-block;
     }
-    .narration-text:hover {
+    .remarks-text:hover {
         color: #3b82f6;
         text-decoration: underline;
     }
-    .narration-tooltip {
+    .remarks-tooltip {
         position: absolute;
         background: #1f2937;
         color: white;
@@ -63,7 +63,7 @@
         word-wrap: break-word;
         display: none;
     }
-    .narration-tooltip::after {
+    .remarks-tooltip::after {
         content: '';
         position: absolute;
         top: 100%;
@@ -73,24 +73,78 @@
         border-style: solid;
         border-color: #1f2937 transparent transparent transparent;
     }
+    .report-header {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    .organization-info {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .organization-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .organization-address {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    .voucher-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .voucher-details {
+        display: flex;
+        gap: 2rem;
+    }
+    .voucher-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .voucher-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+    .voucher-value {
+        font-weight: 600;
+    }
 </style>
 
-<!-- Header -->
-<header class="gradient-bg text-white">
-    <div class="container mx-auto px-6 py-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold mb-2">TDS Brokerage Report - Lease Brokerage</h1>
-                <p class="text-blue-100">Comprehensive Tax Deducted at Source reporting for brokerage payments</p>
+<!-- Report Header -->
+<div class="report-header">
+    <div class="organization-info">
+        <div class="organization-name">@Model.OrganizationName</div>
+        <div class="organization-address">@Model.OrganizationAddress</div>
+    </div>
+    <div class="voucher-info">
+        <div class="voucher-details">
+            <div class="voucher-item">
+                <span class="voucher-label">Voucher No.</span>
+                <span class="voucher-value">@Model.VoucherNumber</span>
             </div>
-            <div class="flex items-center space-x-4">
-                <div class="glass-effect rounded-lg px-4 py-2">
-                    <span class="text-sm">Last Updated: <span id="lastUpdated">@DateTime.Now.ToString("dd MMM yyyy HH:mm")</span></span>
-                </div>
+            <div class="voucher-item">
+                <span class="voucher-label">Cheque No.</span>
+                <span class="voucher-value">@Model.ChequeNumber</span>
+            </div>
+            <div class="voucher-item">
+                <span class="voucher-label">Payment Date</span>
+                <span class="voucher-value">@Model.PaymentDate.ToString("dd/MM/yyyy")</span>
             </div>
         </div>
+        <div class="glass-effect rounded-lg px-4 py-2">
+            <span class="text-sm">Generated: <span id="lastUpdated">@DateTime.Now.ToString("dd MMM yyyy HH:mm")</span></span>
+        </div>
     </div>
-</header>
+</div>
 
 <div class="container mx-auto px-6 py-8">
     <!-- No Data Alert -->
@@ -100,15 +154,15 @@
             <div class="flex items-center">
                 <i class="ri-information-line text-orange-600 text-xl mr-3"></i>
                 <div>
-                    <h4 class="text-orange-800 font-medium">No TDS Brokerage Data Available</h4>
+                    <h4 class="text-orange-800 font-medium">No Rent Payment Data Available</h4>
                     <p class="text-orange-700 text-sm mt-1">
                         @if (!ViewBag.DiagnosticInfo.HasData)
                         {
-                            <span>No Brokerage Payments found in the database. Please create some payments first.</span>
+                            <span>No Rent Payments found in the database. Please create some payments first.</span>
                         }
-                        else if (!ViewBag.DiagnosticInfo.HasTDSData)
+                        else if (!ViewBag.DiagnosticInfo.HasRentData)
                         {
-                            <span>Brokerage Payments exist but none have TDS amounts. Try checking "Include Zero TDS Payments" or configure TDS rates.</span>
+                            <span>Rent Payments exist but none match your current filter criteria. Try adjusting the filters below.</span>
                         }
                         else
                         {
@@ -125,7 +179,7 @@
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Total Brokerage Payments</p>
+                    <p class="text-sm font-medium text-gray-600">Total Payments</p>
                     <p class="text-2xl font-bold text-gray-900" id="totalPayments">@Model.Summary.TotalPayments</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -136,8 +190,8 @@
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Gross Brokerage Amount</p>
-                    <p class="text-2xl font-bold text-gray-900" id="totalGrossAmount">₹@Model.Summary.TotalGrossAmount.ToString("N2")</p>
+                    <p class="text-sm font-medium text-gray-600">Total Amount</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalAmount">₹@Model.Summary.TotalAmount.ToString("N2")</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <i class="ri-money-dollar-circle-line text-green-600 text-xl"></i>
@@ -147,11 +201,11 @@
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">TDS Amount</p>
-                    <p class="text-2xl font-bold text-gray-900" id="totalTDSAmount">₹@Model.Summary.TotalTDSAmount.ToString("N2")</p>
+                    <p class="text-sm font-medium text-gray-600">Total Payable</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalPayable">₹@Model.Summary.TotalPayable.ToString("N2")</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="ri-percent-line text-purple-600 text-xl"></i>
+                    <i class="ri-bank-card-line text-purple-600 text-xl"></i>
                 </div>
             </div>
         </div>
@@ -175,7 +229,7 @@
             Filter Configuration
         </h3>
         
-        <form id="tdsBrokerageReportForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <form id="rentPaymentReportForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
                 <div class="grid grid-cols-2 gap-2">
@@ -210,17 +264,13 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">TDS Applicable</label>
-                <select id="TDSApplicableId" name="TDSApplicableId" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
-                    <option value="" selected>All TDS Types</option>
-                    @if (ViewBag.TDSApplicable != null)
-                    {
-                        @foreach (var tds in ViewBag.TDSApplicable)
-                        {
-                            <option value="@tds.Id">@tds.Name</option>
-                        }
-                    }
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Voucher Number</label>
+                <input type="text" id="VoucherNumber" name="VoucherNumber" value="@Model.Filter.VoucherNumber" placeholder="Enter voucher number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cheque Number</label>
+                <input type="text" id="ChequeNumber" name="ChequeNumber" value="@Model.Filter.ChequeNumber" placeholder="Enter cheque number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
             </div>
 
             <div>
@@ -248,12 +298,10 @@
                             if (Model.Filter.Month == month.Value)
                             {
                                 <option value="@month.Value" selected="selected">@month.Text</option>
-
                             }
                             else
                             {
                                 <option value="@month.Value">@month.Text</option>
-
                             }
                         }
                     }
@@ -273,6 +321,11 @@
                         }
                     }
                 </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                <input type="text" id="BankName" name="BankName" value="@Model.Filter.BankName" placeholder="Enter bank name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary">
             </div>
 
             <div>
@@ -298,8 +351,8 @@
             </div>
 
             <div class="flex items-center space-x-2">
-                <input type="checkbox" id="IncludeZeroTDS" name="IncludeZeroTDS" value="true" @(Model.Filter.IncludeZeroTDS ? "checked" : "") class="rounded border-gray-300 text-primary focus:ring-primary">
-                <label for="IncludeZeroTDS" class="text-sm text-gray-700">Include Zero TDS Payments</label>
+                <input type="checkbox" id="IncludeZeroAmounts" name="IncludeZeroAmounts" value="true" @(Model.Filter.IncludeZeroAmounts ? "checked" : "") class="rounded border-gray-300 text-primary focus:ring-primary">
+                <label for="IncludeZeroAmounts" class="text-sm text-gray-700">Include Zero Amount Payments</label>
             </div>
 
             <div class="md:col-span-2 lg:col-span-4 pt-4">
@@ -315,99 +368,97 @@
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold flex items-center">
                 <i class="ri-file-list-line mr-2 text-primary"></i>
-                TDS Brokerage Report Data
+                Rent Payment Report Data
             </h3>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="exportReport('PDF')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">
-                            <i class="ri-file-pdf-line mr-1"></i>PDF
-                        </button>
-                        <button onclick="exportReport('EXCEL')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">
-                            <i class="ri-file-excel-line mr-1"></i>Excel
-                        </button>
-                        <button onclick="exportReport('CSV')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                            <i class="ri-file-text-line mr-1"></i>CSV
-                        </button>
-                    </div>
-                </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="exportReport('PDF')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors">
+                    <i class="ri-file-pdf-line mr-1"></i>PDF
+                </button>
+                <button onclick="exportReport('EXCEL')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">
+                    <i class="ri-file-excel-line mr-1"></i>Excel
+                </button>
+                <button onclick="exportReport('CSV')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                    <i class="ri-file-text-line mr-1"></i>CSV
+                </button>
+            </div>
+        </div>
 
-                <!-- Report Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3">Sl No</th>
-                                <th class="px-6 py-3">Voucher No.</th>
-                                <th class="px-6 py-3">Code</th>
-                                <th class="px-6 py-3">Name</th>
-                                <th class="px-6 py-3">PAN</th>
-                                <th class="px-6 py-3">Date</th>
-                                <th class="px-6 py-3">TDS Deducted on</th>
-                                <th class="px-6 py-3">TDS %</th>
-                                <th class="px-6 py-3">TDS Amount</th>
-                                <th class="px-6 py-3">Gross CN Value</th>
-                                <th class="px-6 py-3">Project Name</th>
-                                <th class="px-6 py-3">CoA Name</th>
-                                <th class="px-6 py-3">Narration</th>
-                                <th class="px-6 py-3">Exemption Certificate No.</th>
-                                <th class="px-6 py-3">Exemption From Dt</th>
-                                <th class="px-6 py-3">Exemption To Dt</th>
+        <!-- Report Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3">Sl No</th>
+                        <th class="px-6 py-3">Payment No.</th>
+                        <th class="px-6 py-3">Transaction No.</th>
+                        <th class="px-6 py-3">Vendor Name</th>
+                        <th class="px-6 py-3">Bank Name</th>
+                        <th class="px-6 py-3">Account No.</th>
+                        <th class="px-6 py-3">PAN</th>
+                        <th class="px-6 py-3">Invoice No. & dt</th>
+                        <th class="px-6 py-3">IFSC</th>
+                        <th class="px-6 py-3">Amount</th>
+                        <th class="px-6 py-3">Adjustment</th>
+                        <th class="px-6 py-3">Recoveries</th>
+                        <th class="px-6 py-3">Payable</th>
+                        <th class="px-6 py-3">Employee Name</th>
+                        <th class="px-6 py-3">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    @if (Model.PaymentItems != null && Model.PaymentItems.Any())
+                    {
+                        @foreach (var item in Model.PaymentItems)
+                        {
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-6 py-4">@item.SlNo</td>
+                                <td class="px-6 py-4 font-medium">@item.PaymentNumber</td>
+                                <td class="px-6 py-4 font-medium">@item.TransactionNumber</td>
+                                <td class="px-6 py-4">@item.VendorName</td>
+                                <td class="px-6 py-4">@item.BankName</td>
+                                <td class="px-6 py-4 font-mono">@item.AccountNumber</td>
+                                <td class="px-6 py-4 font-mono">@item.PAN</td>
+                                <td class="px-6 py-4">@item.InvoiceNumber dt : @item.InvoiceDate.ToString("dd/MM/yyyy")</td>
+                                <td class="px-6 py-4 font-mono">@item.IFSC</td>
+                                <td class="px-6 py-4 font-medium text-green-600">₹@item.Amount.ToString("N2")</td>
+                                <td class="px-6 py-4 font-medium text-blue-600">₹@item.Adjustment.ToString("N2")</td>
+                                <td class="px-6 py-4 font-medium text-purple-600">₹@item.Recoveries.ToString("N2")</td>
+                                <td class="px-6 py-4 font-medium text-orange-600">₹@item.Payable.ToString("N2")</td>
+                                <td class="px-6 py-4">@item.EmployeeName</td>
+                                <td class="px-6 py-4">
+                                    <span class="remarks-text" title="@item.Remarks">
+                                        @(item.Remarks?.Length > 30 ? item.Remarks.Substring(0, 30) + "..." : item.Remarks)
+                                    </span>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody id="reportTableBody">
-                            @if (Model.TDSItems != null && Model.TDSItems.Any())
-                            {
-                                @foreach (var item in Model.TDSItems)
-                                {
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <td class="px-6 py-4">@item.SlNo</td>
-                                        <td class="px-6 py-4 font-medium">@item.VoucherNumber</td>
-                                        <td class="px-6 py-4 font-mono">@item.EmployeeCode</td>
-                                        <td class="px-6 py-4">@item.EmployeeName</td>
-                                        <td class="px-6 py-4 font-mono">@item.PAN</td>
-                                        <td class="px-6 py-4">@item.PaymentDate.ToString("dd/MM/yyyy")</td>
-                                        <td class="px-6 py-4 font-medium">₹@item.TDSDeductedOn.ToString("N2")</td>
-                                        <td class="px-6 py-4">@item.TDSRate%</td>
-                                        <td class="px-6 py-4 font-medium text-purple-600">₹@item.TDSAmount.ToString("N2")</td>
-                                        <td class="px-6 py-4 font-medium text-green-600">₹@item.GrossValue.ToString("N2")</td>
-                                        <td class="px-6 py-4">@item.ProjectName</td>
-                                        <td class="px-6 py-4">@item.CoAName</td>
-                                        <td class="px-6 py-4">
-                                            <span class="narration-text" title="@item.Narration">
-                                                @(item.Narration?.Length > 30 ? item.Narration.Substring(0, 30) + "..." : item.Narration)
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4">@item.ExemptionCertificateNo</td>
-                                        <td class="px-6 py-4">@(item.ExemptionFromDate?.ToString("dd/MM/yyyy") ?? "")</td>
-                                        <td class="px-6 py-4">@(item.ExemptionToDate?.ToString("dd/MM/yyyy") ?? "")</td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="12" class="px-6 py-12 text-center">
-                                        <div class="text-gray-500">
-                                            <i class="ri-inbox-line text-4xl mb-4"></i>
-                                            <h5 class="text-lg font-medium">No TDS Brokerage data found</h5>
-                                            <p class="text-sm">Try adjusting your filter options to see more results.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="15" class="px-6 py-12 text-center">
+                                <div class="text-gray-500">
+                                    <i class="ri-inbox-line text-4xl mb-4"></i>
+                                    <h5 class="text-lg font-medium">No Rent Payment data found</h5>
+                                    <p class="text-sm">Try adjusting your filter options to see more results.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-                <!-- Pagination -->
-                <div id="paginationContainer" class="mt-6 @(Model.TotalRecords <= 20 ? "hidden" : "")">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-700">
-                            Showing <span id="recordCount">@Model.TotalRecords</span> records
-                        </div>
-                        <div class="flex items-center space-x-2" id="pagination">
-                            <!-- Pagination will be populated by JavaScript -->
-                        </div>
-                    </div>
+        <!-- Pagination -->
+        <div id="paginationContainer" class="mt-6 @(Model.TotalRecords <= 20 ? "hidden" : "")">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing <span id="recordCount">@Model.TotalRecords</span> records
+                </div>
+                <div class="flex items-center space-x-2" id="pagination">
+                    <!-- Pagination will be populated by JavaScript -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -433,11 +484,6 @@
 
         function hideLoading() {
             document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        function showPegging(paymentId, paymentType) {
-            // Implementation for showing pegging details
-            console.log('Show pegging for payment:', paymentId, paymentType);
         }
 
         function updatePagination(totalRecords) {
@@ -483,7 +529,7 @@
         }
 
         function changePage(page) {
-            const form = document.getElementById('tdsBrokerageReportForm');
+            const form = document.getElementById('rentPaymentReportForm');
             const pageInput = document.createElement('input');
             pageInput.type = 'hidden';
             pageInput.name = 'Page';
@@ -493,14 +539,14 @@
         }
 
         // Form submission
-        document.getElementById('tdsBrokerageReportForm').addEventListener('submit', function(e) {
+        document.getElementById('rentPaymentReportForm').addEventListener('submit', function(e) {
             e.preventDefault();
             showLoading();
             
             const formData = new FormData(this);
             formData.append('Page', '1'); // Reset to first page on new search
             
-            fetch('@Url.Action("Details", "TDSBrokerageReport")', {
+            fetch('@Url.Action("Details", "RentPaymentReport")', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -530,30 +576,29 @@
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = '';
 
-            if (data.tdsItems && data.tdsItems.length > 0) {
-                data.tdsItems.forEach((item, index) => {
+            if (data.paymentItems && data.paymentItems.length > 0) {
+                data.paymentItems.forEach((item, index) => {
                     const row = `
                         <tr class="bg-white border-b hover:bg-gray-50">
                             <td class="px-6 py-4">${item.slNo}</td>
-                            <td class="px-6 py-4 font-medium">${item.voucherNumber}</td>
-                            <td class="px-6 py-4 font-mono">${item.employeeCode}</td>
-                            <td class="px-6 py-4">${item.employeeName}</td>
+                            <td class="px-6 py-4 font-medium">${item.paymentNumber}</td>
+                            <td class="px-6 py-4 font-medium">${item.transactionNumber}</td>
+                            <td class="px-6 py-4">${item.vendorName}</td>
+                            <td class="px-6 py-4">${item.bankName}</td>
+                            <td class="px-6 py-4 font-mono">${item.accountNumber}</td>
                             <td class="px-6 py-4 font-mono">${item.pan}</td>
-                            <td class="px-6 py-4">${new Date(item.paymentDate).toLocaleDateString('en-GB')}</td>
-                            <td class="px-6 py-4 font-medium">₹${parseFloat(item.tdsDeductedOn).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td class="px-6 py-4">${item.tdsRate}%</td>
-                            <td class="px-6 py-4 font-medium text-purple-600">₹${parseFloat(item.tdsAmount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td class="px-6 py-4 font-medium text-green-600">₹${parseFloat(item.grossValue).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                            <td class="px-6 py-4">${item.projectName || ''}</td>
-                            <td class="px-6 py-4">${item.coAName || ''}</td>
+                            <td class="px-6 py-4">${item.invoiceNumber} dt : ${new Date(item.invoiceDate).toLocaleDateString('en-GB')}</td>
+                            <td class="px-6 py-4 font-mono">${item.ifsc}</td>
+                            <td class="px-6 py-4 font-medium text-green-600">₹${parseFloat(item.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4 font-medium text-blue-600">₹${parseFloat(item.adjustment).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4 font-medium text-purple-600">₹${parseFloat(item.recoveries).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4 font-medium text-orange-600">₹${parseFloat(item.payable).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="px-6 py-4">${item.employeeName}</td>
                             <td class="px-6 py-4">
-                                <span class="narration-text" title="${item.narration || ''}">
-                                    ${item.narration && item.narration.length > 30 ? item.narration.substring(0, 30) + '...' : (item.narration || '')}
+                                <span class="remarks-text" title="${item.remarks || ''}">
+                                    ${item.remarks && item.remarks.length > 30 ? item.remarks.substring(0, 30) + '...' : (item.remarks || '')}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">${item.exemptionCertificateNo || ''}</td>
-                            <td class="px-6 py-4">${item.exemptionFromDate ? new Date(item.exemptionFromDate).toLocaleDateString('en-GB') : ''}</td>
-                            <td class="px-6 py-4">${item.exemptionToDate ? new Date(item.exemptionToDate).toLocaleDateString('en-GB') : ''}</td>
                         </tr>
                     `;
                     tbody.insertAdjacentHTML('beforeend', row);
@@ -561,10 +606,10 @@
             } else {
                 tbody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td colspan="12" class="px-6 py-12 text-center">
+                        <td colspan="15" class="px-6 py-12 text-center">
                             <div class="text-gray-500">
                                 <i class="ri-inbox-line text-4xl mb-4"></i>
-                                <h5 class="text-lg font-medium">No TDS Brokerage data found</h5>
+                                <h5 class="text-lg font-medium">No Rent Payment data found</h5>
                                 <p class="text-sm">Try adjusting your filter options to see more results.</p>
                             </div>
                         </td>
@@ -577,8 +622,8 @@
 
         function updateSummary(summary) {
             $('#totalPayments').text(summary.totalPayments || 0);
-            $('#totalGrossAmount').text('₹' + (parseFloat(summary.totalGrossAmount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
-            $('#totalTDSAmount').text('₹' + (parseFloat(summary.totalTDSAmount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
+            $('#totalAmount').text('₹' + (parseFloat(summary.totalAmount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
+            $('#totalPayable').text('₹' + (parseFloat(summary.totalPayable || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})));
             $('#uniqueVendors').text(summary.uniqueVendors || 0);
         }
 
@@ -586,7 +631,7 @@
             showLoading();
             
             // Get current form values
-            const form = document.getElementById('tdsBrokerageReportForm');
+            const form = document.getElementById('rentPaymentReportForm');
             const formData = new FormData(form);
             
             // Add format and reset page to 0 for export (get all filtered data)
@@ -596,7 +641,7 @@
             // Create form for submission
             const exportForm = document.createElement('form');
             exportForm.method = 'POST';
-            exportForm.action = '@Url.Action("Export", "TDSBrokerageReport")';
+            exportForm.action = '@Url.Action("Export", "RentPaymentReport")';
             
             // Add all form data as hidden inputs
             for (let [key, value] of formData.entries()) {
@@ -607,12 +652,12 @@
                 exportForm.appendChild(input);
             }
             
-            // Ensure IncludeZeroTDS checkbox value is properly set
-            const includeZeroTDSInput = document.createElement('input');
-            includeZeroTDSInput.type = 'hidden';
-            includeZeroTDSInput.name = 'IncludeZeroTDS';
-            includeZeroTDSInput.value = document.getElementById('IncludeZeroTDS').checked ? 'true' : 'false';
-            exportForm.appendChild(includeZeroTDSInput);
+            // Ensure IncludeZeroAmounts checkbox value is properly set
+            const includeZeroAmountsInput = document.createElement('input');
+            includeZeroAmountsInput.type = 'hidden';
+            includeZeroAmountsInput.name = 'IncludeZeroAmounts';
+            includeZeroAmountsInput.value = document.getElementById('IncludeZeroAmounts').checked ? 'true' : 'false';
+            exportForm.appendChild(includeZeroAmountsInput);
             
             document.body.appendChild(exportForm);
             exportForm.submit();
@@ -639,14 +684,14 @@
             }, 3000);
         }
 
-        // Function to show narration tooltip
-        function showNarrationTooltip(element, text) {
+        // Function to show remarks tooltip
+        function showRemarksTooltip(element, text) {
             // Remove any existing tooltips
-            $('.narration-tooltip').remove();
+            $('.remarks-tooltip').remove();
             
             if (!text || text.length <= 30) return;
             
-            const tooltip = $(`<div class="narration-tooltip">${text}</div>`);
+            const tooltip = $(`<div class="remarks-tooltip">${text}</div>`);
             $('body').append(tooltip);
             
             const rect = element.getBoundingClientRect();
@@ -674,27 +719,27 @@
             });
         }
 
-        // Function to hide narration tooltip
-        function hideNarrationTooltip() {
-            $('.narration-tooltip').remove();
+        // Function to hide remarks tooltip
+        function hideRemarksTooltip() {
+            $('.remarks-tooltip').remove();
         }
 
-        // Function to show narration in modal
-        function showNarrationModal(text) {
+        // Function to show remarks in modal
+        function showRemarksModal(text) {
             if (!text || text.length <= 30) return;
             
             const modal = $(`
-                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="narrationModal">
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" id="remarksModal">
                     <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Narration Details</h3>
-                            <button onclick="closeNarrationModal()" class="text-gray-500 hover:text-gray-700">
+                            <h3 class="text-lg font-semibold">Remarks Details</h3>
+                            <button onclick="closeRemarksModal()" class="text-gray-500 hover:text-gray-700">
                                 <i class="ri-close-line text-xl"></i>
                             </button>
                         </div>
                         <div class="text-gray-700 whitespace-pre-wrap">${text}</div>
                         <div class="mt-6 flex justify-end">
-                            <button onclick="closeNarrationModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">
+                            <button onclick="closeRemarksModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">
                                 Close
                             </button>
                         </div>
@@ -705,9 +750,9 @@
             $('body').append(modal);
         }
 
-        // Function to close narration modal
-        function closeNarrationModal() {
-            $('#narrationModal').remove();
+        // Function to close remarks modal
+        function closeRemarksModal() {
+            $('#remarksModal').remove();
         }
 
         $(document).ready(function() {
@@ -735,11 +780,6 @@
                 $('#Month').val(currentMonth);
             }
             
-            // Set default TDS Applicable to "All TDS Types" if not set
-            if (!$('#TDSApplicableId').val()) {
-                $('#TDSApplicableId').val('');
-            }
-            
             // Set default Payment Status to "All Status" if not set
             if (!$('#PaymentStatus').val()) {
                 $('#PaymentStatus').val('');
@@ -750,25 +790,25 @@
                 $('#paginationContainer').show();
             }
 
-            // Add event handlers for narration tooltips
-            $(document).on('mouseenter', '.narration-text', function() {
+            // Add event handlers for remarks tooltips
+            $(document).on('mouseenter', '.remarks-text', function() {
                 const fullText = $(this).attr('title');
-                showNarrationTooltip(this, fullText);
+                showRemarksTooltip(this, fullText);
             });
 
-            $(document).on('mouseleave', '.narration-text', function() {
-                hideNarrationTooltip();
+            $(document).on('mouseleave', '.remarks-text', function() {
+                hideRemarksTooltip();
             });
 
-            $(document).on('click', '.narration-text', function() {
+            $(document).on('click', '.remarks-text', function() {
                 const fullText = $(this).attr('title');
-                showNarrationModal(fullText);
+                showRemarksModal(fullText);
             });
 
             // Close modal when clicking outside
-            $(document).on('click', '#narrationModal', function(e) {
+            $(document).on('click', '#remarksModal', function(e) {
                 if (e.target === this) {
-                    closeNarrationModal();
+                    closeRemarksModal();
                 }
             });
         });

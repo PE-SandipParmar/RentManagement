@@ -28,6 +28,7 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
         parameters.Add("@LeaseId", payment.LeaseId);
         parameters.Add("@EmployeeId", payment.EmployeeId);
         parameters.Add("@VendorId", payment.VendorId);
+        parameters.Add("@BrokerId", payment.BrokerId);
         parameters.Add("@PaymentMonth", payment.PaymentMonth);
         parameters.Add("@BrokerageAmount", payment.BrokerageAmount);
         parameters.Add("@TDSApplicableId", payment.TDSApplicableId);
@@ -101,6 +102,7 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
         parameters.Add("@LeaseId", payment.LeaseId);
         parameters.Add("@EmployeeId", payment.EmployeeId);
         parameters.Add("@VendorId", payment.VendorId);
+        parameters.Add("@BrokerId", payment.BrokerId);
         parameters.Add("@PaymentMonth", payment.PaymentMonth);
         parameters.Add("@BrokerageAmount", payment.BrokerageAmount);
         parameters.Add("@TDSApplicableId", payment.TDSApplicableId);
@@ -152,6 +154,13 @@ public class BrokeragePaymentRepository : IBrokeragePaymentRepository
         return await connection.QueryAsync<Owner>(
             "VendorRead",
             commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<IEnumerable<Owner>> GetBrokersAsync()
+    {
+        using var connection = CreateConnection();
+        return await connection.QueryAsync<Owner>(
+            "SELECT Id, VendorName as Name FROM Vendors WHERE VendorRole = 'Broker' ORDER BY VendorName");
     }
     public async Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync()
     {

@@ -408,7 +408,7 @@
                 data: { leaseId: leaseId },
                 success: function (data) {
                     if (data.success) {
-                        $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', false);
+                        $('#vendorSelect').val(data.ownerId).trigger('change').prop('disabled', true);
                         // Validate the auto-selected vendor
                         validateRequiredField('#vendorSelect', '#vendorValidation', 'Please select an owner');
                     }
