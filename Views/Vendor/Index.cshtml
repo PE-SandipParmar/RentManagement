@@ -184,9 +184,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <input type="checkbox" id="selectAll">
-                        </th>
+                       
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Role</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
@@ -208,9 +206,7 @@
                     @foreach (var vendor in Model.Vendors)
                     {
                         <tr class="table-row">
-                            <td class="px-4 py-4 text-center">
-                                <input type="checkbox" class="vendor-checkbox">
-                            </td>
+                           
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@(vendor.VendorRole ?? "Owner")</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@vendor.VendorCode</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@vendor.VendorName</td>
@@ -1209,9 +1205,7 @@
 
                 const row = `
                     <tr class="table-row hover:bg-gray-50">
-                        <td class="px-4 py-4 text-center">
-                            <input type="checkbox" class="vendor-checkbox">
-                        </td>
+                     
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorRole || 'Owner'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${vendor.vendorCode || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName || ''}</td>
@@ -2257,9 +2251,7 @@
             vendors.forEach(vendor => {
                 const row = `
                             <tr class="table-row">
-                                <td class="px-4 py-4 text-center">
-                                    <input type="checkbox" class="vendor-checkbox">
-                                </td>
+                               
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorCode}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.vendorName}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${vendor.mobileNumber}</td>

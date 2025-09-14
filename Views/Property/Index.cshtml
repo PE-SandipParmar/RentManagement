@@ -193,9 +193,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <input type="checkbox" id="selectAll">
-                        </th>
+                       
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Address</th>
@@ -214,9 +212,7 @@
                     @foreach (var property in Model.Properties)
                     {
                         <tr class="table-row">
-                            <td class="px-4 py-4 text-center">
-                                <input type="checkbox" class="property-checkbox">
-                            </td>
+                            
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@property.PropertyCode</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @property.VendorName<br>
@@ -1524,9 +1520,7 @@
 
                 const row = `
                     <tr class="table-row hover:bg-gray-50">
-                        <td class="px-4 py-4 text-center">
-                            <input type="checkbox" class="property-checkbox">
-                        </td>
+                     
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${property.propertyCode || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ${property.vendorName || ''}<br>
