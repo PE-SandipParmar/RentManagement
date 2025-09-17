@@ -14,19 +14,22 @@ namespace RentManagement.Controllers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IVendorRepository _vendorRepository;
         private readonly ILogger<MonthlyRentPaymentController> _logger;
-
+        private readonly IPropertyRepository _propertyRepository;
         public MonthlyRentPaymentController(
             ILeaseRepository leaseRepository,
             IMonthlyRentPaymentRepository repository,
             IEmployeeRepository employeeRepository,
             IVendorRepository vendorRepository,
-            ILogger<MonthlyRentPaymentController> logger)
+            ILogger<MonthlyRentPaymentController> logger,
+            IPropertyRepository propertyRepository)
         {
             _leaseRepository = leaseRepository;
             _repository = repository;
             _employeeRepository = employeeRepository;
             _vendorRepository = vendorRepository;
             _logger = logger;
+            _propertyRepository = propertyRepository;
+
         }
 
         // GET: MonthlyRentPayment - Fixed with proper filtering
@@ -123,11 +126,46 @@ namespace RentManagement.Controllers
         [Authorize(Roles = Roles.AdminOrEmployee)]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+            // ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+
+            // Load dropdown data
+            await LoadViewBagData();
             ViewBag.TDSApplicable = await _repository.GetTdsApplicableAsync();
             return View(new MonthlyRentPayment());
         }
+        private async Task LoadViewBagData()
+        {
+            var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+            var linkedEmployeeIds = new HashSet<int>();
+            var allProperties = await _propertyRepository.GetAllPropertiesAsync();
 
+            foreach (var property in allProperties.Where(e => e.ApprovalStatus == ApprovalStatus.Approved))
+            {
+                if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                {
+                    var employeeIds = property.LinkedEmployees.Split(',')
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                        .Where(id => id > 0);
+
+                    foreach (var id in employeeIds)
+                    {
+                        linkedEmployeeIds.Add(id);
+                    }
+                }
+            }
+
+            var availableEmployees = allEmployees.Where(e => e.Id.HasValue && e.ApprovalStatus == ApprovalStatus.Approved && linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+
+            var employeeCount = availableEmployees.Count;
+
+            ViewBag.Employees = availableEmployees.Select(e => new
+            {
+                Id = e.Id.Value,
+                Name = e.Name + "(" + e.Code + ")",
+            }).ToList();
+
+        }
         // POST: MonthlyRentPayment/Create - Fixed with proper validation
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -226,7 +264,9 @@ namespace RentManagement.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+            //ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+            // Load dropdown data
+            await LoadViewBagData();
             ViewBag.TDSApplicable = await _repository.GetTdsApplicableAsync();
 
             // Load vendors for the selected employee

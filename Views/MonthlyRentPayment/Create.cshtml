@@ -226,13 +226,14 @@
                         type: 'GET',
                         data: { employeeId: employeeId },
                         success: function(response) {
+
                             $('#employeeLoader').removeClass('show');
                             
                             if (response.success && response.vendors && response.vendors.length > 0) {
                                 $('#VendorId').prop('disabled', false);
                                 
                                 $.each(response.vendors, function(index, vendor) {
-                                    $('#VendorId').append(new Option(vendor.name, vendor.id));
+                                    $('#VendorId').append(new Option(vendor.vendorName + " (" + vendor.vendorCode + ")", vendor.id));
                                 });
                                 
                                 // If only one vendor, auto-select it

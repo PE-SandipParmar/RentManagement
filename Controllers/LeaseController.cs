@@ -16,19 +16,26 @@ namespace RentManagement.Controllers
         private readonly IVendorRepository _vendorRepository;
         private readonly ILogger<LeaseController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IPropertyRepository _propertyRepository;
+        private readonly IEmployeeRepository _employeeRepository;
 
         public LeaseController(
             ILeaseRepository leaseRepository,
             ILeaseDocumentRepository leaseDocumentRepository,
             IVendorRepository vendorRepository,
             ILogger<LeaseController> logger,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            IPropertyRepository propertyRepository,
+            IEmployeeRepository employeeRepository
+            )
         {
             _leaseRepository = leaseRepository;
             _leaseDocumentRepository = leaseDocumentRepository;
             _vendorRepository = vendorRepository;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            _propertyRepository = propertyRepository;
+            _employeeRepository = employeeRepository;
         }
 
         // GET: Lease
@@ -974,13 +981,45 @@ namespace RentManagement.Controllers
         private async Task LoadViewBagData()
         {
             ViewBag.LeaseTypes = await _leaseRepository.GetLeaseTypesAsync();
-            ViewBag.EmployeeNames = await _leaseRepository.GetEmployeeNamesAsync();
+           // ViewBag.EmployeeNames = await _leaseRepository.GetEmployeeNamesAsync();
             ViewBag.Owners = await _leaseRepository.GetOwnersAsync();
             ViewBag.RentRecoveryElements = await _leaseRepository.GetRentRecoveryElementsAsync();
             ViewBag.LicenseFeeRecoveryElements = await _leaseRepository.GetLicenseFeeRecoveryElementsAsync();
             ViewBag.PaymentTerms = await _leaseRepository.GetPaymentTermsAsync();
             ViewBag.PayableOnOrBeforeOptions = await _leaseRepository.GetPayableOnOrBeforeOptionsAsync();
             ViewBag.PerquisitePercents = await _leaseRepository.GetPerquisiteApplicablePercentsAsync();
+
+
+            var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+            var linkedEmployeeIds = new HashSet<int>();
+            var allProperties = await _propertyRepository.GetAllPropertiesAsync();
+
+            foreach (var property in allProperties.Where(e=>e.ApprovalStatus==ApprovalStatus.Approved))
+            {
+                if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                {
+                    var employeeIds = property.LinkedEmployees.Split(',')
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                        .Where(id => id > 0);
+
+                    foreach (var id in employeeIds)
+                    {
+                        linkedEmployeeIds.Add(id);
+                    }
+                }
+            }
+
+            var availableEmployees = allEmployees.Where(e => e.Id.HasValue &&  e.ApprovalStatus == ApprovalStatus.Approved && linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+
+            var employeeCount = availableEmployees.Count;
+
+            ViewBag.EmployeeNames = availableEmployees.Select(e => new
+            {
+                Id = e.Id.Value,
+                Name = e.Name +"("+ e.Code + ")",
+            }).ToList();
+
         }
 
         private UserRole GetCurrentUserRole()

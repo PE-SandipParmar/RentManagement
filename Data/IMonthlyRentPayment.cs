@@ -23,7 +23,7 @@ namespace RentManagement.Data
         // Dropdown data methods
         Task<IEnumerable<EmployeeName>> GetEmployeeNamesAsync();
         Task<IEnumerable<Owner>> GetOwnersAsync();
-        Task<IEnumerable<Owner>> GetOwnersByEmployeeAsync(int employeeid);
+        Task<IEnumerable<Vendor>> GetOwnersByEmployeeAsync(int employeeid);
         Task<IEnumerable<Lease>> GetLeasesByEmployeeAndVendorAsync(int employeeId, int vendorId);
         Task<IEnumerable<TdsApplicable>> GetTdsApplicableAsync();
         Task<IEnumerable<LeaseName>> GetLeaseNameAsync();

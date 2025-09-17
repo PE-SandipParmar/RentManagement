@@ -357,13 +357,7 @@
                                     <i class="ri-search-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                                 </div>
                                 <div id="createEmployeeList" class="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
-                                    @foreach (var employee in employees)
-                                    {
-                                        <div class="employee-item flex items-center mb-2" data-name="@employee.Name.ToLower()" data-code="@employee.Code.ToLower()">
-                                            <input type="checkbox" name="linkedEmployees" value="@employee.Id" id="create_emp_@employee.Id" class="mr-2" />
-                                            <label for="create_emp_@employee.Id" class="text-sm text-gray-700">@employee.Name (@employee.Code)</label>
-                                        </div>
-                                    }
+                                  
                                 </div>
                                 <div class="error-text hidden" data-field="linkedEmployees"></div>
                             </div>
@@ -621,6 +615,82 @@
             }
         }
 
+        // Function to fetch employees not linked to a specific vendor
+        async function fetchEmployeesNotLinkedToVendor(vendorId, formType = 'create') {
+            try {
+                console.log('Fetching employees not linked to vendor ID:', vendorId);
+                
+                const employeeListContainer = document.getElementById(`${formType}EmployeeList`);
+                if (!employeeListContainer) {
+                    console.error('Employee list container not found for form type:', formType);
+                    return;
+                }
+
+                // Show loading state
+                employeeListContainer.innerHTML = '<div class="text-center py-4 text-gray-500">Loading employees...</div>';
+
+                const url = `@Url.Action("GetEmployeesNotLinkedToVendor")?vendorId=${vendorId}`;
+                console.log('Fetching from URL:', url);
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    console.log('Available employees found:', result.data.length);
+                    
+                    if (result.data.length > 0) {
+                        // Populate employee list with available employees
+                        employeeListContainer.innerHTML = result.data.map(emp => 
+                            `<div class="employee-item flex items-center mb-2" data-name="${emp.name.toLowerCase()}" data-code="${emp.code.toLowerCase()}">
+                                <input type="checkbox" name="linkedEmployees" value="${emp.id}" id="${formType}_emp_${emp.id}" class="mr-2" />
+                                <label for="${formType}_emp_${emp.id}" class="text-sm text-gray-700">${emp.name} (${emp.code})</label>
+                            </div>`
+                        ).join('');
+                        
+                        console.log('Employee list updated with available employees');
+                    } else {
+                        employeeListContainer.innerHTML = '<div class="text-center py-4 text-gray-500">No available employees for this vendor</div>';
+                        console.log('No available employees found for this vendor');
+                    }
+                } else {
+                    console.error('API returned error:', result.message);
+                    employeeListContainer.innerHTML = '<div class="text-center py-4 text-red-500">Error loading employees</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching employees not linked to vendor:', error);
+                const employeeListContainer = document.getElementById(`${formType}EmployeeList`);
+                if (employeeListContainer) {
+                    employeeListContainer.innerHTML = '<div class="text-center py-4 text-red-500">Error loading employees</div>';
+                }
+            }
+        }
+
+        // Function to reset employee list to show all employees
+        function resetEmployeeList(formType = 'create') {
+            const employeeListContainer = document.getElementById(`${formType}EmployeeList`);
+            if (!employeeListContainer) {
+                console.error('Employee list container not found for form type:', formType);
+                return;
+            }
+
+            // Get all employees from ViewBag
+            const allEmployees = @Html.Raw(Json.Serialize(employees));
+            
+            if (allEmployees && allEmployees.length > 0) {
+                employeeListContainer.innerHTML = allEmployees.map(emp => 
+                    `<div class="employee-item flex items-center mb-2" data-name="${emp.name.toLowerCase()}" data-code="${emp.code.toLowerCase()}">
+                        <input type="checkbox" name="linkedEmployees" value="${emp.id}" id="${formType}_emp_${emp.id}" class="mr-2" />
+                        <label for="${formType}_emp_${emp.id}" class="text-sm text-gray-700">${emp.name} (${emp.code})</label>
+                    </div>`
+                ).join('');
+                
+                console.log('Employee list reset to show all employees:', allEmployees.length);
+            } else {
+                employeeListContainer.innerHTML = '<div class="text-center py-4 text-gray-500">No employees available</div>';
+                console.log('No employees available');
+            }
+        }
+
         // Event listeners
         function initializeEventListeners() {
             document.getElementById('searchInput').addEventListener('keypress', function (e) {
@@ -629,15 +699,28 @@
                 }
             });
 
-            document.getElementById('selectAll').addEventListener('change', function () {
-                const checkboxes = document.querySelectorAll('.property-checkbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
-            });
+       
 
             // Employee search functionality
             initializeEmployeeSearch();
+
+            // Vendor selection change handler for employee filtering
+            $(document).on('change', 'select[name="vendorId"]', function () {
+                const vendorId = $(this).val();
+                const formId = $(this).closest('form').attr('id');
+                const formType = formId === 'createPropertyForm' ? 'create' : 'edit';
+                
+                console.log('Vendor selection changed to:', vendorId, 'for form type:', formType);
+                
+                if (vendorId && vendorId !== '') {
+                    console.log('Fetching employees not linked to vendor:', vendorId);
+                    fetchEmployeesNotLinkedToVendor(vendorId, formType);
+                } else {
+                    console.log('No vendor selected, showing all employees');
+                    // Reset to show all employees
+                    resetEmployeeList(formType);
+                }
+            });
         }
 
         // Form validation
@@ -777,6 +860,9 @@
                     if (vendorSelect && $(vendorSelect).hasClass('select2-hidden-accessible')) {
                         $(vendorSelect).val('').trigger('change.select2');
                     }
+                    
+                    // Reset employee list to show all employees
+                    resetEmployeeList('create');
                 }
             }, 300);
         }
@@ -817,6 +903,9 @@
                     if (vendorSelect && $(vendorSelect).hasClass('select2-hidden-accessible')) {
                         $(vendorSelect).val('').trigger('change.select2');
                     }
+                    
+                    // Reset employee list to show all employees
+                    resetEmployeeList('edit');
                 }
             }, 300);
         }

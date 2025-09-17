@@ -225,7 +225,7 @@
             
             // Employee change event
             $('#EmployeeId').on('change', function() {
-                if (isInitialLoad) return;
+                // if (isInitialLoad) return;
                 
                 var employeeId = $(this).val();
                 
@@ -240,7 +240,7 @@
             
             // Vendor change event
             $('#VendorId').on('change', function() {
-                if (isInitialLoad) return;
+              
                 
                 var vendorId = $(this).val();
                 var employeeId = $('#EmployeeId').val();
@@ -286,13 +286,15 @@
                             $('#VendorId').prop('disabled', false);
                             
                             $.each(response.vendors, function(index, vendor) {
-                                $('#VendorId').append(new Option(vendor.name, vendor.id));
+                               // $('#VendorId').append(new Option(vendor.name, vendor.id));
+                                $('#VendorId').append(new Option(vendor.vendorName + " (" + vendor.vendorCode + ")", vendor.id));
+
                             });
                             
                             if (callback) callback();
                             
                             // If only one vendor and not initial load, auto-select it
-                            if (!isInitialLoad && response.vendors.length === 1) {
+                            if ( response.vendors.length === 1) {
                                 $('#VendorId').val(response.vendors[0].id).trigger('change');
                             }
                         } else {
@@ -319,7 +321,7 @@
                         
                         if (response.success && response.leases && response.leases.length > 0) {
                             $('#LeaseId').prop('disabled', false);
-                            
+                            $("#LeaseId").empty();
                             $.each(response.leases, function(index, lease) {
                                 var optionText = lease.refNo;
                                 if (lease.monthlyRentPayable) {
@@ -331,7 +333,7 @@
                             if (callback) callback();
                             
                             // If only one lease and not initial load, auto-select it
-                            if (!isInitialLoad && response.leases.length === 1) {
+                            if ( response.leases.length === 1) {
                                 $('#LeaseId').val(response.leases[0].id).trigger('change');
                             }
                         } else {

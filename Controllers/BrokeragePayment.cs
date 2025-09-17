@@ -11,10 +11,14 @@ namespace RentManagement.Controllers
     public class BrokeragePaymentController : Controller
     {
         private readonly IBrokeragePaymentRepository _BrokeragePaymentRepository;
-
-        public BrokeragePaymentController(IBrokeragePaymentRepository BrokeragePaymentRepository)
+        private readonly IPropertyRepository _propertyRepository;
+        private readonly IEmployeeRepository _employeeRepository;
+        public BrokeragePaymentController(IBrokeragePaymentRepository BrokeragePaymentRepository, IPropertyRepository propertyRepository,
+             IEmployeeRepository employeeRepository)
         {
             _BrokeragePaymentRepository = BrokeragePaymentRepository;
+            _propertyRepository = propertyRepository;
+            _employeeRepository = employeeRepository;
         }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string search = "")
@@ -384,10 +388,39 @@ namespace RentManagement.Controllers
         }
         private async Task LoadDropdowns()
         {
+            var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+            var linkedEmployeeIds = new HashSet<int>();
+            var allProperties = await _propertyRepository.GetAllPropertiesAsync();
 
+            foreach (var property in allProperties.Where(e => e.ApprovalStatus == ApprovalStatus.Approved))
+            {
+                if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                {
+                    var employeeIds = property.LinkedEmployees.Split(',')
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                        .Where(id => id > 0);
+
+                    foreach (var id in employeeIds)
+                    {
+                        linkedEmployeeIds.Add(id);
+                    }
+                }
+            }
+
+            var availableEmployees = allEmployees.Where(e => e.Id.HasValue && e.ApprovalStatus == ApprovalStatus.Approved && linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+
+            var employeeCount = availableEmployees.Count;
+
+            ViewBag.Employees = availableEmployees.Select(e => new
+            {
+                Id = e.Id.Value,
+                Name = e.Name + "(" + e.Code + ")",
+            }).ToList();
             ViewBag.Leases = await _BrokeragePaymentRepository.GetLeaseNameAsync();
-            ViewBag.Employees = await _BrokeragePaymentRepository.GetEmployeeNamesAsync();
+           // ViewBag.Employees = await _BrokeragePaymentRepository.GetEmployeeNamesAsync();
             ViewBag.Vendors = await _BrokeragePaymentRepository.GetOwnersAsync();
+
             ViewBag.Brokers = await _BrokeragePaymentRepository.GetBrokersAsync();
             ViewBag.TDSApplicable = await _BrokeragePaymentRepository.GetTdsApplicableAsync();
         }

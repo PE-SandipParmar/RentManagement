@@ -317,20 +317,33 @@ namespace RentManagement.Data
             return await connection.QueryAsync<Owner>(sql);
         }
 
-        public async Task<IEnumerable<Owner>> GetOwnersByEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<Vendor>> GetOwnersByEmployeeAsync(int employeeId)
         {
             using var connection = CreateConnection();
 
+            //var sql = @"
+            //    SELECT DISTINCT v.Id, v.VendorName as Name, v.VendorCode
+            //    FROM Vendors v
+            //    INNER JOIN Leases l ON l.VendorId = v.Id
+            //    WHERE l.EmployeeId = @EmployeeId
+            //    AND v.IsActiveRecord = 1 
+            //    AND v.ApprovalStatus = 2
+            //    ORDER BY v.VendorName";
             var sql = @"
-                SELECT DISTINCT v.Id, v.VendorName as Name, v.VendorCode
-                FROM Vendors v
-                INNER JOIN Leases l ON l.VendorId = v.Id
-                WHERE l.EmployeeId = @EmployeeId
-                AND v.IsActiveRecord = 1 
-                AND v.ApprovalStatus = 2
-                ORDER BY v.VendorName";
-
-            return await connection.QueryAsync<Owner>(sql, new { EmployeeId = employeeId });
+                    SELECT DISTINCT v.*
+                    FROM Vendors v
+                    INNER JOIN Properties p ON v.Id = p.VendorId
+                    WHERE v.IsActiveRecord = 1 
+                    AND v.ApprovalStatus = 2  -- Only approved vendors
+                    AND v.Status = 'Active'   -- Only active vendors
+                    AND p.IsActiveRecord = 1  -- Only active properties
+                    AND p.ApprovalStatus = 2  -- Only approved properties
+                    AND p.LinkedEmployees LIKE '%' + @EmployeeId + '%'  -- Employee is linked to property
+                    ORDER BY v.VendorName";
+            //return await connection.QueryAsync<Owner>(sql, new { EmployeeId = employeeId });
+            var parameters = new { EmployeeId = employeeId.ToString() };
+            var result = await connection.QueryAsync<Vendor>(sql, parameters);
+            return result ?? new List<Vendor>();
         }
 
         public async Task<IEnumerable<Lease>> GetLeasesByEmployeeAndVendorAsync(int employeeId, int vendorId)
@@ -343,6 +356,7 @@ namespace RentManagement.Data
                 WHERE l.EmployeeId = @EmployeeId 
                 AND l.VendorId = @VendorId
                 AND l.IsActive = 1
+                AND l.ApprovalStatus = 2
                 AND l.EndDate >= GETDATE()
                 ORDER BY l.RefNo";
 

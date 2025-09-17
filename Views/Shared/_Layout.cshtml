@@ -104,6 +104,35 @@
             background-color: #fed7aa;
             color: #d97706;
         }
+
+        /* Collapsible menu styles */
+        .reports-submenu {
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+
+        .reports-submenu.hidden {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .reports-submenu:not(.hidden) {
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .reports-menu-arrow {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .reports-menu-toggle:hover {
+            background-color: #f8fafc;
+        }
+
+        .reports-menu-toggle.active {
+            background-color: #dbeafe;
+            color: #3b82f6;
+        }
     </style>
 </head>
 
@@ -296,50 +325,72 @@
                         <span class="sidebar-text text-xs font-medium text-gray-500 uppercase tracking-wide px-3">Reports & Analytics</span>
                     </div>
 
-                    <a asp-controller="MISReport" asp-action="Index"
-                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                       data-nav="mis-reports">
-                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="ri-file-chart-line"></i>
-                        </div>
-                        <span class="sidebar-text">MIS Reports</span>
-                    </a>
+                    <!-- Collapsible Reports Menu -->
+                    <div class="reports-menu-container">
+                        <button type="button" 
+                                class="reports-menu-toggle w-full flex items-center justify-between px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
+                                onclick="toggleReportsMenu()"
+                                onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); toggleReportsMenu(); }"
+                                aria-expanded="false"
+                                aria-controls="reports-submenu">
+                            <div class="flex items-center">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-file-chart-line"></i>
+                                </div>
+                                <span class="sidebar-text">Reports</span>
+                            </div>
+                            <div class="w-5 h-5 flex items-center justify-center">
+                                <i class="ri-arrow-down-s-line reports-menu-arrow transition-transform duration-200"></i>
+                            </div>
+                        </button>
 
-                    <a asp-controller="Reports" asp-action="Index"
-                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                       data-nav="financial-reports">
-                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="ri-funds-line"></i>
-                        </div>
-                        <span class="sidebar-text">Reports</span>
-                    </a>
+                        <div id="reports-submenu" class="reports-submenu hidden ml-6 space-y-1">
+                           @*  <a asp-controller="Reports" asp-action="Index"
+                               class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors duration-200"
+                               data-nav="financial-reports">
+                                <div class="w-4 h-4 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-funds-line"></i>
+                                </div>
+                                <span class="sidebar-text">Financial Reports</span>
+                            </a> *@
 
-                    <a asp-controller="TDSReport" asp-action="Index"
-                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                       data-nav="tds-reports">
-                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="ri-file-invoice-line"></i>
-                        </div>
-                        <span class="sidebar-text">TDS Reports</span>
-                    </a>
+                            <a asp-controller="TDSReport" asp-action="Index"
+                               class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors duration-200"
+                               data-nav="tds-reports">
+                                <div class="w-4 h-4 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <span class="sidebar-text">TDS Reports</span>
+                            </a>
 
-                    <a asp-controller="TDSBrokerageReport" asp-action="Index"
-                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                       data-nav="tds-brokerage-reports">
-                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="ri-money-dollar-circle-line"></i>
-                        </div>
-                        <span class="sidebar-text">TDS Brokerage Reports</span>
-                    </a>
+                            <a asp-controller="TDSBrokerageReport" asp-action="Index"
+                               class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors duration-200"
+                               data-nav="tds-brokerage-reports">
+                                <div class="w-4 h-4 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <span class="sidebar-text">TDS Brokerage Reports</span>
+                            </a>
 
-                    <a asp-controller="RentPaymentReport" asp-action="Index"
-                       class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg mb-1 text-sm transition-colors duration-200"
-                       data-nav="rent-payment-reports">
-                        <div class="w-5 h-5 flex items-center justify-center mr-3 flex-shrink-0">
-                            <i class="ri-bank-card-line"></i>
+                           @*  <a asp-controller="MISReport" asp-action="Index"
+                               class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors duration-200"
+                               data-nav="mis-reports">
+                                <div class="w-4 h-4 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-bar-chart-2-line"></i>
+                                </div>
+                                <span class="sidebar-text">MIS Reports</span>
+                            </a>
+
+                            <a asp-controller="RentPaymentReport" asp-action="Index"
+                               class="sidebar-item flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors duration-200"
+                               data-nav="rent-payment-reports">
+                                <div class="w-4 h-4 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i class="ri-bank-card-line"></i>
+                                </div>
+                                <span class="sidebar-text">Rent Payment Reports</span>
+                            </a> *@
                         </div>
-                        <span class="sidebar-text">Rent Payment Reports</span>
-                    </a>
+                    </div>
 
                     <!-- Settings Section -->
                     <div class="mt-4 mb-2">
@@ -624,6 +675,45 @@
             dropdown.classList.toggle('hidden');
         }
 
+        // Reports menu toggle functionality
+        function toggleReportsMenu() {
+            const submenu = document.querySelector('.reports-submenu');
+            const arrow = document.querySelector('.reports-menu-arrow');
+            const toggle = document.querySelector('.reports-menu-toggle');
+            
+            if (submenu.classList.contains('hidden')) {
+                expandReportsMenu();
+            } else {
+                collapseReportsMenu();
+            }
+        }
+
+        // Expand reports menu
+        function expandReportsMenu() {
+            const submenu = document.querySelector('.reports-submenu');
+            const arrow = document.querySelector('.reports-menu-arrow');
+            const toggle = document.querySelector('.reports-menu-toggle');
+            
+            submenu.classList.remove('hidden');
+            arrow.style.transform = 'rotate(180deg)';
+            toggle.classList.add('bg-blue-50', 'text-primary');
+            toggle.classList.remove('text-gray-600');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+
+        // Collapse reports menu
+        function collapseReportsMenu() {
+            const submenu = document.querySelector('.reports-submenu');
+            const arrow = document.querySelector('.reports-menu-arrow');
+            const toggle = document.querySelector('.reports-menu-toggle');
+            
+            submenu.classList.add('hidden');
+            arrow.style.transform = 'rotate(0deg)';
+            toggle.classList.remove('bg-blue-50', 'text-primary');
+            toggle.classList.add('text-gray-600');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
         // Close dropdown when clicking outside
         document.addEventListener('click', function (event) {
             const userMenuButton = document.getElementById('userMenuButton');
@@ -709,9 +799,13 @@
                 'communication-announcements': 'announcements',
 
                 // Reports mappings
+                'reports-index': 'financial-reports',
                 'reports-mis': 'mis-reports',
                 'reports-financial': 'financial-reports',
-        'reports-tds': 'tds-reports',
+                'tdsreport-index': 'tds-reports',
+                'tdsbrokeragereport-index': 'tds-brokerage-reports',
+                'rentpaymentreport-index': 'rent-payment-reports',
+                'misreport-index': 'mis-reports',
                 'reports-occupancy': 'occupancy-reports',
                 'reports-analytics': 'analytics-dashboard',
                 'reports-export': 'data-export',
@@ -747,6 +841,12 @@
             // Function to set active navigation
             function setActiveNavigation() {
                 var matchFound = false;
+                
+                // Check if we're on a reports page and expand the reports menu
+                var reportsControllers = ['reports', 'tdsreport', 'tdsbrokeragereport', 'rentpaymentreport', 'misreport'];
+                if (reportsControllers.includes(currentController)) {
+                    expandReportsMenu();
+                }
 
                 // Method 1: Direct controller-action matching with data-nav attribute
                 var targetNav = controllerActionMappings[currentController + '-' + currentAction];

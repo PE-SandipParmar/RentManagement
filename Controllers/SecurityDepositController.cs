@@ -13,12 +13,16 @@ namespace RentManagement.Controllers
     {
         private readonly ISecurityDepositRepository _securityDepositRepository;
         private readonly ILogger<SecurityDepositController> _logger;
-
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IPropertyRepository _propertyRepository;
         public SecurityDepositController(ISecurityDepositRepository securityDepositRepository,
-            ILogger<SecurityDepositController> logger)
+            ILogger<SecurityDepositController> logger, IEmployeeRepository employeeRepository,
+            IPropertyRepository propertyRepository)
         {
             _securityDepositRepository = securityDepositRepository;
             _logger = logger;
+            _employeeRepository = employeeRepository;
+            _propertyRepository = propertyRepository;
         }
 
         // GET: SecurityDeposit
@@ -1051,9 +1055,39 @@ namespace RentManagement.Controllers
 
         private async Task LoadDropdowns()
         {
-            ViewBag.Employees = await _securityDepositRepository.GetEmployeeNamesAsync();
+           // ViewBag.Employees = await _securityDepositRepository.GetEmployeeNamesAsync();
             ViewBag.Vendors = await _securityDepositRepository.GetOwnersAsync();
             ViewBag.Leases = await _securityDepositRepository.GetLeaseNamesAsync();
+
+            var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+            var linkedEmployeeIds = new HashSet<int>();
+            var allProperties = await _propertyRepository.GetAllPropertiesAsync();
+
+            foreach (var property in allProperties.Where(e => e.ApprovalStatus == ApprovalStatus.Approved))
+            {
+                if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                {
+                    var employeeIds = property.LinkedEmployees.Split(',')
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                        .Where(id => id > 0);
+
+                    foreach (var id in employeeIds)
+                    {
+                        linkedEmployeeIds.Add(id);
+                    }
+                }
+            }
+
+            var availableEmployees = allEmployees.Where(e => e.Id.HasValue && e.ApprovalStatus == ApprovalStatus.Approved && linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+
+            var employeeCount = availableEmployees.Count;
+
+            ViewBag.Employees = availableEmployees.Select(e => new
+            {
+                Id = e.Id.Value,
+                Name = e.Name + "(" + e.Code + ")",
+            }).ToList();
         }
     }
 }

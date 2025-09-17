@@ -144,8 +144,236 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+        let employeeSalary = 0;
+        let leaseMaxBrokerage = 0;
+        let isInitialLoad = true;
 
-    <script>
+        $(document).ready(function () {
+            $('.searchable-dropdown').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Initialize calculations on load with existing values
+            initializeEditForm();
+        });
+
+        function initializeEditForm() {
+            // Get initial values and validate
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+
+            if (employeeId && employeeId !== "0") {
+                getEmployeeSalary(employeeId);
+            }
+
+            if (leaseId && leaseId !== "0") {
+                getLeaseMaxBrokerage(leaseId);
+            }
+
+            // Initialize TDS calculations
+            calculateNetAmount();
+
+            // Validate current brokerage amount after loading data
+            setTimeout(() => {
+                validateBrokerageAmount();
+                isInitialLoad = false;
+            }, 500);
+        }
+
+        // Employee selection change - load related leases
+        $("#EmployeeSelect").on("change", function () {
+            let employeeId = $(this).val();
+
+            if (employeeId && employeeId !== "0") {
+                // Always load leases for selected employee (same as Create form)
+                loadEmployeeLeases(employeeId);
+                // Get employee salary for validation
+                getEmployeeSalary(employeeId);
+            } else {
+                // Clear dependent dropdowns when no employee is selected
+                $("#LeaseSelect").empty().append('<option value="0">Select Lease</option>');
+                $("#VendorSelect").empty().append('<option value="0">Select Owner</option>');
+                employeeSalary = 0;
+                leaseMaxBrokerage = 0;
+            }
+
+            // Clear brokerage calculations when employee changes
+            clearBrokerageCalculations();
+            validateBrokerageAmount();
+        });
+
+        // Lease selection change - auto-fill owner and get lease details
+        $("#LeaseSelect").on("change", function () {
+            let leaseId = $(this).val();
+
+            if (leaseId && leaseId !== "0") {
+                // Load lease details for the selected lease
+                loadLeaseDetails(leaseId);
+            } else {
+                // Clear vendor when no lease is selected
+                $("#VendorSelect").empty().append('<option value="0">Select Owner</option>');
+                leaseMaxBrokerage = 0;
+                clearBrokerageCalculations();
+            }
+            validateBrokerageAmount();
+        });
+
+        // TDS selection change
+        $("#TDSApplicableSelect").on("change", function () {
+            let rate = $(this).find(":selected").data("rate");
+            $("#TDSRate").val(rate || 0);
+            calculateNetAmount();
+        });
+
+        // Brokerage amount input with debounced validation
+        $("#BrokerageAmount").on("input", function () {
+            debouncedValidation();
+            calculateNetAmount();
+        });
+
+        function loadEmployeeLeases(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeLeases", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    let leaseSelect = $("#LeaseSelect");
+                    leaseSelect.empty().append('<option value="0">Select Lease</option>');
+
+                    $.each(data, function (index, lease) {
+                        leaseSelect.append('<option value="' + lease.id + '">' + lease.name + '</option>');
+                    });
+
+                    leaseSelect.trigger('change.select2');
+                },
+                error: function () {
+                    alert('Failed to load leases for selected employee');
+                }
+            });
+        }
+
+        function getEmployeeSalary(employeeId) {
+            $.ajax({
+                url: '@Url.Action("GetEmployeeSalary", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId },
+                success: function (data) {
+                    employeeSalary = data.salary || 0;
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        function loadLeaseDetails(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "BrokeragePayment")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    // Auto-fill owner
+                    let vendorSelect = $("#VendorSelect");
+                    vendorSelect.empty();
+                    vendorSelect.append('<option value="' + data.vendorId + '">' + data.vendorName + '</option>');
+                    vendorSelect.val(data.vendorId);
+                    vendorSelect.trigger('change.select2');
+
+                    // Set lease max brokerage
+                    leaseMaxBrokerage = data.maxBrokerageAmount || 0;
+
+                    // Auto-fill payment month if not in edit mode with existing data
+                    if (!$("#PaymentMonth").val()) {
+                        let currentDate = new Date();
+                        let currentMonth = currentDate.toISOString().slice(0, 7);
+                        $("#PaymentMonth").val(currentMonth);
+                    }
+
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        function getLeaseMaxBrokerage(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "BrokeragePayment")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    leaseMaxBrokerage = data.maxBrokerageAmount || 0;
+                    validateBrokerageAmount();
+                }
+            });
+        }
+
+        // Enhanced validation function using server-side endpoint
+        function validateBrokerageAmount() {
+            let brokerageAmount = parseFloat($("#BrokerageAmount").val()) || 0;
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+
+            if (!brokerageAmount || !employeeId || !leaseId || employeeId === "0" || leaseId === "0") {
+                $("#brokerageValidation").hide();
+                $("#submitBtn").prop('disabled', false).removeClass('bg-gray-400').addClass('bg-blue-600 hover:bg-blue-700');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("ValidateBrokerageAmount", "BrokeragePayment")',
+                type: 'GET',
+                data: {
+                    employeeId: employeeId,
+                    leaseId: leaseId,
+                    brokerageAmount: brokerageAmount,
+                    excludeId: @Model.Id // Include current payment ID for edit validation
+                },
+                success: function (response) {
+                    // Update local variables for future calculations
+                    employeeSalary = response.employeeSalary || 0;
+                    leaseMaxBrokerage = response.leaseMaxBrokerage || 0;
+                },
+                error: function () {
+                    // Handle validation error silently or show message as needed
+                }
+            });
+        }
+
+        // Debounce function to avoid too many API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Use debounced validation
+        const debouncedValidation = debounce(validateBrokerageAmount, 500);
+
+        function calculateNetAmount() {
+            let total = parseFloat($("#BrokerageAmount").val()) || 0;
+            let rate = parseFloat($("#TDSRate").val()) || 0;
+            let tdsAmount = (total * rate / 100);
+            let netAmount = total - tdsAmount;
+
+            $("#TDSAmount").val(tdsAmount.toFixed(2));
+            $("#NetPayableAmount").val(netAmount.toFixed(2));
+        }
+
+        function clearBrokerageCalculations() {
+            $("#BrokerageAmount").val('');
+            $("#TDSAmount").val('');
+            $("#NetPayableAmount").val('');
+            $("#PaymentMonth").val('');
+            $("#brokerageValidation").hide();
+        }
+</script>
+    @* <script>
         let employeeSalary = 0;
         let leaseMaxBrokerage = 0;
         let isInitialLoad = true;
@@ -398,5 +626,5 @@
             $("#TDSAmount").val(tdsAmount.toFixed(2));
             $("#NetPayableAmount").val(netAmount.toFixed(2));
         }
-    </script>
+    </script> *@
 }
