@@ -44,9 +44,12 @@ namespace RentManagement.Data
                         WHEN p.ApprovalStatus = 2 THEN 'Approved'
                         WHEN p.ApprovalStatus = 3 THEN 'Rejected'
                         ELSE 'Unknown'
-                    END as ApprovalStatusText
+                    END as ApprovalStatusText,
+                b.VendorCode as BrokerCode,
+                 b.VendorName as BrokerName
                 FROM Properties p
                 INNER JOIN Vendors v ON p.VendorId = v.Id
+                LEFT JOIN Vendors b ON p.BrokerId = b.Id
                 WHERE p.IsActiveRecord = 1
                 AND (@SearchTerm = '' OR p.PropertyAddress LIKE '%' + @SearchTerm + '%' OR p.PropertyCode LIKE '%' + @SearchTerm + '%' OR v.VendorName LIKE '%' + @SearchTerm + '%')
                 AND (@StatusFilter = '' OR p.Status = @StatusFilter)
@@ -94,9 +97,10 @@ namespace RentManagement.Data
         {
             using var connection = CreateConnection();
             var sql = @"
-                SELECT p.*, v.VendorCode, v.VendorName 
+                SELECT p.*, v.VendorCode, v.VendorName,b.VendorCode as BrokerCode, b.VendorName as BrokerName
                 FROM Properties p
                 INNER JOIN Vendors v ON p.VendorId = v.Id
+                LEFT JOIN Vendors b ON p.BrokerId = b.Id
                 WHERE p.Id = @Id AND p.IsActiveRecord = 1";
 
             var parameters = new { Id = id };
@@ -149,13 +153,13 @@ namespace RentManagement.Data
 
             var sql = @"
                 INSERT INTO Properties (
-                    PropertyCode, VendorId, PropertyAddress, TotalRentAmount,
+                    PropertyCode, VendorId,BrokerId, PropertyAddress, TotalRentAmount,
                     LinkedEmployees, Status, ApprovalStatus, MakerUserId, MakerUserName,
                     MakerAction, CheckerUserId, CheckerUserName, ApprovalDate, 
                     RejectionReason, IsActiveRecord, CreatedDate, UpdatedDate
                 )
                 VALUES (
-                    @PropertyCode, @VendorId, @PropertyAddress, @TotalRentAmount,
+                    @PropertyCode, @VendorId,@BrokerId, @PropertyAddress, @TotalRentAmount,
                     @LinkedEmployees, @Status, @ApprovalStatus, @MakerUserId, @MakerUserName,
                     @MakerAction, @CheckerUserId, @CheckerUserName, @ApprovalDate,
                     @RejectionReason, @IsActiveRecord, GETDATE(), GETDATE()
@@ -166,6 +170,7 @@ namespace RentManagement.Data
             {
                 PropertyCode = property.PropertyCode,
                 VendorId = property.VendorId,
+                BrokerId = property.BrokerId,
                 PropertyAddress = property.PropertyAddress,
                 TotalRentAmount = property.TotalRentAmount,
                 LinkedEmployees = property.LinkedEmployees,
@@ -193,6 +198,7 @@ namespace RentManagement.Data
                 UPDATE Properties
                 SET 
                     VendorId = @VendorId,
+                    BrokerId = property.BrokerId,
                     PropertyAddress = @PropertyAddress,
                     TotalRentAmount = @TotalRentAmount,
                     LinkedEmployees = @LinkedEmployees,
@@ -213,6 +219,7 @@ namespace RentManagement.Data
             {
                 Id = property.Id,
                 VendorId = property.VendorId,
+                BrokerId = property.BrokerId,
                 PropertyAddress = property.PropertyAddress,
                 TotalRentAmount = property.TotalRentAmount,
                 LinkedEmployees = property.LinkedEmployees,
@@ -300,8 +307,7 @@ namespace RentManagement.Data
         }
 
         #endregion
-
-        #region Approval Workflow Methods
+         #region Approval Workflow Methods
 
         public async Task<IEnumerable<Property>> GetApprovedPropertiesAsync(string searchTerm, string statusFilter, int? vendorFilter, int pageNumber, int pageSize)
         {
@@ -535,6 +541,7 @@ namespace RentManagement.Data
                 UPDATE Properties 
                 SET 
                     VendorId = @VendorId,
+                    BrokerId = @BrokerId,
                     PropertyAddress = @PropertyAddress,
                     TotalRentAmount = @TotalRentAmount,
                     LinkedEmployees = @LinkedEmployees,
@@ -554,6 +561,7 @@ namespace RentManagement.Data
             {
                 Id = property.Id,
                 VendorId = property.VendorId,
+                BrokerId = property.BrokerId,
                 PropertyAddress = property.PropertyAddress,
                 TotalRentAmount = property.TotalRentAmount,
                 LinkedEmployees = property.LinkedEmployees,

@@ -135,6 +135,78 @@ namespace RentManagement.Controllers
         #region AJAX Methods
 
         [HttpGet]
+        public async Task<IActionResult> GetEmployeesNotLinkedToVendor(int vendorId, int? currentPropertyId = null)
+        {
+            try
+            {
+                if (vendorId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid vendor id." });
+                }
+
+                //var vendorProperties = await _propertyRepository.GetPropertiesByVendorAsync(vendorId);
+                //var linkedEmployeeIds = new HashSet<int>();
+                //foreach (var prop in vendorProperties)
+                //{
+                //    foreach (var empId in prop.LinkedEmployeesList)
+                //    {
+                //        linkedEmployeeIds.Add(empId);
+                //    }
+                //}
+
+                //var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+                //var available = allEmployees
+                //    .Where(e => e.Id.HasValue)
+                //    .Where(e => e.ApprovalStatus == ApprovalStatus.Approved)
+                //    .Where(e => !linkedEmployeeIds.Contains(e.Id!.Value))
+                //    .Select(e => new { id = e.Id!.Value, code = e.Code ?? string.Empty, name = e.Name })
+                //    .OrderBy(e => e.name)
+                //    .ToList();
+                var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+                var linkedEmployeeIds = new HashSet<int>();
+                var allProperties = await _propertyRepository.GetAllPropertiesAsync();
+
+                foreach (var property in allProperties.Where(e => e.ApprovalStatus == ApprovalStatus.Approved))
+                {
+                    if (currentPropertyId.HasValue && property.Id == currentPropertyId.Value)
+                    {
+                        // Skip excluding employees already linked to the property we are editing
+                        continue;
+                    }
+                    if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                    {
+                        var employeeIds = property.LinkedEmployees.Split(',')
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                            .Where(id => id > 0);
+
+                        foreach (var id in employeeIds)
+                        {
+                            linkedEmployeeIds.Add(id);
+                        }
+                    }
+                }
+
+                var availableEmployees = allEmployees.Where(e => e.Id.HasValue &&  !linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+
+                var employeeCount = availableEmployees.Count;
+
+               var available = availableEmployees.Select(e => new
+                {
+                    id = e.Id.Value,
+                    name = e.Name,
+                   code =  e.Code
+                }).ToList();
+                return Json(new { success = true, data = available });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting employees not linked to vendor {VendorId}", vendorId);
+                return Json(new { success = false, message = "An error occurred while loading employees." });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetProperties(string searchTerm = "", string statusFilter = "", string approvalStatusFilter = "", int? vendorFilter = null, int page = 1, int pageSize = 10)
         {
             try
@@ -182,7 +254,10 @@ namespace RentManagement.Controllers
                         approvalStatus = (int)p.ApprovalStatus,
                         approvalStatusText = p.ApprovalStatusText,
                         makerUserName = p.MakerUserName,
-                        makerAction = p.MakerActionText
+                        makerAction = p.MakerActionText,
+                        brokerId = p.BrokerId,
+                        brokerCode = p.BrokerCode,
+                        brokerName = p.BrokerName
                     });
                 }
 
@@ -239,7 +314,10 @@ namespace RentManagement.Controllers
                         makerUserName = property.MakerUserName,
                         checkerUserName = property.CheckerUserName,
                         rejectionReason = property.RejectionReason,
-                        approvalDate = property.ApprovalDate?.ToString("dd-MM-yyyy")
+                        approvalDate = property.ApprovalDate?.ToString("dd-MM-yyyy"),
+                        brokerId = property.BrokerId,
+                        brokerCode = property.BrokerCode,
+                        brokerName = property.BrokerName
                     }
                 });
             }
@@ -546,6 +624,7 @@ namespace RentManagement.Controllers
 
             try
             {
+
                 var employees = await _employeeRepository.GetEmployeesByIdsAsync(employeeIds);
                 return employees.Select(e => e.Name).ToList();
             }
@@ -562,6 +641,28 @@ namespace RentManagement.Controllers
         {
             public int Id { get; set; }
             public string RejectionReason { get; set; } = string.Empty;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetApprovedBrokers()
+        {
+            try
+            {
+                var brokers = await _vendorRepository.GetApprovedBrokersAsync("", "", 1, 1000);
+                var brokerList = brokers.Select(b => new
+                {
+                    id = b.Id,
+                    vendorCode = b.VendorCode,
+                    vendorName = b.VendorName
+                }).ToList();
+
+                return Json(new { success = true, data = brokerList });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting approved brokers");
+                return Json(new { success = false, message = "An error occurred while loading brokers." });
+            }
         }
     }
 }

@@ -294,6 +294,9 @@
 
                 // Check for duplicate records
                 checkDuplicateRecord(employeeId, leaseId);
+                
+                // Auto-fill deposit amount from lease
+                fetchLeaseDetails(leaseId);
             } else {
                 $('#vendorSelect').val('').trigger('change').prop('disabled', true);
                 $('#duplicateWarning').hide();
@@ -448,6 +451,29 @@
                     }
                 });
             }
+        }
+
+        function fetchLeaseDetails(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "SecurityDeposit")',
+                type: 'GET',
+                data: { id: leaseId },
+                success: function (data) {
+                    if (data.success && data.data) {
+                        const rentDeposit = data.data.rentDeposit;
+                        if (rentDeposit > 0) {
+                            $('#amountInput').val(rentDeposit);
+                            $('#amountValidation').addClass('success-message').text('Amount auto-filled from lease deposit');
+                            calculateTds(); // Recalculate TDS with new amount
+                        }
+                        else { $('#amountInput').val('0'); calculateTds(); }
+
+                    }
+                },
+                error: function () {
+                    console.error('Error fetching lease details');
+                }
+            });
         }
 
         function validateAmount() {

@@ -19,7 +19,7 @@
             <li>
                 <div class="flex items-center">
                     <i class="ri-arrow-right-s-line text-gray-400"></i>
-                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Owner Management</span>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Owner/Broker Management</span>
                 </div>
             </li>
         </ol>
@@ -31,14 +31,14 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">Owner Management</h2>
-            <p class="text-gray-600 mt-1">Manage your organization's owners and their information</p>
+            <h2 class="text-2xl font-bold text-gray-900">Owner/Broker Management</h2>
+            <p class="text-gray-600 mt-1">Manage your organization's owners/brokers and their information</p>
         </div>
         @if (isMaker || Model.CurrentUserRole == RentManagement.Models.UserRole.Admin)
         {
             <button onclick="openCreateDrawer()" class="rounded bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90 flex items-center">
                 <i class="ri-add-line mr-2"></i>
-                Add Owner
+                Add Owner/Broker
             </button>
         }
     </div>
@@ -93,7 +93,7 @@
             <div class="flex-1">
                 <div class="relative">
                     <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Search owners..."
+                    <input type="text" id="searchInput" placeholder="Search owners/brokers..."
                            value="@Model.SearchTerm"
                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
@@ -186,8 +186,8 @@
                     <tr>
                        
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner/Broker Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner/Broker Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mobile Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
@@ -291,7 +291,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Reject Owner</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Reject Owner/Broker</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -322,7 +322,7 @@
 
             <div class="px-6 py-4 bg-blue-600 text-white">
                 <div class="flex items-center justify-between">
-                    <h2 id="drawerTitle" class="text-xl font-semibold">Add New Owner</h2>
+                    <h2 id="drawerTitle" class="text-xl font-semibold">Add New Owner/Broker</h2>
                     <button onclick="closeCreateDrawer()" class="text-white hover:text-gray-200">
                         <i class="ri-close-line text-2xl"></i>
                     </button>
@@ -333,7 +333,7 @@
                 <form id="createVendorForm" class="p-6 space-y-6">
                     <!-- Vendor Details Section -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner/Broker Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Vendor Role Selection -->
                             <div class="md:col-span-2">
@@ -351,7 +351,7 @@
                                 <div class="error-text hidden" data-field="vendorRole"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner/Broker Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -382,7 +382,7 @@
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
-                                <textarea name="address" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter complete address"></textarea>
+                                <textarea name="address" rows="3" maxlength="500" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter complete address"></textarea>
                                 <div class="error-text hidden" data-field="address"></div>
                             </div>
                         </div>
@@ -470,7 +470,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitCreateForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Save Owner
+                    Save 
                 </button>
             </div>
         </div>
@@ -485,7 +485,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Edit Owner</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Edit Owner/Broker</h2>
                 <button onclick="closeEditDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -497,7 +497,7 @@
                     <input type="hidden" name="vendorId" />
                     <!-- Same form structure as create, with error divs -->
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Owner/Broker Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Vendor Role Selection -->
                             <div class="md:col-span-2">
@@ -505,7 +505,7 @@
                                 <div class="flex space-x-6">
                                     <label class="flex items-center">
                                         <input type="radio" name="vendorRole" value="Owner" class="mr-2 text-primary focus:ring-primary" />
-                                        <span class="text-sm text-gray-700">Owner</span>
+                                        <span class="text-sm text-gray-700">Owner/Broker</span>
                                     </label>
                                     <label class="flex items-center">
                                         <input type="radio" name="vendorRole" value="Broker" class="mr-2 text-primary focus:ring-primary" />
@@ -515,7 +515,7 @@
                                 <div class="error-text hidden" data-field="vendorRole"></div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner Name <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Owner/Broker Name <span class="text-red-500">*</span></label>
                                 <input type="text" name="vendorName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" />
                                 <div class="error-text hidden" data-field="vendorName"></div>
                             </div>
@@ -634,7 +634,7 @@
                     Cancel
                 </button>
                 <button type="button" onclick="submitEditForm()" class="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg">
-                    Update Owner
+                    Update 
                 </button>
             </div>
         </div>
@@ -647,7 +647,7 @@
         <div class="flex flex-col h-full">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-900">Owner Details</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Owner/Broker Details</h2>
                 <button onclick="closeViewDrawer()" class="text-gray-400 hover:text-gray-600">
                     <i class="ri-close-line text-xl"></i>
                 </button>
@@ -673,7 +673,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner/Broker</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -701,7 +701,7 @@
                     <i class="ri-error-warning-line text-red-400 text-2xl"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Owner</h3>
+                    <h3 class="text-lg font-medium text-gray-900">Delete Owner/Broker</h3>
                 </div>
             </div>
             <div class="mb-4">
@@ -912,7 +912,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while approving the owner.');
+                    showAlert('error', 'An error occurred while approving the owner/Broker.');
                 });
         }
 
@@ -964,7 +964,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while rejecting the owner.');
+                    showAlert('error', 'An error occurred while rejecting the owner/broker.');
                 });
         }
         function validateBankFields(input) {
@@ -981,7 +981,7 @@
         function validateVendorName(input) {
             const namePattern = /^[a-zA-Z\s]+$/;
             if (input.value && !namePattern.test(input.value)) {
-                showFieldError(input, 'Owner Name can only contain letters and spaces');
+                showFieldError(input, 'Owner/Broker Name can only contain letters and spaces');
                 return false;
             }
             clearFieldError(input);
@@ -1058,7 +1058,7 @@
             // Show loading indicator
             const tbody = document.getElementById('vendorTableBody');
             const colspan = isChecker ? 12 : 10; // Updated for Vendor Role column
-            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading owners...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4"><i class="ri-loader-line animate-spin"></i> Loading owner/brokers...</td></tr>`;
 
             fetch(`@Url.Action("GetVendors")?${params}`)
                 .then(response => {
@@ -1087,14 +1087,14 @@
                         console.log('Table now has', tableRows.length, 'rows');
                     } else {
                         console.error('GetVendors failed:', result);
-                        showAlert('error', result.message || 'Failed to load Owners');
-                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load Owners</td></tr>`;
+                        showAlert('error', result.message || 'Failed to load Owners/Brokers');
+                        tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Failed to load Owners/Brokers</td></tr>`;
                     }
                 })
                 .catch(error => {
                     console.error('Error loading owners:', error);
                     showAlert('error', 'An error occurred while loading Owners: ' + error.message);
-                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading Owners</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-red-500">Error loading Owners/Brokers</td></tr>`;
                 });
         }
 
@@ -1108,7 +1108,7 @@
 
             if (!vendors || vendors.length === 0) {
                 const colspan = isChecker ? 13 : 11; // Adjust colspan based on role (added Vendor Role column)
-                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No Owners found</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">No Owners/Brokers found</td></tr>`;
                 return;
             }
 
@@ -2053,7 +2053,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while updating the owner.');
+                    showAlert('error', 'An error occurred while updating the owner/broker.');
                 });
         }
 
@@ -2071,18 +2071,18 @@
                         document.getElementById('viewVendorDetails').innerHTML = `
                                     <div class="space-y-6">
                                         <div class="bg-gray-50 p-4 rounded-lg">
-                                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Owner Details</h3>
+                                                            <h3 class="text-md font-semibold text-gray-900 mb-4">Owner/Broker Details</h3>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label class="block text-sm font-medium text-gray-700">Vendor Role</label>
+                                                            <label class="block text-sm font-medium text-gray-700">Role</label>
                                                     <p class="text-sm text-gray-900">${vendor.vendorRole || 'Owner'}</p>
                                                 </div>
                                                 <div>
-                                                            <label class="block text-sm font-medium text-gray-700">Owner Code</label>
+                                                            <label class="block text-sm font-medium text-gray-700">Owner/Broker Code</label>
                                                     <p class="text-sm text-gray-900">${vendor.vendorCode}</p>
                                                 </div>
                                                 <div>
-                                                            <label class="block text-sm font-medium text-gray-700">Owner Name</label>
+                                                                    <label class="block text-sm font-medium text-gray-700">Owner/Broker Name</label>
                                                     <p class="text-sm text-gray-900">${vendor.vendorName}</p>
                                                 </div>
                                                 <div>
@@ -2168,7 +2168,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading owner details.');
+                    showAlert('error', 'An error occurred while loading owner/broker details.');
                 });
         }
 
@@ -2201,7 +2201,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while deleting the owner.');
+                    showAlert('error', 'An error occurred while deleting the owner/broker.');
                 });
         }
 
@@ -2240,7 +2240,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('error', 'An error occurred while loading owners.');
+                    showAlert('error', 'An error occurred while loading owners/brokers.');
                 });
         }
 

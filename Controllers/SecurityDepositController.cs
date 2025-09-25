@@ -15,14 +15,16 @@ namespace RentManagement.Controllers
         private readonly ILogger<SecurityDepositController> _logger;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IPropertyRepository _propertyRepository;
+        private readonly ILeaseRepository _leaseRepository;
         public SecurityDepositController(ISecurityDepositRepository securityDepositRepository,
             ILogger<SecurityDepositController> logger, IEmployeeRepository employeeRepository,
-            IPropertyRepository propertyRepository)
+            IPropertyRepository propertyRepository, ILeaseRepository leaseRepository)
         {
             _securityDepositRepository = securityDepositRepository;
             _logger = logger;
             _employeeRepository = employeeRepository;
             _propertyRepository = propertyRepository;
+            _leaseRepository = leaseRepository;
         }
 
         // GET: SecurityDeposit
@@ -1088,6 +1090,36 @@ namespace RentManagement.Controllers
                 Id = e.Id.Value,
                 Name = e.Name + "(" + e.Code + ")",
             }).ToList();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeaseDetails(int id)
+        {
+            try
+            {
+                var lease = await _leaseRepository.GetLeaseByIdAsync(id);
+                if (lease == null)
+                {
+                    return Json(new { success = false, message = "Lease not found." });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        id = lease.Id,
+                        rentDeposit = lease.RentDeposit ?? 0,
+                        refNo = lease.RefNo,
+                        monthlyRentPayable = lease.MonthlyRentPayable
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting lease details for ID: {Id}", id);
+                return Json(new { success = false, message = "An error occurred while loading lease details." });
+            }
         }
     }
 }

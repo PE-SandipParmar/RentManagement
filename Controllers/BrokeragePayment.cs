@@ -476,6 +476,45 @@ namespace RentManagement.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetAutoBroker(int employeeId, int leaseId)
+        {
+            try
+            {
+                if (employeeId <= 0 || leaseId <= 0)
+                {
+                    return Json(new { success = false, brokerId = (int?)null });
+                }
+
+                var leaseDetails = await _BrokeragePaymentRepository.GetLeaseDetailsAsync(leaseId);
+                if (leaseDetails == null)
+                {
+                    return Json(new { success = false, brokerId = (int?)null });
+                }
+
+                var allProps = await _propertyRepository.GetAllPropertiesAsync();
+                var match = allProps
+                    .Where(p => p.ApprovalStatus == ApprovalStatus.Approved && p.IsActiveRecord)
+                    .Where(p => p.VendorId == leaseDetails.VendorId)
+                    .FirstOrDefault(p => !string.IsNullOrEmpty(p.LinkedEmployees) &&
+                        p.LinkedEmployees.Split(',')
+                         .Where(x => !string.IsNullOrWhiteSpace(x))
+                         .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                         .Any(id => id == employeeId));
+
+                if (match != null && match.BrokerId.HasValue && match.BrokerId.Value > 0)
+                {
+                    return Json(new { success = true, brokerId = match.BrokerId.Value });
+                }
+
+                return Json(new { success = false, brokerId = (int?)null });
+            }
+            catch
+            {
+                return Json(new { success = false, brokerId = (int?)null });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ValidateBrokeragePayment(int employeeId, int leaseId)
         {
             try

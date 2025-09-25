@@ -212,6 +212,7 @@
             if (leaseId && leaseId !== "0") {
                 // Load lease details for the selected lease
                 loadLeaseDetails(leaseId);
+                tryAutoSelectBroker();
             } else {
                 // Clear vendor when no lease is selected
                 $("#VendorSelect").empty().append('<option value="0">Select Owner</option>');
@@ -220,7 +221,22 @@
             }
             validateBrokerageAmount();
         });
+        function tryAutoSelectBroker() {
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+            if (!employeeId || employeeId === "0" || !leaseId || leaseId === "0") return;
 
+            $.ajax({
+                url: '@Url.Action("GetAutoBroker", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId, leaseId: leaseId },
+                success: function (res) {
+                    if (res && res.success && res.brokerId) {
+                        $("#BrokerSelect").val(res.brokerId).trigger('change.select2');
+                    }
+                }
+            });
+        }
         // TDS selection change
         $("#TDSApplicableSelect").on("change", function () {
             let rate = $(this).find(":selected").data("rate");
@@ -289,8 +305,9 @@
                         let currentMonth = currentDate.toISOString().slice(0, 7);
                         $("#PaymentMonth").val(currentMonth);
                     }
-
+                    $("#BrokerageAmount").val(data.maxBrokerageAmount).prop('disabled', true);
                     validateBrokerageAmount();
+                    calculateNetAmount();
                 }
             });
         }

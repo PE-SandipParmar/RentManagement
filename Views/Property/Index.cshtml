@@ -227,13 +227,13 @@
                                     var employeeList = property.LinkedEmployeesList;
                                     if (employeeList.Any())
                                     {
-                                        <span title="@string.Join(", ", employeeList)">
-                                            @(employeeList.Count) Employee(s)
-                                        </span>
+                                            <span title="@string.Join(", ", employeeList)">
+                                                @(employeeList.Count) Employee(s)
+                                            </span>
                                     }
                                     else
                                     {
-                                        <span>-</span>
+                                            <span>-</span>
                                     }
                                 }
                             </td>
@@ -350,6 +350,13 @@
                                 <div class="error-text hidden" data-field="status"></div>
                             </div>
                             <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+                                <select name="brokerId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Select Broker (Optional)</option>
+                                </select>
+                                <div class="error-text hidden" data-field="brokerId"></div>
+                            </div>
+                            <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Linked Employees</label>
                                 <div class="relative mb-2">
                                     <input type="text" id="createEmployeeSearch" placeholder="Search employees..." 
@@ -361,6 +368,7 @@
                                 </div>
                                 <div class="error-text hidden" data-field="linkedEmployees"></div>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -423,6 +431,13 @@
                                     <option value="Inactive">Inactive</option>
                                 </select>
                                 <div class="error-text hidden" data-field="status"></div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+                                <select name="brokerId" class="searchable-dropdown w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="">Select Broker (Optional)</option>
+                                </select>
+                                <div class="error-text hidden" data-field="brokerId"></div>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Linked Employees</label>
@@ -563,6 +578,7 @@
             
             // Load vendors first, then initialize Select2
             await loadVendors();
+            await loadBrokers();
             initializeSelect2();
         });
        
@@ -629,10 +645,15 @@
                 // Show loading state
                 employeeListContainer.innerHTML = '<div class="text-center py-4 text-gray-500">Loading employees...</div>';
 
-                const url = `@Url.Action("GetEmployeesNotLinkedToVendor")?vendorId=${vendorId}`;
+                const form = document.getElementById(`${formType}PropertyForm`);
+                const currentPropertyId = formType === 'edit' ? (form?.querySelector('input[name="propertyId"]')?.value || '') : '';
+                const url = `@Url.Action("GetEmployeesNotLinkedToVendor")?vendorId=${vendorId}${currentPropertyId ? `&currentPropertyId=${encodeURIComponent(currentPropertyId)}` : ''}`;
                 console.log('Fetching from URL:', url);
 
                 const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 const result = await response.json();
 
                 if (result.success && result.data && Array.isArray(result.data)) {
@@ -947,7 +968,7 @@
             const propertyAddress = formData.get('propertyAddress');
             const totalRentAmount = formData.get('totalRentAmount');
             const status = formData.get('status');
-
+            const brokerId = formData.get('brokerId');
             // Validate required fields
             if (!vendorId || !propertyAddress || !totalRentAmount) {
                 showAlert('error', 'Please fill in all required fields');
@@ -963,6 +984,7 @@
 
             const data = {
                 vendorId: parseInt(vendorId),
+                brokerId: brokerId ? parseInt(brokerId) : null,
                 propertyAddress: propertyAddress.trim(),
                 totalRentAmount: parseFloat(totalRentAmount) || 0,
                 linkedEmployeesList: selectedEmployees || [],
@@ -1019,25 +1041,26 @@
                     // Safely set form values with null checks
                     const propertyIdInput = form.querySelector('input[name="propertyId"]');
                     const vendorIdSelect = form.querySelector('select[name="vendorId"]');
+                    const brokerIdSelect = form.querySelector('select[name="brokerId"]');
                     const propertyAddressTextarea = form.querySelector('textarea[name="propertyAddress"]');
                     const totalRentAmountInput = form.querySelector('input[name="totalRentAmount"]');
                     const statusSelect = form.querySelector('select[name="status"]');
-
+                    
                     if (propertyIdInput) propertyIdInput.value = property.id || '';
-                                        if (vendorIdSelect) {
+                    if (vendorIdSelect) {
                         console.log('Setting vendor ID:', property.vendorId, 'for property:', property.id);
                         console.log('Vendor select element:', vendorIdSelect);
                         console.log('Available options:', Array.from(vendorIdSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
-                        
+
                         vendorIdSelect.value = property.vendorId || '';
                         console.log('Vendor select value after setting:', vendorIdSelect.value);
                         console.log('Vendor select selectedIndex:', vendorIdSelect.selectedIndex);
-                        
+
                         // Refresh Select2 if it's initialized
                         if ($(vendorIdSelect).hasClass('select2-hidden-accessible')) {
                             console.log('Select2 is initialized, triggering change event');
                             $(vendorIdSelect).trigger('change.select2');
-                            
+
                             // Add a small delay to ensure Select2 updates properly
                             setTimeout(() => {
                                 if ($(vendorIdSelect).val() !== property.vendorId) {
@@ -1045,12 +1068,45 @@
                                     $(vendorIdSelect).val(property.vendorId).trigger('change.select2');
                                 }
                             }, 100);
-                            
+
                             // Additional fallback with longer delay
                             setTimeout(() => {
                                 if ($(vendorIdSelect).val() !== property.vendorId) {
                                     console.log('Final fallback: forcing Select2 update');
                                     $(vendorIdSelect).val(property.vendorId).trigger('change.select2');
+                                }
+                            }, 500);
+                        } else {
+                            console.log('Select2 is not initialized yet');
+                        }
+                    }
+                    if (brokerIdSelect) {
+                        console.log('Setting broker ID:', property.brokerId, 'for property:', property.id);
+                        console.log('broker select element:', brokerIdSelect);
+                        console.log('Available options:', Array.from(brokerIdSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+
+                        brokerIdSelect.value = property.brokerId || '';
+                        console.log('broker select value after setting:', brokerIdSelect.value);
+                        console.log('broker select selectedIndex:', brokerIdSelect.selectedIndex);
+
+                        // Refresh Select2 if it's initialized
+                        if ($(brokerIdSelect).hasClass('select2-hidden-accessible')) {
+                            console.log('Select2 is initialized, triggering change event');
+                            $(brokerIdSelect).trigger('change.select2');
+
+                            // Add a small delay to ensure Select2 updates properly
+                            setTimeout(() => {
+                                if ($(brokerIdSelect).val() !== property.brokerId) {
+                                    console.log('Select2 value mismatch, forcing update');
+                                    $(brokerIdSelect).val(property.brokerId).trigger('change.select2');
+                                }
+                            }, 100);
+
+                            // Additional fallback with longer delay
+                            setTimeout(() => {
+                                if ($(brokerIdSelect).val() !== property.brokerId) {
+                                    console.log('Final fallback: forcing Select2 update');
+                                    $(brokerIdSelect).val(property.brokerId).trigger('change.select2');
                                 }
                             }, 500);
                         } else {
@@ -1102,7 +1158,7 @@
             const propertyAddress = formData.get('propertyAddress');
             const totalRentAmount = formData.get('totalRentAmount');
             const status = formData.get('status');
-
+            const brokerId = formData.get('brokerId');
             // Validate required fields
             if (!propertyId || !vendorId || !propertyAddress || !totalRentAmount) {
                 showAlert('error', 'Please fill in all required fields');
@@ -1122,7 +1178,8 @@
                 propertyAddress: propertyAddress.trim(),
                 totalRentAmount: parseFloat(totalRentAmount) || 0,
                 linkedEmployeesList: selectedEmployees || [],
-                status: status || 'Active'
+                status: status || 'Active',
+                        brokerId: brokerId ? parseInt(brokerId) : null
             };
 
             fetch('@Url.Action("UpdateProperty")', {
@@ -1166,6 +1223,21 @@
                             ? (property.linkedEmployeeNames && property.linkedEmployeeNames.length > 0 ? property.linkedEmployeeNames.join(', ') : property.linkedEmployees.join(', '))
                             : 'None';
 
+                        const brokerDetails = (property.brokerId || property.brokerName || property.brokerCode) ? `
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h3 class="text-md font-semibold text-gray-900 mb-4">Broker Details</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Broker Code</label>
+                                            <p class="text-sm text-gray-900">${property.brokerCode || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Broker Name</label>
+                                            <p class="text-sm text-gray-900">${property.brokerName || '-'}</p>
+                                        </div>
+                                    </div>
+                                </div>` : '';
+
                         document.getElementById('viewPropertyDetails').innerHTML = `
                             <div class="space-y-6">
                                 <div class="bg-gray-50 p-4 rounded-lg">
@@ -1199,6 +1271,8 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                ${brokerDetails}
 
                                 <div class="bg-gray-50 p-4 rounded-lg">
                                     <h3 class="text-md font-semibold text-gray-900 mb-4">Rent Details</h3>
@@ -1737,6 +1811,27 @@
                     item.style.display = 'none';
                 }
             });
+        }
+        async function loadBrokers() {
+            try {
+                const response = await fetch('@Url.Action("GetApprovedBrokers")');
+                const result = await response.json();
+
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    const createSelect = document.querySelector('#createPropertyForm select[name="brokerId"]');
+                    const editSelect = document.querySelector('#editPropertyForm select[name="brokerId"]');
+
+                    if (createSelect && editSelect) {
+                        const options = '<option value="">Select Broker (Optional)</option>' +
+                            result.data.map(b => `<option value="${b.id || ''}">${b.vendorName || 'Unknown'} (${b.vendorCode || 'N/A'})</option>`).join('');
+
+                        createSelect.innerHTML = options;
+                        editSelect.innerHTML = options;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading brokers:', error);
+            }
         }
     </script>
 }

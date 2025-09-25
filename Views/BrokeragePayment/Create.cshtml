@@ -177,6 +177,7 @@
 
             if (leaseId && leaseId !== "0") {
                 loadLeaseDetails(leaseId);
+                tryAutoSelectBroker();
             } else {
                 $("#VendorSelect").empty().append('<option value="0">Select Owner</option>').prop('disabled', true);
                 leaseMaxBrokerage = 0;
@@ -241,7 +242,7 @@
                     vendorSelect.empty();
                     vendorSelect.append('<option value="' + data.vendorId + '">' + data.vendorName + '</option>');
                     vendorSelect.val(data.vendorId).prop('disabled', false);
-                    vendorSelect.trigger('change.select2');
+                    vendorSelect.trigger('change.select2'); 
 
                     // Set lease max brokerage
                     leaseMaxBrokerage = data.maxBrokerageAmount || 0;
@@ -250,8 +251,27 @@
                     let currentDate = new Date();
                     let currentMonth = currentDate.toISOString().slice(0, 7);
                     $("#PaymentMonth").val(currentMonth);
+                    $("#BrokerageAmount").val(data.maxBrokerageAmount).prop('disabled', true);
 
                     validateBrokerageAmount();
+                    calculateNetAmount();
+                }
+            });
+        }
+
+        function tryAutoSelectBroker() {
+            let employeeId = $("#EmployeeSelect").val();
+            let leaseId = $("#LeaseSelect").val();
+            if (!employeeId || employeeId === "0" || !leaseId || leaseId === "0") return;
+
+            $.ajax({
+                url: '@Url.Action("GetAutoBroker", "BrokeragePayment")',
+                type: 'GET',
+                data: { employeeId: employeeId, leaseId: leaseId },
+                success: function (res) {
+                    if (res && res.success && res.brokerId) {
+                        $("#BrokerSelect").val(res.brokerId).trigger('change.select2');
+                    }
                 }
             });
         }

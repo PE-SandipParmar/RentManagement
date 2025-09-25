@@ -40,5 +40,6 @@ namespace RentManagement.Data
         // Additional helper methods
         Task<IEnumerable<Property>> GetPropertiesByVendorAsync(int vendorId);
         Task<IEnumerable<Property>> GetPropertiesByEmployeeAsync(string employeeName);
+      
     }
 }

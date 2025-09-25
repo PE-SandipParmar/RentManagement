@@ -39,10 +39,10 @@ namespace RentManagement.Data
         
         // Get vendors by employee (for lease management)
         Task<IEnumerable<Vendor>> GetVendorsByEmployeeAsync(int employeeId);
-        
+
         // Add these methods to your IVendorRepository interface
 
         // Get pending approvals by specific maker
-
+        Task<IEnumerable<Vendor>> GetApprovedBrokersAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize);
     }
 }

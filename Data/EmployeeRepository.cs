@@ -613,7 +613,7 @@ IsActive = 1,
             var sql = @"
                 SELECT COUNT(*)
                 FROM Employees e
-                WHERE e.IsActiveRecord = 1
+                WHERE e.IsActiveRecord = 1 and ApprovalStatus = 1
                 AND (@SearchTerm = '' OR e.Name LIKE '%' + @SearchTerm + '%' OR e.Code LIKE '%' + @SearchTerm + '%')
                 AND (@StatusFilter = '' OR e.IsActive = CASE WHEN @StatusFilter = 'Active' THEN 1 WHEN @StatusFilter = 'Inactive' THEN 0 END)";
 

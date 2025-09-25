@@ -65,7 +65,9 @@ namespace RentManagement.Models
 
         [Display(Name = "Is Active Record")]
         public bool IsActiveRecord { get; set; } = true;
-
+        public int? BrokerId { get; set; }
+        public string? BrokerCode { get; set; }
+        public string? BrokerName { get; set; }
         // Helper property to get linked employees as a list of IDs
         public List<int> LinkedEmployeesList
         {
@@ -105,6 +107,7 @@ namespace RentManagement.Models
             MakerAction.Delete => "Delete",
             _ => "Unknown"
         };
+
     }
 
     public class PropertyViewModel

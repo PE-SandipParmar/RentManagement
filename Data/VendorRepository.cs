@@ -679,5 +679,34 @@ namespace RentManagement.Data
         }
 
         #endregion
+        public async Task<IEnumerable<Vendor>> GetApprovedBrokersAsync(string searchTerm, string statusFilter, int pageNumber, int pageSize)
+        {
+            using var connection = CreateConnection();
+
+            var sql = @"
+        SELECT * FROM (
+            SELECT *, ROW_NUMBER() OVER (ORDER BY VendorName) as RowNum
+            FROM Vendors 
+            WHERE ApprovalStatus = 2 
+            AND IsActiveRecord = 1 
+            AND VendorRole = 'Broker'
+            AND (@SearchTerm IS NULL OR @SearchTerm = '' 
+                   OR VendorName LIKE '%' + @SearchTerm + '%' 
+                   OR VendorCode LIKE '%' + @SearchTerm + '%')
+            AND (@StatusFilter IS NULL OR @StatusFilter = '' OR Status = @StatusFilter)
+        ) AS PagedResults
+        WHERE RowNum BETWEEN ((@PageNumber - 1) * @PageSize + 1) AND (@PageNumber * @PageSize)
+        ORDER BY RowNum";
+
+            var parameters = new
+            {
+                SearchTerm = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+                StatusFilter = string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            return await connection.QueryAsync<Vendor>(sql, parameters);
+        }
     }
 }
