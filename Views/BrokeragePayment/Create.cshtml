@@ -251,7 +251,7 @@
                     let currentDate = new Date();
                     let currentMonth = currentDate.toISOString().slice(0, 7);
                     $("#PaymentMonth").val(currentMonth);
-                    $("#BrokerageAmount").val(data.maxBrokerageAmount).prop('disabled', true);
+                    $("#BrokerageAmount").val(data.maxBrokerageAmount);
 
                     validateBrokerageAmount();
                     calculateNetAmount();
