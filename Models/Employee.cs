@@ -46,7 +46,6 @@ namespace RentManagement.Models
 
         public bool EligibleForLease { get; set; } = false;
 
-        [Required(ErrorMessage = "Total Salary is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Total Salary must be a positive number.")]
         public decimal? TotalSalary { get; set; }
 
