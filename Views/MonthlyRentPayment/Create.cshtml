@@ -208,9 +208,16 @@
             // Make sure all loaders are hidden initially
             $('.loading-spinner').removeClass('show');
             
+            // Re-populate dropdowns if model has values (validation failure scenario)
+            restoreFormAfterValidationFailure();
+            
             // Employee change event
             $('#EmployeeId').on('change', function() {
                 var employeeId = $(this).val();
+                
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="EmployeeId"]').text('');
                 
                 // Reset dependent fields
                 $('#VendorId').empty().append('<option value="">Select Vendor</option>').prop('disabled', true).trigger('change');
@@ -249,6 +256,7 @@
                             showAlert('Error loading vendors', 'error');
                         }
                     });
+                  
                 }
             });
             
@@ -256,6 +264,10 @@
             $('#VendorId').on('change', function() {
                 var vendorId = $(this).val();
                 var employeeId = $('#EmployeeId').val();
+                
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="VendorId"]').text('');
               
                 // Reset lease field
                 $('#LeaseId').empty().append('<option value="">Select Lease</option>').prop('disabled', true).trigger('change');
@@ -303,6 +315,10 @@
             $('#LeaseId').on('change', function() {
                 var leaseId = $(this).val();
                 
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="LeaseId"]').text('');
+                
                 if (leaseId) {
                     $('#leaseLoader').addClass('show');
                     
@@ -327,16 +343,49 @@
                                     $('#LeaseEndDate').val(formattedDate);
                                 }
                                 
-                                // Set current month as default payment month
-                                var currentDate = new Date();
-                                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-                                var year = currentDate.getFullYear();
-                                $('#PaymentMonth').val(year + '-' + month);
+                                // Set current month as default payment month (only if empty)
+                                if (!$('#PaymentMonth').val()) {
+                                    var currentDate = new Date();
+                                    var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                                    var year = currentDate.getFullYear();
+                                    $('#PaymentMonth').val(year + '-' + month);
+                                }
                                 
                                 // Trigger TDS calculation
                                 calculateTDS();
+
                             } else {
                                 showAlert('Could not load lease details', 'error');
+                            }
+
+                            if ($("#TDSApplicableId").val() != '0') {
+                                $("#TDSApplicableId").removeClass('border-red-500');
+                                $('span[data-valmsg-for="TDSApplicableId"]').text('');
+                            }
+                            if ($("#PaymentMonth").val() != '0') {
+                                $("#PaymentMonth").removeClass('border-red-500');
+                                $('span[data-valmsg-for="PaymentMonth"]').text('');
+                            }
+                            if ($("#LeaseId").val() != '0') {
+                                $("#LeaseId").removeClass('border-red-500');
+                                $('span[data-valmsg-for="LeaseId"]').text('');
+                            }
+                            if ($("#LeaseEndDate").val() != '' && $("#LeaseEndDate").val() != '01-01-0001') {
+                                $("#LeaseEndDate").removeClass('border-red-500');
+                                $('span[data-valmsg-for="LeaseEndDate"]').text('');
+                            }
+                            if ($("#MonthlyLeaseAmount").val() != '') {
+                                $("#MonthlyLeaseAmount").removeClass('border-red-500');
+                                $('span[data-valmsg-for="MonthlyLeaseAmount"]').text('');
+                            }
+
+                            if ($("#Remark").val() != '') {
+                                $("#Remark").removeClass('border-red-500');
+                                $('span[data-valmsg-for="Remark"]').text('');
+                            }
+                            if ($("#MonthlyLeaseAmount").val() != '') {
+                                $("#MonthlyLeaseAmount").removeClass('border-red-500');
+                                $('span[data-valmsg-for="MonthlyLeaseAmount"]').text('');
                             }
                         },
                         error: function() {
@@ -349,9 +398,27 @@
             
             // TDS change event
             $('#TDSApplicableId').on('change', function() {
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="TDSApplicableId"]').text('');
+                
                 var rate = $(this).find(':selected').data('rate') || 0;
                 $('#TDSRate').val(rate);
                 calculateTDS();
+            });
+            
+            // Payment Month change event
+            $('#PaymentMonth').on('change', function() {
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="PaymentMonth"]').text('');
+            });
+            
+            // Remark field change event
+            $('textarea[name="Remark"]').on('input', function() {
+                // Clear validation errors
+                $(this).removeClass('border-red-500');
+                $('span[data-valmsg-for="Remark"]').text('');
             });
             
             // Calculate TDS and Net Amount
@@ -392,6 +459,100 @@
             // Format number with commas
             function formatNumber(num) {
                 return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            
+            // Restore form after validation failure
+            function restoreFormAfterValidationFailure() {
+                const employeeId = $('#EmployeeId').val();
+                const vendorId = $('#VendorId').val();
+                const leaseId = $('#LeaseId').val();
+
+                if ($("#TDSApplicableId").val() != '0') {
+                    $("#TDSApplicableId").removeClass('border-red-500');
+                    $('span[data-valmsg-for="TDSApplicableId"]').text('');
+                }
+                if ($("#PaymentMonth").val() != '0') {
+                    $("#PaymentMonth").removeClass('border-red-500');
+                    $('span[data-valmsg-for="PaymentMonth"]').text('');
+                }
+                if ($("#LeaseId").val() != '0') {
+                    $("#LeaseId").removeClass('border-red-500');
+                    $('span[data-valmsg-for="LeaseId"]').text('');
+                }
+                if ($("#LeaseEndDate").val() != '' && $("#LeaseEndDate").val() != '01-01-0001') {
+                    $("#LeaseEndDate").removeClass('border-red-500');
+                    $('span[data-valmsg-for="LeaseEndDate"]').text('');
+                }
+                if ($("#MonthlyLeaseAmount").val() != '') {
+                    $("#MonthlyLeaseAmount").removeClass('border-red-500');
+                    $('span[data-valmsg-for="MonthlyLeaseAmount"]').text('');
+                }
+                
+                if ($("#Remark").val() != '') {
+                    $("#Remark").removeClass('border-red-500');
+                    $('span[data-valmsg-for="Remark"]').text('');
+                }
+                if ($("#MonthlyLeaseAmount").val() != '') {
+                    $("#MonthlyLeaseAmount").removeClass('border-red-500');
+                    $('span[data-valmsg-for="MonthlyLeaseAmount"]').text('');
+                }
+                if (employeeId && employeeId !== '0') {
+                    // Re-load vendors for selected employee
+                    $.ajax({
+                        url: '@Url.Action("GetVendorsByEmployee", "MonthlyRentPayment")',
+                        type: 'GET',
+                        data: { employeeId: employeeId },
+                        success: function(response) {
+                            if (response.success && response.vendors && response.vendors.length > 0) {
+                                $('#VendorId').prop('disabled', false);
+                                
+                                $.each(response.vendors, function(index, vendor) {
+                                    $('#VendorId').append(new Option(vendor.vendorName + " (" + vendor.vendorCode + ")", vendor.id));
+                                });
+                                if (response.vendors.length === 1) {
+                                    $('#VendorId').val(response.vendors[0].id).trigger('change');
+                                }
+                                // Restore selected vendor
+                                if (vendorId) {
+                                    $('#VendorId').val(vendorId).trigger('change');
+                                    
+                                    // If vendor is selected, reload leases
+                                    if (leaseId) {
+                                        setTimeout(function() {
+                                            reloadLeasesAfterValidation(employeeId, vendorId, leaseId);
+                                        }, 500);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            function reloadLeasesAfterValidation(employeeId, vendorId, leaseId) {
+                $.ajax({
+                    url: '@Url.Action("GetLeasesByEmployeeAndVendor", "MonthlyRentPayment")',
+                    type: 'GET',
+                    data: { employeeId: employeeId, vendorId: vendorId },
+                    success: function(response) {
+                        if (response.success && response.leases && response.leases.length > 0) {
+                            $('#LeaseId').prop('disabled', false);
+                            
+                            $.each(response.leases, function(index, lease) {
+                                var optionText = lease.refNo;
+                                if (lease.monthlyRentPayable) {
+                                    optionText += ' - ₹' + formatNumber(lease.monthlyRentPayable);
+                                }
+                                $('#LeaseId').append(new Option(optionText, lease.id));
+                            });
+                            
+                            // Restore selected lease and don't reload details (values already in model)
+                            if (leaseId) {
+                                $('#LeaseId').val(leaseId).trigger('change.select2');
+                            }
+                        }
+                    }
+                });
             }
         });
     </script>

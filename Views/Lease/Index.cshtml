@@ -695,8 +695,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Remarks <span class="text-red-500">*</span></label>
-                        <textarea name="Narration" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
-                        <span class="text-red-600 text-sm" data-validation="Narration"></span>
+                        <textarea name="Narration" id="createNarration" rows="3" maxlength="250" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-red-600 text-sm" data-validation="Narration"></span>
+                            <span class="text-xs text-gray-500"><span id="createNarrationCount">0</span>/250 characters</span>
+                        </div>
                     </div>
                     <!-- Add this section after the "Miscellaneous" section and before the closing form tag -->
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Document Upload</h3>
@@ -866,6 +869,28 @@
         }
 
         function initializeEventListeners() {
+            // Character counter for Narration field
+            const narrationField = document.getElementById('createNarration');
+            if (narrationField) {
+                narrationField.addEventListener('input', function() {
+                    const count = this.value.length;
+                    const counter = document.getElementById('createNarrationCount');
+                    if (counter) {
+                        counter.textContent = count;
+                        if (count > 250) {
+                            counter.parentElement.classList.add('text-red-600');
+                            counter.parentElement.classList.remove('text-gray-500');
+                        } else if (count > 200) {
+                            counter.parentElement.classList.add('text-yellow-600');
+                            counter.parentElement.classList.remove('text-gray-500', 'text-red-600');
+                        } else {
+                            counter.parentElement.classList.add('text-gray-500');
+                            counter.parentElement.classList.remove('text-red-600', 'text-yellow-600');
+                        }
+                    }
+                });
+            }
+
             // Search functionality
             document.getElementById('searchInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
@@ -1746,6 +1771,14 @@
                         }
                     }
                     element.value = value || '';
+                    
+                    // Update character counter for Narration
+                    if (fieldName === 'Narration' && element.id === 'createNarration') {
+                        const counter = document.getElementById('createNarrationCount');
+                        if (counter) {
+                            counter.textContent = (value || '').length;
+                        }
+                    }
                 }
             });
 
@@ -2232,13 +2265,13 @@
 
             // Narration length validation
             const narration = document.querySelector('[name="Narration"]').value;
-            if (narration && narration.length > 200) {
+            if (narration && narration.length > 250) {
                 const errorSpan = document.querySelector('[data-validation="Narration"]');
                 if (errorSpan) {
-                    errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
+                    errorSpan.textContent = 'Remarks cannot be longer than 250 characters';
                     document.querySelector('[name="Narration"]').classList.add('border-red-500');
                 }
-                errors.push('Remarks cannot be longer than 200 characters');
+                errors.push('Remarks cannot be longer than 250 characters');
                 isValid = false;
             }
 
@@ -2430,13 +2463,13 @@
 
             // Narration length validation
             const narration = document.querySelector('[name="Narration"]').value;
-            if (narration && narration.length > 200) {
+            if (narration && narration.length > 250) {
                 const errorSpan = document.querySelector('[data-validation="Narration"]');
                 if (errorSpan) {
-                    errorSpan.textContent = 'Remarks cannot be longer than 200 characters';
+                    errorSpan.textContent = 'Remarks cannot be longer than 250 characters';
                     document.querySelector('[name="Narration"]').classList.add('border-red-500');
                 }
-                errors.push('Remarks cannot be longer than 200 characters');
+                errors.push('Remarks cannot be longer than 250 characters');
                 isValid = false;
             }
 
@@ -2962,22 +2995,23 @@
         }
         function downloadFile(fileId, fileName) {
             try {
-                // Create a download URL - adjust this based on your backend API
-                const downloadUrl = `@Url.Action("DownloadLeaseDocument")?documentId=${fileId}`;
+                console.log('Downloading file - ID:', fileId, 'Name:', fileName);
+                
+                if (!fileId || fileId === 'undefined' || fileId === 'null') {
+                    console.error('Invalid file ID:', fileId);
+                    showAlert('error', 'Invalid document ID');
+                    return;
+                }
+                
+                // Create a download URL
+                const downloadUrl = `@Url.Action("DownloadLeaseDocument", "Lease")?documentId=${fileId}`;
+                console.log('Download URL:', downloadUrl);
 
-                // Create a temporary link element
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = fileName;
-                link.style.display = 'none';
-
-                // Append to body, click, and remove
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Direct navigation to download URL
+                window.location.href = downloadUrl;
             } catch (error) {
                 console.error('Error downloading file:', error);
-                showAlert('error', 'Failed to download file');
+                showAlert('error', 'Failed to download file: ' + error.message);
             }
         }
         function loadLeases() {

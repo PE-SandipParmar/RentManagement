@@ -82,7 +82,34 @@ namespace RentManagement.Controllers
                 }
 
                 // Load dropdowns
-                ViewBag.Employees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+                //ViewBag.Employees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+                var allEmployees = await _employeeRepository.GetAllEmployeesDropdownAsync();
+                var linkedEmployeeIds = new HashSet<int>();
+                var allProperties = await _propertyRepository.GetAllPropertiesAsync();
+
+                foreach (var property in allProperties.Where(e => e.ApprovalStatus == ApprovalStatus.Approved))
+                {
+                    if (!string.IsNullOrEmpty(property.LinkedEmployees))
+                    {
+                        var employeeIds = property.LinkedEmployees.Split(',')
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Select(x => int.TryParse(x.Trim(), out int id) ? id : 0)
+                            .Where(id => id > 0);
+
+                        foreach (var id in employeeIds)
+                        {
+                            linkedEmployeeIds.Add(id);
+                        }
+                    }
+                }
+
+                var availableEmployees = allEmployees.Where(e => e.Id.HasValue && e.ApprovalStatus == ApprovalStatus.Approved && linkedEmployeeIds.Contains(e.Id.Value)).ToList();
+                ViewBag.Employees = availableEmployees.Select(e => new
+                {
+                    Id = e.Id.Value,
+                    Name = e.Name + "(" + e.Code + ")",
+                }).ToList();
+
                 ViewBag.TDSApplicable = await _repository.GetTdsApplicableAsync();
 
                 return View(viewModel);
@@ -233,7 +260,8 @@ namespace RentManagement.Controllers
                 }
 
                 // If we got here, something failed
-                ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+                //ViewBag.Employees = await _repository.GetEmployeeNamesAsync();
+                await LoadViewBagData();
                 ViewBag.TDSApplicable = await _repository.GetTdsApplicableAsync();
                 return View(payment);
             }

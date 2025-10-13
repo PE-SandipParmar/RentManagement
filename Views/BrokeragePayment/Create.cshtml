@@ -84,7 +84,7 @@
                         <span class="text-red-500">*</span>
                     </label>
                     <input asp-for="BrokerageAmount" id="BrokerageAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                           type="number" step="0.01" onkeypress="return event.charCode >= 48 && event.charCode <= 57"/>
+                           type="number" step="0.01" min="0.01" />
                     <div id="brokerageValidation" class="text-red-500 text-sm mt-1" style="display: none;"></div>
                     <span asp-validation-for="BrokerageAmount" class="text-red-500 text-sm"></span>
                 </div>
@@ -152,11 +152,32 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // Re-populate dropdowns if model has values (validation failure scenario)
+            const employeeId = $("#EmployeeSelect").val();
+            const leaseId = $("#LeaseSelect").val();
+            
+            if (employeeId && employeeId !== "0") {
+                // Re-load leases for selected employee
+                loadEmployeeLeases(employeeId);
+                getEmployeeSalary(employeeId);
+                
+                if (leaseId && leaseId !== "0") {
+                    // Re-load lease details (owner will be populated)
+                    setTimeout(function() {
+                        loadLeaseDetailsAfterValidation(leaseId);
+                    }, 500);
+                }
+            }
         });
 
         // Employee selection change - load related leases
         $("#EmployeeSelect").on("change", function () {
             let employeeId = $(this).val();
+
+            // Clear error styling and validation errors
+            $("#EmployeeSelect").removeClass('border-red-500');
+            $('.validation-errors').remove();
 
             if (employeeId && employeeId !== "0") {
                 // Load leases for selected employee
@@ -174,6 +195,10 @@
         // Lease selection change - auto-fill owner and payment details
         $("#LeaseSelect").on("change", function () {
             let leaseId = $(this).val();
+
+            // Clear error styling
+            $("#LeaseSelect").removeClass('border-red-500');
+            $('.validation-errors').remove();
 
             if (leaseId && leaseId !== "0") {
                 loadLeaseDetails(leaseId);
@@ -194,8 +219,23 @@
 
         // Brokerage amount input with debounced validation
         $("#BrokerageAmount").on("input", function () {
+            // Clear error styling
+            $("#BrokerageAmount").removeClass('border-red-500');
+            
             debouncedValidation();
             calculateNetAmount();
+        });
+
+        // Payment Month change - clear errors
+        $("#PaymentMonth").on("change", function() {
+            $("#PaymentMonth").removeClass('border-red-500');
+            $('.validation-errors').remove();
+        });
+
+        // Broker select change - clear errors
+        $("#BrokerSelect").on("change", function() {
+            $("#BrokerSelect").removeClass('border-red-500');
+            $('.validation-errors').remove();
         });
 
         function loadEmployeeLeases(employeeId) {
@@ -247,12 +287,41 @@
                     // Set lease max brokerage
                     leaseMaxBrokerage = data.maxBrokerageAmount || 0;
 
-                    // Auto-fill payment month (current month)
-                    let currentDate = new Date();
-                    let currentMonth = currentDate.toISOString().slice(0, 7);
-                    $("#PaymentMonth").val(currentMonth);
-                    $("#BrokerageAmount").val(data.maxBrokerageAmount);
+                    // Auto-fill payment month (current month) - only if empty
+                    if (!$("#PaymentMonth").val()) {
+                        let currentDate = new Date();
+                        let currentMonth = currentDate.toISOString().slice(0, 7);
+                        $("#PaymentMonth").val(currentMonth);
+                    }
+                    
+                    // Auto-fill brokerage amount - only if empty
+                    if (!$("#BrokerageAmount").val() || $("#BrokerageAmount").val() == "0") {
+                        $("#BrokerageAmount").val(data.maxBrokerageAmount || 0);
+                    }
 
+                    validateBrokerageAmount();
+                    calculateNetAmount();
+                }
+            });
+        }
+
+        // Function to reload lease details after validation failure (preserves existing values)
+        function loadLeaseDetailsAfterValidation(leaseId) {
+            $.ajax({
+                url: '@Url.Action("GetLeaseDetails", "BrokeragePayment")',
+                type: 'GET',
+                data: { leaseId: leaseId },
+                success: function (data) {
+                    // Only populate owner if not already set
+                    let vendorSelect = $("#VendorSelect");
+                    if (!vendorSelect.val() || vendorSelect.val() === "0") {
+                        vendorSelect.empty();
+                        vendorSelect.append('<option value="' + data.vendorId + '">' + data.vendorName + '</option>');
+                        vendorSelect.val(data.vendorId).prop('disabled', false);
+                        vendorSelect.trigger('change.select2');
+                    }
+                    
+                    leaseMaxBrokerage = data.maxBrokerageAmount || 0;
                     validateBrokerageAmount();
                     calculateNetAmount();
                 }
@@ -370,6 +439,101 @@
             $("#NetPayableAmount").val('');
             $("#PaymentMonth").val('');
             $("#brokerageValidation").hide();
+        }
+
+        // Add form validation before submit
+        $('form').on('submit', function(e) {
+            if (!validateFormBeforeSubmit()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        function validateFormBeforeSubmit() {
+            let isValid = true;
+            let errors = [];
+
+            // Validate Employee
+            const employeeId = $("#EmployeeSelect").val();
+            if (!employeeId || employeeId === "0") {
+                errors.push('Please select an Employee');
+                $("#EmployeeSelect").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#EmployeeSelect").removeClass('border-red-500');
+            }
+
+            // Validate Lease
+            const leaseId = $("#LeaseSelect").val();
+            if (!leaseId || leaseId === "0") {
+                errors.push('Please select a Lease Reference');
+                $("#LeaseSelect").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#LeaseSelect").removeClass('border-red-500');
+            }
+
+            // Validate Owner (auto-filled, but check)
+            const vendorId = $("#VendorSelect").val();
+            if (!vendorId || vendorId === "0") {
+                errors.push('Owner is required (auto-filled from Lease)');
+                $("#VendorSelect").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#VendorSelect").removeClass('border-red-500');
+            }
+
+            // Validate Broker
+            const brokerId = $("#BrokerSelect").val();
+            if (!brokerId || brokerId === "0") {
+                errors.push('Please select a Broker');
+                $("#BrokerSelect").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#BrokerSelect").removeClass('border-red-500');
+            }
+
+            // Validate Payment Month
+            const paymentMonth = $("#PaymentMonth").val();
+            if (!paymentMonth) {
+                errors.push('Please select a Payment Month');
+                $("#PaymentMonth").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#PaymentMonth").removeClass('border-red-500');
+            }
+
+            // Validate Brokerage Amount
+            const brokerageAmount = parseFloat($("#BrokerageAmount").val()) || 0;
+            if (brokerageAmount <= 0) {
+                errors.push('Brokerage Amount must be greater than 0');
+                $("#BrokerageAmount").addClass('border-red-500');
+                isValid = false;
+            } else {
+                $("#BrokerageAmount").removeClass('border-red-500');
+            }
+
+            // Show errors if validation fails
+            if (!isValid) {
+                let errorHtml = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"><strong>Please fix the following errors:</strong><ul class="list-disc ml-5 mt-2">';
+                errors.forEach(err => {
+                    errorHtml += `<li>${err}</li>`;
+                });
+                errorHtml += '</ul></div>';
+                
+                // Remove existing error container if any
+                $('.validation-errors').remove();
+                
+                // Add error container at top of form
+               // $('form').prepend(`<div class="validation-errors">${errorHtml}</div>`);
+                
+                // Scroll to top
+                $('html, body').animate({ scrollTop: 0 }, 300);
+            } else {
+                $('.validation-errors').remove();
+            }
+
+            return isValid;
         }
     </script>
 }

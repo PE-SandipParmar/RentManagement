@@ -197,7 +197,6 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Code</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property Address</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rent Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked Employees</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval Status</th>
@@ -221,7 +220,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 <div class="max-w-xs truncate" title="@property.PropertyAddress">@property.PropertyAddress</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹@property.TotalRentAmount.ToString("N2")</td>
+
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 @{
                                     var employeeList = property.LinkedEmployeesList;
@@ -336,9 +335,9 @@
                                 <textarea name="propertyAddress" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter complete property address"></textarea>
                                 <div class="error-text hidden" data-field="propertyAddress"></div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Total Rent Amount <span class="text-red-500">*</span></label>
-                                <input type="number" name="totalRentAmount" step="0.01" min="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="25000.00" />
+                            <div style="display:none">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Total Rent Amount</label>
+                                <input type="number" name="totalRentAmount" step="0.01" min="0.01" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="25000.00" />
                                 <div class="error-text hidden" data-field="totalRentAmount"></div>
                             </div>
                             <div>
@@ -419,9 +418,9 @@
                                 <textarea name="propertyAddress" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter complete property address"></textarea>
                                 <div class="error-text hidden" data-field="propertyAddress"></div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Total Rent Amount <span class="text-red-500">*</span></label>
-                                <input type="number" name="totalRentAmount" step="0.01" min="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="25000.00" />
+                            <div style="display:none">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Total Rent Amount</label>
+                                <input type="number" name="totalRentAmount" step="0.01" min="0.01" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="25000.00" />
                                 <div class="error-text hidden" data-field="totalRentAmount"></div>
                             </div>
                             <div>
@@ -970,7 +969,7 @@
             const status = formData.get('status');
             const brokerId = formData.get('brokerId');
             // Validate required fields
-            if (!vendorId || !propertyAddress || !totalRentAmount) {
+            if (!vendorId || !propertyAddress) {
                 showAlert('error', 'Please fill in all required fields');
                 return;
             }
@@ -1277,7 +1276,7 @@
                                 <div class="bg-gray-50 p-4 rounded-lg">
                                     <h3 class="text-md font-semibold text-gray-900 mb-4">Rent Details</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
+                                        <div style="display:none">
                                             <label class="block text-sm font-medium text-gray-700">Total Rent Amount</label>
                                             <p class="text-sm text-gray-900">₹${property.totalRentAmount}</p>
                                         </div>
@@ -1692,7 +1691,7 @@
                         <td class="px-6 py-4 text-sm text-gray-900">
                             <div class="max-w-xs truncate" title="${property.propertyAddress || ''}">${property.propertyAddress || ''}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${property.totalRentAmount.toLocaleString('en-IN')}</td>
+                       
                         <td class="px-6 py-4 text-sm text-gray-900">${linkedEmployeesDisplay}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="status-badge ${property.status === 'Active' ? 'status-active' : 'status-inactive'}">

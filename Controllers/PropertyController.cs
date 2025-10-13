@@ -605,10 +605,10 @@ namespace RentManagement.Controllers
                 errors.Add("Property Address cannot exceed 500 characters.");
             }
 
-            if (property.TotalRentAmount <= 0)
-            {
-                errors.Add("Total Rent Amount must be greater than 0.");
-            }
+            //if (property.TotalRentAmount <= 0)
+            //{
+            //    errors.Add("Total Rent Amount must be greater than 0.");
+            //}
 
             return errors;
         }

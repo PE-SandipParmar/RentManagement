@@ -1233,42 +1233,50 @@
         });
     }
 
-    // Function to validate Aadhar uniqueness
-    function validateAadharUniqueness(aadhar) {
+    // Function to validate Aadhar uniqueness (async, returns promise)
+    async function validateAadharUniqueness(aadhar) {
+        if (!aadhar) return true;
+        
         const employeeId = $('#id').val() || 0;
         
-        fetch(`/Employee/ValidateAadhar?aadhar=${encodeURIComponent(aadhar)}&employeeId=${employeeId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.isUnique) {
-                    showFieldError('aadhar', 'This Aadhar number is already registered with another employee.');
-                } else {
-                    clearFieldError('aadhar');
-                }
-            })
-            .catch(error => {
-                console.error('Error validating Aadhar:', error);
-                // Don't show error to user, just log it
-            });
+        try {
+            const response = await fetch(`/Employee/ValidateAadhar?aadhar=${encodeURIComponent(aadhar)}&employeeId=${employeeId}`);
+            const data = await response.json();
+            
+            if (!data.isUnique) {
+                showFieldError('aadhar', 'This Aadhar number is already registered with another employee.');
+                return false;
+            } else {
+                clearFieldError('aadhar');
+                return true;
+            }
+        } catch (error) {
+            console.error('Error validating Aadhar:', error);
+            return true; // Allow if validation service fails
+        }
     }
 
-    // Function to validate Email uniqueness
-    function validateEmailUniqueness(email) {
+    // Function to validate Email uniqueness (async, returns promise)
+    async function validateEmailUniqueness(email) {
+        if (!email) return true;
+        
         const employeeId = $('#id').val() || 0;
         
-        fetch(`/Employee/ValidateEmail?email=${encodeURIComponent(email)}&employeeId=${employeeId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.isUnique) {
-                    showFieldError('email', 'This email address is already registered with another employee.');
-                } else {
-                    clearFieldError('email');
-                }
-            })
-            .catch(error => {
-                console.error('Error validating Email:', error);
-                // Don't show error to user, just log it
-        });
+        try {
+            const response = await fetch(`/Employee/ValidateEmail?email=${encodeURIComponent(email)}&employeeId=${employeeId}`);
+            const data = await response.json();
+            
+            if (!data.isUnique) {
+                showFieldError('email', 'This email address is already registered with another employee.');
+                return false;
+            } else {
+                clearFieldError('email');
+                return true;
+            }
+        } catch (error) {
+            console.error('Error validating Email:', error);
+            return true; // Allow if validation service fails
+        }
     }
     function validateHouseRentAllowance() {
         const hra = parseFloat($('#hra').val()) || 0;
@@ -1559,7 +1567,7 @@
         summaryDiv.innerHTML = '';
     }
 
-    function validateForm() {
+    async function validateForm() {
         let isValid = true;
         clearAllErrors();
 
@@ -1592,20 +1600,57 @@
         if (!validateHRA()) isValid = false;
         if (!validateHouseRentAllowance()) isValid = false;
         if (!validateHRAAndBasicCombined()) isValid = false;
-        var Adharvalue = $('#aadhar').val().trim();
-        if (Adharvalue.length != 12) {
-            showFieldError('aadhar', 'Aadhar number must be exactly 12 digits');
-        }
-        else {
+        
+        // Validate Aadhar (12 digits) - optional field
+        var adharValue = $('#aadhar').val().trim();
+        if (adharValue && adharValue.length > 0) {
+            if (adharValue.length != 12 || !/^\d{12}$/.test(adharValue)) {
+                showFieldError('aadhar', 'Aadhar number must be exactly 12 digits');
+                isValid = false;
+            } else {
+                clearFieldError('aadhar');
+                // Check for duplicates
+                const aadharUnique = await validateAadharUniqueness(adharValue);
+                if (!aadharUnique) isValid = false;
+            }
+        } else {
             clearFieldError('aadhar');
         }
-        var panvalue = $('#pan').val().trim();
-        if (panvalue.length != 10) {
-            showFieldError('pan', 'Pan number must be exactly 10 characters');
-        }
-        else {
+
+        // Validate PAN (10 characters, format: ABCDE1234F) - required
+        var panValue = $('#pan').val().trim();
+        if (!panValue || panValue.length != 10 || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(panValue)) {
+            showFieldError('pan', 'PAN must be exactly 10 characters (format: ABCDE1234F)');
+            isValid = false;
+        } else {
             clearFieldError('pan');
         }
+
+        // Validate Email format and required
+        var emailValue = $('#email').val().trim();
+        if (!emailValue || !/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(emailValue)) {
+            showFieldError('email', 'Please enter a valid email address');
+            isValid = false;
+        } else {
+            clearFieldError('email');
+            // Check for duplicates
+            const emailUnique = await validateEmailUniqueness(emailValue);
+            if (!emailUnique) isValid = false;
+        }
+
+        // Validate numeric fields are not negative
+        const numericFields = ['totalSalary', 'basicSalary', 'hra', 'houseRentAllowance', 
+                               'travelAllowance', 'medicalAllowance', 'otherAllowance', 
+                               'pf', 'professionalTax', 'esi', 'grossSalaryAfterDeductions'];
+        
+        numericFields.forEach(fieldId => {
+            const value = parseFloat($(`#${fieldId}`).val()) || 0;
+            if (value < 0) {
+                showFieldError(fieldId, 'Value cannot be negative');
+                isValid = false;
+            }
+        });
+
         return isValid;
     }
 
@@ -1752,12 +1797,13 @@
             });
     }
 
-    function saveEmployee() {
-        if (!validateForm()) {
+    async function saveEmployee() {
+        const isFormValid = await validateForm();
+        if (!isFormValid) {
             showAlert('error', 'Please correct all validation errors before saving.');
             return;
         }
-
+        
         const button = document.getElementById('saveButton');
         const buttonText = document.getElementById('saveButtonText');
         const buttonSpinner = document.getElementById('saveButtonSpinner');

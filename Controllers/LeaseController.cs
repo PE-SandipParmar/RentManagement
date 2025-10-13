@@ -1166,6 +1166,7 @@ namespace RentManagement.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> DownloadLeaseDocument(int documentId)
         {
             try
