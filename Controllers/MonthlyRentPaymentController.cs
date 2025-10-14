@@ -466,8 +466,9 @@ namespace RentManagement.Controllers
         }
 
         // POST: MonthlyRentPayment/Reject
+        // POST: MonthlyRentPayment/Reject
         [HttpPost]
-        [Authorize(Roles = Roles.AdminOrVendor)]
+        [Authorize(Roles = Roles.AdminOrVendor)]  // Changed from AdminOrVendor
         public async Task<IActionResult> RejectPayment([FromBody] PaymentRejectionRequest request)
         {
             try

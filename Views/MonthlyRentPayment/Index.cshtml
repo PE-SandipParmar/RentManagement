@@ -28,6 +28,7 @@
 </style>
 
 <div class="p-1">
+    @Html.AntiForgeryToken()
     <!-- Breadcrumb - Keep as is -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -47,7 +48,7 @@
     </nav>
 
     <!-- Success/Error Messages - Keep as is -->
-@*     <div id="alertContainer" class="mb-4">
+    <div id="alertContainer" class="mb-4">
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="bg-green-100 border-green-400 text-green-700 px-4 py-3 rounded border" role="alert">
@@ -61,7 +62,7 @@
             </div>
         }
     </div>
- *@
+
     <!-- Page Header - Keep as is -->
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -511,6 +512,7 @@
         }
 
         // Reject payment
+        // Reject payment
         function rejectPayment() {
             if (!currentPaymentId) return;
 
@@ -525,28 +527,36 @@
                 rejectionReason: rejectionReason
             };
 
+            // Get the anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
             fetch('@Url.Action("RejectPayment")', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    'RequestVerificationToken': token  // Corrected header name
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert('success', result.message);
-                    closeRejectModal();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showAlert('error', result.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('error', 'An error occurred while rejecting the payment.');
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        showAlert('success', result.message);
+                        closeRejectModal();
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showAlert('error', result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'An error occurred while rejecting the payment.');
+                });
         }
 
         // Show alert
